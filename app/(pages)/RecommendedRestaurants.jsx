@@ -7,11 +7,19 @@ import { useNavigation } from '@react-navigation/native';
 const RecommendedRestaurantsCard = () => {
     const navigation = useNavigation();
     const recommendedRestaurants = [
-        { dishName: 'Benihana Covent Garden', img: icons.resto1, rating: 4, reviews: 60 },
-        { dishName: 'GOLDEN CHIPPY', img: icons.resto1, rating: 4, reviews: 60 },
-        { dishName: 'Benihana Covent Garden', img: icons.resto1, rating: 4, reviews: 60 },
-        { dishName: 'GOLDEN CHIPPY', img: icons.resto1, rating: 4, reviews: 60 },
-    ]
+      {
+        dishName: "Spice Junction",
+        img: icons.resto1,
+        rating: 4.5,
+        reviews: 60,
+      },
+      {
+        dishName: "	Tandoori Delight",
+        img: icons.resto1,
+        rating: 4.2,
+        reviews: 60,
+      },
+    ];
     return (
         <View style={styles.container}>
 

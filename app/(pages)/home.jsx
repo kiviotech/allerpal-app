@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from './Header';
@@ -10,8 +10,24 @@ import CustomText from '../../components/CustomText/CustomText';
 import RecommendedRestaurants from './RecommendedRestaurants';
 import RecommendedDish from './RecommendedDish';
 import icons from '../../constants/icons';
+import { getRestaurants } from '../../src/api/repositories/restaurantRepository';
 
 const Home = () => {
+    const [restaurants, setRestaurants] = useState([]);
+    useEffect(() => {
+      const fetchRestaurants = async () => {
+        try {
+          const restaurantData = await getRestaurants();
+          setRestaurants(restaurantData.data.data); // Assuming response.data contains an array of restaurants
+        } catch (error) {
+          console.error("Error fetching restaurants:", error);
+        }
+      };
+
+      fetchRestaurants();
+    }, []);
+
+
     const filterArr = [
         'Filters', 'Nearest', 'Book Table', 'Open Now', 'Veg', 'Non-Veg'
     ];
@@ -59,7 +75,7 @@ const Home = () => {
                             horizontal
                             showsHorizontalScrollIndicator={false}
                             contentContainerStyle={styles.filterContainer}>
-                            <RecommendedRestaurants />
+                             <RecommendedRestaurants data={restaurants} />
                         </ScrollView>
                     </View>
                     {/* Favorites section start here */}
