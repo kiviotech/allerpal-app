@@ -9,10 +9,15 @@ import UserImageCommon from '../../components/UserImage/UserImageCommon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import fonts from '../../constants/fonts';
 import { useNavigation } from '@react-navigation/native'; // Import the hook
+import { login } from '../../src/utils/auth';
 
 NativeWindStyleSheet.setOutput({
   default: "native",
 });
+
+
+// const [loading, setLoading] = useState(false); // To manage loading state
+// const [errorMessage, setErrorMessage] = useState(null); // To show error message if login fails
 
 const Login = () => {
   const navigation = useNavigation(); // Use the hook to get navigation object
@@ -24,16 +29,27 @@ const Login = () => {
   const router = useRouter();
 
   const submit = async (action) => {
-    try {
-      if (action === 'SignUp') {
-        // Navigate to the Sign Up page
-        router.replace('/signup');
-      } else {
-        // Handle login action
-        router.replace('/home');
+    if (action === 'SignUp') {
+      router.replace('/signup');
+    } else {
+      try {
+        // setLoading(true); // Set loading state when starting login
+        // setErrorMessage(null); // Reset error message before a new login attempt
+
+        // Call login function from auth.js
+        const response = await login(form.email, form.password);
+
+        if (response && response.jwt) {
+          console.log("Login successful: ", response);
+          router.replace('/home'); // Navigate to home page on successful login
+        }
+      } catch (error) {
+        console.error('Login failed:', error.message);
+        // setErrorMessage('Invalid email or password. Please try again.');
       }
-    } catch (error) {
-      console.error('Error', error.message);
+      // finally {
+      //   setLoading(false); // Stop loading state after login attempt
+      // }
     }
   };
 

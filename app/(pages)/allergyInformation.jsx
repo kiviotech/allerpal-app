@@ -6,7 +6,7 @@ import colors from '../../constants/colors';
 import icons from '../../constants/icons';
 import CustomCheckbox from '../../components/customCheckbox/CustomCheckbox';
 import fonts from '../../constants/fonts';
-
+import { getAllergies } from '../../src/api/repositories/allergyRepository';
 
 
 const allergyInformation = () => {

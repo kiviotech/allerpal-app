@@ -85,7 +85,7 @@ const Home = () => {
                             horizontal
                             showsHorizontalScrollIndicator={false}
                             contentContainerStyle={styles.filterContainer}>
-                            <RecommendedRestaurants />
+                            <RecommendedRestaurants data={restaurants} />
                         </ScrollView>
                     </View>
                 </ScrollView>
