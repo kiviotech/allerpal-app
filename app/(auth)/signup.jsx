@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CustomButton from '../../components/CustomButton';
 import LoginField from '../../components/LoginField';
 import { useRouter } from 'expo-router';
@@ -7,7 +7,7 @@ import colors from '../../constants/colors';
 import UserImageCommon from '../../components/UserImage/UserImageCommon';
 import CustomCheckbox from '../../components/customCheckbox/CustomCheckbox';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native'; // Import the hook
+import { useNavigation } from '@react-navigation/native';
 import fonts from '../../constants/fonts';
 
 const Signup = () => {
@@ -17,19 +17,17 @@ const Signup = () => {
         email: '',
     });
 
+    const [errors, setErrors] = useState({
+        name: null,
+        email: null,
+        profileType: null,
+    });
+
     const router = useRouter();
 
-    const [isCheckedFirst, setIsCheckedFirst] = useState(false);
-    const [isCheckedSecond, setIsCheckedSecond] = useState(false);
-
-    const handleCheckboxPress = (checkbox) => {
-        checkbox === 'first' ? setIsCheckedFirst(!isCheckedFirst) : setIsCheckedSecond(!isCheckedSecond);
-    };
-
+    const [selectedProfileType, setSelectedProfileType] = useState(null); // State for profile type selection
     const [isNextButtonPressed, setIsNextButtonPressed] = useState(false);
-    const signupNextScreen = () => {
-        setIsNextButtonPressed(true);
-    };
+    const [isFormComplete, setIsFormComplete] = useState(false); // To track if form is complete
 
     const buttons = [
         { id: 1, label: 'Children' },
@@ -39,17 +37,65 @@ const Signup = () => {
     ];
     const [selectedButton, setSelectedButton] = useState(null);
 
-    const handleButtonPress = (id) => {
-        setSelectedButton(id); // Set the selected button
+    const handleProfileTypeChange = (type) => {
+        setSelectedProfileType(type); // Set the selected profile type
+        setSelectedButton(null); // Reset relation buttons
     };
 
-    const gotoMyAllergyInfoPage = async () => {
-        try {
-            router.replace('/allergyInformation');
-        } catch (error) {
-            console.error('Error', error.message);
+    const handleButtonPress = (id) => {
+        setSelectedButton(id); // Set the selected button for relation
+    };
+
+    const validateEmail = (email) => {
+        const emailRegex = /^\S+@\S+\.\S+$/;
+        return emailRegex.test(email);
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+
+        if (!form.name) {
+            newErrors.name = "Name is required";
+        }
+
+        if (!form.email) {
+            newErrors.email = "Email is required";
+        } else if (!validateEmail(form.email)) {
+            newErrors.email = "Invalid email format";
+        }
+
+        if (!selectedProfileType) {
+            newErrors.profileType = "Please select a profile type";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const signupNextScreen = () => {
+        if (validateForm()) {
+            // Directly navigate to allergyInformation page if profile type is "myself"
+            if (selectedProfileType === 'myself') {
+                router.push({
+                    pathname: '/allergyInformation',
+                    params: { name: form.name, email: form.email }
+                });
+
+
+            } else {
+                setIsNextButtonPressed(true);
+            }
         }
     };
+
+    useEffect(() => {
+        // Check if name, email, and selectedProfileType are filled
+        if (form.name && form.email && selectedProfileType && validateEmail(form.email)) {
+            setIsFormComplete(true);
+        } else {
+            setIsFormComplete(false);
+        }
+    }, [form, selectedProfileType]);
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#FFF' }}>
@@ -57,7 +103,7 @@ const Signup = () => {
                 <View style={styles.container}>
                     <UserImageCommon shapeWidth={250} shapeHeight={250} />
 
-                    {isNextButtonPressed === false ? (
+                    {!isNextButtonPressed ? (
                         <View style={styles.content}>
                             <Text style={styles.header}>Sign Up</Text>
                             <View style={styles.inputContainer}>
@@ -68,6 +114,7 @@ const Signup = () => {
                                     keyboardType='text'
                                     style={styles.loginField}
                                 />
+                                {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
                                 <View style={styles.passwordContainer}>
                                     <LoginField
                                         placeholder="Email Id"
@@ -76,12 +123,15 @@ const Signup = () => {
                                         keyboardType='email-address'
                                         style={styles.loginField}
                                     />
+                                    {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
                                 </View>
                             </View>
+
+                            {/* Profile Type Selection */}
                             <View style={styles.buttonContainer}>
                                 <CustomCheckbox
-                                    isChecked={isCheckedFirst}
-                                    onPress={() => handleCheckboxPress('first')}
+                                    isChecked={selectedProfileType === 'myself'}
+                                    onPress={() => handleProfileTypeChange('myself')}
                                     style={{ width: '15%' }}
                                 />
                                 <CustomButton
@@ -91,8 +141,8 @@ const Signup = () => {
                             </View>
                             <View style={styles.buttonContainer}>
                                 <CustomCheckbox
-                                    isChecked={isCheckedSecond}
-                                    onPress={() => handleCheckboxPress('second')}
+                                    isChecked={selectedProfileType === 'someoneElse'}
+                                    onPress={() => handleProfileTypeChange('someoneElse')}
                                     style={{ width: '15%' }}
                                 />
                                 <CustomButton
@@ -100,15 +150,18 @@ const Signup = () => {
                                     text="Creating Profile for Someone Else"
                                 />
                             </View>
+                            {errors.profileType && <Text style={styles.errorText}>{errors.profileType}</Text>}
+
                             <View style={styles.buttonContainer}>
                                 <CustomButton
-                                    buttonStyle={{ fontSize: 13 }}
+                                    buttonStyle={{ fontSize: 13, backgroundColor: isFormComplete ? colors.primary : colors.disabledButton }}
                                     text="Next"
                                     onPress={signupNextScreen}
+                                    disabled={!isFormComplete} // Disable the button if form is incomplete
                                 />
                             </View>
                         </View>
-                    ) : (
+                    ) : selectedProfileType === 'someoneElse' ? ( // Only show relation if "Someone Else" is selected
                         <View style={styles.content}>
                             <View style={styles.buttonContainer}>
                                 <CustomButton
@@ -143,7 +196,7 @@ const Signup = () => {
                                 />
                             </View>
                         </View>
-                    )}
+                    ) : null}
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -183,5 +236,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flexDirection: 'row',
         gap: 20,
+    },
+    errorText: {
+        color: 'red',
+        fontSize: 12,
+        marginTop: 5,
     },
 });
