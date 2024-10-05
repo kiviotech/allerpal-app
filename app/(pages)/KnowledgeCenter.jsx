@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, Text, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from './Header';
@@ -11,55 +11,69 @@ import icons from '../../constants/icons';
 import CustomButton from '../../components/CustomButton';
 import RecommendedDish from './RecommendedDish';
 
-
 const KnowledgeCenter = () => {
 
-    const Recommendedblogs = [
-        {
-            img: icons.khowledgeBanner,
-            name: 'Lorem ipsum',
-        },
-        {
-            img: icons.khowledgeBanner,
-            name: 'Lorem ipsum',
-        }
-    ];
+    // State to store recommended blogs, recently posted, and allergens
+    const [recommendedBlogs, setRecommendedBlogs] = useState([]);
+    const [recentlyPosted, setRecentlyPosted] = useState([]);
+    const [recommendedDishes, setRecommendedDishes] = useState([]);
 
-    const recentlyPosted = [
-        {
-            img: icons.knowledegeP,
-            name: 'Lorem ipsum',
-        },
-        {
-            img: icons.knowledegeP,
-            name: 'Lorem ipsum',
-        }
-    ];
+    // Mock API to simulate dynamic data fetching
+    useEffect(() => {
+        // Mock Recommended Blogs API
+        const fetchRecommendedBlogs = () => {
+            const blogs = [
+                { img: icons.khowledgeBanner, name: 'Blog 1: Allergies in the UK' },
+                { img: icons.khowledgeBanner, name: 'Blog 2: Food Allergens You Should Know' },
+            ];
+            setRecommendedBlogs(blogs);
+        };
 
+        // Mock Recently Posted API
+        const fetchRecentlyPosted = () => {
+            const posts = [
+                { img: icons.knowledegeP, name: 'Post 1: Hello' },
+                { img: icons.knowledegeP, name: 'Post 2: How to Manage Allergies' },
+            ];
+            setRecentlyPosted(posts);
+        };
 
-    const recommendedDishes = [
-        { dishName: 'Allergen 1', img: icons.dish1 },
-        { dishName: 'Allergen 1', img: icons.dish2 },
-        { dishName: 'Allergen 1', img: icons.dish1 },
-        { dishName: 'Allergen 1', img: icons.dish2 },
-        { dishName: 'Allergen 1', img: icons.dish3 },
-        { dishName: 'Allergen 1', img: icons.dish2 },
-    ];
+        // Mock Recommended Dishes API (UK Allergens)
+        const fetchRecommendedDishes = () => {
+            const dishes = [
+                { dishName: 'Peanuts', img: icons.dish1 },
+                { dishName: 'Tree nuts', img: icons.dish2 },
+                { dishName: 'Milk', img: icons.dish3 },
+                { dishName: 'Eggs', img: icons.dish1 },
+                { dishName: 'Fish', img: icons.dish2 },
+                { dishName: 'Shellfish', img: icons.dish3 },
+            ];
+            setRecommendedDishes(dishes);
+        };
+
+        // Call the mock APIs
+        fetchRecommendedBlogs();
+        fetchRecentlyPosted();
+        fetchRecommendedDishes();
+    }, []);
 
     return (
         <SafeAreaView style={styles.safeArea}>
             <Header />
             <ScrollView contentContainerStyle={styles.scrollViewContent}>
+
+                {/* Recommended Blogs Section */}
                 <CustomText title={'Recommended blogs for you'} />
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.filterContainer}>
-                    {Recommendedblogs.map((item, index) => (
+                    {recommendedBlogs.map((item, index) => (
                         <ImageBackground
                             source={item.img}
                             style={styles.imageBackground}
-                            imageStyle={styles.image} key={index}
+                            imageStyle={styles.image}
+                            key={index}
                         >
                             <View style={styles.infoContainer}>
                                 <Text style={styles.restaurantName}>{item.name}</Text>
@@ -73,16 +87,12 @@ const KnowledgeCenter = () => {
                                         text='Allergen 2'
                                     />
                                 </View>
-
                             </View>
                         </ImageBackground>
-
-
                     ))}
                 </ScrollView>
 
-                {/* read about */}
-
+                {/* Read About Section */}
                 <CustomText title={'Read about'} />
                 <ScrollView
                     horizontal
@@ -91,7 +101,7 @@ const KnowledgeCenter = () => {
                     <RecommendedDish data={recommendedDishes} />
                 </ScrollView>
 
-                {/* Recently posted */}
+                {/* Recently Posted Section */}
                 <CustomText title={'Recently posted'} />
                 <ScrollView
                     horizontal
@@ -101,7 +111,8 @@ const KnowledgeCenter = () => {
                         <ImageBackground
                             source={item.img}
                             style={styles.imageBackground}
-                            imageStyle={styles.image} key={index}
+                            imageStyle={styles.image}
+                            key={index}
                         >
                             <View style={styles.infoContainer}>
                                 <Text style={styles.restaurantName}>{item.name}</Text>
@@ -115,16 +126,12 @@ const KnowledgeCenter = () => {
                                         text='Allergen 2'
                                     />
                                 </View>
-
                             </View>
                         </ImageBackground>
-
-
                     ))}
                 </ScrollView>
 
                 {/* Other blogs */}
-
                 <Search style={{ marginTop: 10 }} />
 
             </ScrollView>
@@ -142,7 +149,6 @@ const styles = StyleSheet.create({
     scrollViewContent: {
         paddingLeft: 15,
         paddingRight: 15,
-
     },
 
     imageBackground: {
@@ -151,11 +157,11 @@ const styles = StyleSheet.create({
         height: 160,
         marginRight: 10,
         width: 276,
-        marginTop: 15
+        marginTop: 15,
     },
     image: {
         borderRadius: 15,
-        objectFit: 'cover'
+        objectFit: 'cover',
     },
 
     infoContainer: {

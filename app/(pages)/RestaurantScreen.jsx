@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, Text, ImageBackground, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import colors from '../../constants/colors';
@@ -10,69 +10,115 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import CustomButton from '../../components/CustomButton';
 import RestaurantReviews from './RestaurantReviews';
 import CustomText from '../../components/CustomText/CustomText';
+import { Linking, TouchableOpacity } from 'react-native';
 
-const RestaurantScreen = () => {
-
-    const restoDetails = {
+// Mock API response for the restaurant details
+const mockApiResponse = {
+    restaurant: {
         name: 'No5 Dining & Lounge',
         rating: 4,
         reviews: '1000',
         location: '3 miles . 5 Tottenham Ln'
-    }
-
-    const foodCard = [
+    },
+    menus: [
         {
             name: 'Poke Nui',
             price: 20.30,
-            img: icons.restoFood1
+            img: icons.restoFood1,
+            type: 'allergen'
         },
         {
             name: 'Smoke Veggie Bowl',
             price: 20.30,
-            img: icons.restoFood2
+            img: icons.restoFood2,
+            type: 'normal'
         },
         {
             name: 'Vegetable Bowl',
             price: 20.30,
-            img: icons.restoFood3
+            img: icons.restoFood3,
+            type: 'allergen'
         },
         {
             name: 'BBQ Chicken',
             price: 20.30,
-            img: icons.restoFood4
+            img: icons.restoFood4,
+            type: 'normal'
         },
         {
-            name: 'Vegetable Bowl',
-            price: 20.30,
-            img: icons.restoFood3
+            name: 'Grilled Tofu Bowl',
+            price: 18.50,
+            img: icons.restoFood3,
+            type: 'normal'
         },
         {
-            name: 'BBQ Chicken',
-            price: 20.30,
-            img: icons.restoFood4
-        },
-        {
-            name: 'Vegetable Bowl',
-            price: 20.30,
-            img: icons.restoFood3
-        },
-        {
-            name: 'BBQ Chicken',
-            price: 20.30,
-            img: icons.restoFood4
-        },
-        {
-            name: 'Vegetable Bowl',
-            price: 20.30,
-            img: icons.restoFood3
-        },
-        {
-            name: 'BBQ Chicken',
-            price: 20.30,
-            img: icons.restoFood4
-        },
+            name: 'Spicy Wings',
+            price: 22.10,
+            img: icons.restoFood4,
+            type: 'allergen'
+        }
     ]
+};
 
+const reviews = [
+    {
+        id: 1,
+        user: 'Olivia Collins',
+        date: 'Mar 5, 2024',
+        avatar: icons.userAvatar, // You can replace this with the actual user avatar URL
+        reviewText: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    },
+    {
+        id: 2,
+        user: 'John Doe',
+        date: 'Mar 10, 2024',
+        avatar: icons.userAvatar, // You can replace this with the actual user avatar URL
+        reviewText: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
+    }
+    // Add more reviews if needed
+];
+
+
+const RestaurantScreen = () => {
+    const [menuType, setMenuType] = useState('normal'); // State for selected menu type (normal/allergen)
+    const [restaurantDetails, setRestaurantDetails] = useState({});
+    const [filteredMenu, setFilteredMenu] = useState([]);
+
+    const handlePressPhone = () => {
+        const phoneNumber = `tel:${restaurantDetails.contact_number}`;
+        Linking.openURL(phoneNumber).catch(err => console.error('Error dialing phone', err));
+    };
+    
+    const handlePressWebsite = () => {
+        const websiteUrl = restaurantDetails.website_url;
+        Linking.openURL(websiteUrl).catch(err => console.error('Error opening website', err));
+    };
+    
+    const handlePressLocation = () => {
+        const { latitude, longitude } = restaurantDetails.location;
+        const locationUrl = `geo:${latitude},${longitude}`;
+        Linking.openURL(locationUrl).catch(err => console.error('Error opening maps', err));
+    };
+    // Function to mock API call and filter menus based on menuType
+    const fetchRestaurantDetails = () => {
+        const { restaurant, menus } = mockApiResponse;
+        setRestaurantDetails(restaurant);
+        // Filter the menu based on the selected type when the component mounts
+        const initialMenu = menus.filter(menu => menu.type === menuType);
+        setFilteredMenu(initialMenu);
+    };
+
+    // Function to handle menu type change and filter menus accordingly
+    const handleMenuChange = (type) => {
+        setMenuType(type);
+        const filtered = mockApiResponse.menus.filter(menu => menu.type === type);
+        setFilteredMenu(filtered);
+    };
+
+    // Initial API fetch simulation
+    useEffect(() => {
+        fetchRestaurantDetails();
+    }, []);
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -85,13 +131,12 @@ const RestaurantScreen = () => {
                         imageStyle={styles.image}
                     >
                         <View style={styles.infoContainer}>
-                            <Text style={styles.restaurantName}>{restoDetails.name}</Text>
+                            <Text style={styles.restaurantName}>{restaurantDetails.name}</Text>
                             <View style={styles.ratingContainer}>
-                                {Array.from({ length: restoDetails.rating }).map((_, index) => (
+                                {Array.from({ length: restaurantDetails.rating }).map((_, index) => (
                                     <Image key={index} style={styles.rating} source={icons.star} />
                                 ))}
-
-                                <Text style={styles.reviews}>{`${restoDetails.reviews} reviews`}</Text>
+                                <Text style={styles.reviews}>{`${restaurantDetails.reviews} reviews`}</Text>
                             </View>
 
                             <View style={styles.ratingContainer}>
@@ -102,38 +147,43 @@ const RestaurantScreen = () => {
                                     <View key={index} style={styles.dotContainer}></View>
                                 ))}
 
-                                <Text style={styles.reviews}>{restoDetails.location}</Text>
+                                <Text style={styles.reviews}>{restaurantDetails.location}</Text>
                             </View>
                         </View>
                     </ImageBackground>
 
+                    {/* Contact Section */}
                     <View style={styles.contactUsContainer}>
-                        <View style={styles.contactIcon}>
-                            <FontAwesome name="phone" size={15} color="white" />
-                        </View>
-                        <View style={styles.contactIcon}>
-                            <FontAwesome name="globe" size={15} color="white" />
-                        </View>
-                        <View style={styles.contactIcon}>
-                            <FontAwesome name="map-marker" size={15} color="white" />
-                        </View>
-                    </View>
-                    <View style={styles.filterByButtons}>
+    <TouchableOpacity style={styles.contactIcon} onPress={handlePressPhone}>
+        <FontAwesome name="phone" size={15} color="white" />
+    </TouchableOpacity>
 
+    <TouchableOpacity style={styles.contactIcon} onPress={handlePressWebsite}>
+        <FontAwesome name="globe" size={15} color="white" />
+    </TouchableOpacity>
+
+    <TouchableOpacity style={styles.contactIcon} onPress={handlePressLocation}>
+        <FontAwesome name="map-marker" size={15} color="white" />
+    </TouchableOpacity>
+</View>
+
+                    {/* Filter Menu Buttons */}
+                    <View style={styles.filterByButtons}>
                         <CustomButton
                             buttonStyle={{ fontSize: 13, width: 140, padding: 14 }}
                             text='Allergen Menu'
+                            onPress={() => handleMenuChange('allergen')}
                         />
                         <CustomButton
                             buttonStyle={{ fontSize: 13, width: 140, padding: 14 }}
                             text='Normal Menu'
+                            onPress={() => handleMenuChange('normal')}
                         />
-
-
                     </View>
 
+                    {/* Food Cards */}
                     <View style={styles.foodCardContainer}>
-                        {foodCard.map((item, index) => {
+                        {filteredMenu.map((item, index) => {
                             const isOddRow = Math.floor(index / 2) % 2 !== 0;
                             const cardHeight = (index % 2 === 0) ? (isOddRow ? 191 : 252) : (isOddRow ? 252 : 191);
 
@@ -142,9 +192,8 @@ const RestaurantScreen = () => {
                                     style={[
                                         styles.foodCard,
                                         { height: cardHeight },
-                                        cardHeight === 252 && index !== 0 && { marginTop: -30 }, // Apply marginTop: -30 if height is 252
+                                        cardHeight === 252 && index !== 0 && { marginTop: -30 },
                                         index === 1 && { height: 220 },
-
                                     ]}
                                     key={index}
                                 >
@@ -161,11 +210,10 @@ const RestaurantScreen = () => {
                         })}
                     </View>
 
-
-                    {/* reviews */}
-
+                    {/* Reviews Section */}
                     <CustomText title={'Reviews'} />
                     <RestaurantReviews />
+                    
                 </View>
             </ScrollView>
             <BottomNavigation />
@@ -173,6 +221,7 @@ const RestaurantScreen = () => {
     );
 };
 
+// Styles
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
@@ -278,12 +327,10 @@ const styles = StyleSheet.create({
         height: '70%', // 70% of the card height
         borderRadius: 10,
         objectFit: 'fill',
-
     },
     textContainer: {
         paddingLeft: 10,
         height: '30%', // 30% of the card height
-
         paddingTop: 10
     },
     title: {

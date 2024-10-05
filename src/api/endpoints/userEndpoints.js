@@ -7,3 +7,4 @@ const userEndpoints = {
 };
 
 export default userEndpoints;
+
