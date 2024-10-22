@@ -30,6 +30,7 @@ const AllergyInformation = () => {
     const fetchAllergies = async () => {
       try {
         const response = await getAllergies();
+        console.log(response)
         const allergiesData = response.data.data.reduce((acc, allergy) => {
           acc[allergy.name] = { id: allergy.id, checked: false }; // Initialize each allergy as not checked (false)
           return acc;

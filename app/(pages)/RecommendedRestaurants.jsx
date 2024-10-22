@@ -3,6 +3,8 @@ import { View, Text, ImageBackground, StyleSheet, TouchableOpacity } from 'react
 import colors from '../../constants/colors';
 import fonts from '../../constants/fonts';
 import { useNavigation } from '@react-navigation/native';
+import { getImageUrl } from "../../src/utils/media";
+
 
 const RecommendedRestaurantsCard = ({ data }) => { // Receive data as a prop
     const navigation = useNavigation();
@@ -13,7 +15,7 @@ const RecommendedRestaurantsCard = ({ data }) => { // Receive data as a prop
                 {data && data.map((item, index) => (  // Map through the data prop
                     <View style={styles.cardContainer} key={index}>
                         <ImageBackground
-                            source={{ uri: item.img }} // Assuming item.img is a valid URL
+                            source={{ uri: getImageUrl(item.image) }} // Assuming item.img is a valid URL
                             style={styles.imageBackground}
                             imageStyle={styles.image}
                         >
@@ -27,7 +29,7 @@ const RecommendedRestaurantsCard = ({ data }) => { // Receive data as a prop
                         </ImageBackground>
                         <View style={styles.buttonContainer}>
                             <TouchableOpacity style={styles.button} onPress={() => {
-                                navigation.navigate('(pages)/RestaurantScreen'); // Navigate to restaurant details screen
+                                navigation.navigate('(pages)/RestaurantScreen', { id: item.id });
                             }}>
                                 <Text style={styles.buttonText}>View Details</Text>
                             </TouchableOpacity>

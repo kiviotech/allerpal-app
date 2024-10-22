@@ -11,34 +11,51 @@ import RecommendedRestaurants from './RecommendedRestaurants';
 import RecommendedDish from './RecommendedDish';
 import icons from '../../constants/icons';
 import { getRestaurants } from '../../src/api/repositories/restaurantRepository';
+import { getMenuItems } from '../../src/api/repositories/menuRepository';
+
+import { getImageUrl } from "../../src/utils/media";
 
 const Home = () => {
     const [restaurants, setRestaurants] = useState([]);
-    useEffect(() => {
-      const fetchRestaurants = async () => {
-        try {
-          const restaurantData = await getRestaurants();
-          setRestaurants(restaurantData.data.data); // Assuming response.data contains an array of restaurants
-        } catch (error) {
-          console.error("Error fetching restaurants:", error);
-        }
-      };
+    const [recommendedDishes, setRecommendedDishes] = useState([]);
 
-      fetchRestaurants();
-    }, []);
+    useEffect(() => {
+        const fetchRestaurants = async () => {
+          try {
+            const restaurantData = await getRestaurants();
+            setRestaurants(restaurantData.data.data); // Assuming response.data.data contains the array of restaurants
+          } catch (error) {
+            console.error("Error fetching restaurants:", error);
+          }
+        };
+      
+        const fetchDishes = async () => {
+          try {
+            const dishData = await getMenuItems();
+            setRecommendedDishes(dishData.data.data); // Assuming response.data.data contains the array of dishes
+          } catch (error) {
+            console.error("Error fetching dishes:", error);
+          }
+        };
+      
+        // Call both async functions
+        fetchRestaurants();
+        fetchDishes();
+      }, []);
+
 
 
     const filterArr = [
         'Filters', 'Nearest', 'Book Table', 'Open Now', 'Veg', 'Non-Veg'
     ];
-    const recommendedDishes = [
-        { dishName: 'Vegan King Poke', img: icons.dish1 },
-        { dishName: 'Vegan King Poke', img: icons.dish2 },
-        { dishName: 'Vegan King Poke', img: icons.dish1 },
-        { dishName: 'Vegan King Poke', img: icons.dish2 },
-        { dishName: 'Vegan King Poke', img: icons.dish3 },
-        { dishName: 'Vegan King Poke', img: icons.dish2 },
-    ];
+    // const recommendedDishes = [
+    //     { dishName: 'Vegan King Poke', img: icons.dish1 },
+    //     { dishName: 'Vegan King Poke', img: icons.dish2 },
+    //     { dishName: 'Vegan King Poke', img: icons.dish1 },
+    //     { dishName: 'Vegan King Poke', img: icons.dish2 },
+    //     { dishName: 'Vegan King Poke', img: icons.dish3 },
+    //     { dishName: 'Vegan King Poke', img: icons.dish2 },
+    // ];
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>

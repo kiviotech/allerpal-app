@@ -79,7 +79,10 @@ const reviews = [
 ];
 
 
-const RestaurantScreen = () => {
+const RestaurantScreen = ({route}) => {
+    const { id } = route.params; // Get the 'id' passed in navigation
+
+    console.log("resturant id",id)
     const [menuType, setMenuType] = useState('normal'); // State for selected menu type (normal/allergen)
     const [restaurantDetails, setRestaurantDetails] = useState({});
     const [filteredMenu, setFilteredMenu] = useState([]);

@@ -2,18 +2,21 @@ import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import colors from '../../constants/colors';
 import fonts from '../../constants/fonts';
+import{ useState, useEffect } from 'react';
+import { getImageUrl } from "../../src/utils/media";
+
+// Mock API response
 
 
-const RecommendedDish = ({ data }) => {
-
+const RecommendedDish = ({data}) => {
+    console.log(data)
     return (
         <View style={styles.container}>
-
             <View style={styles.dishesContainer}>
-                {data.map((item, index) => (
+                {data && data?.map((item, index) => (
                     <View style={styles.cardContainer} key={index}>
-                        <Image source={item.img} style={styles.dishImage} />
-                        <Text style={styles.dishName}>{item.dishName}</Text>
+                        <Image source={getImageUrl(item?.image)} style={styles.dishImage} />
+                        <Text style={styles.dishName}>{item.item_name}</Text>
                     </View>
                 ))}
             </View>
