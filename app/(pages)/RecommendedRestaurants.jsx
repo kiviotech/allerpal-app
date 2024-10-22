@@ -4,6 +4,7 @@ import colors from '../../constants/colors';
 import fonts from '../../constants/fonts';
 import { useNavigation } from '@react-navigation/native';
 import { getImageUrl } from "../../src/utils/media";
+import { router } from 'expo-router';
 
 
 const RecommendedRestaurantsCard = ({ data }) => { // Receive data as a prop
@@ -29,7 +30,7 @@ const RecommendedRestaurantsCard = ({ data }) => { // Receive data as a prop
                         </ImageBackground>
                         <View style={styles.buttonContainer}>
                             <TouchableOpacity style={styles.button} onPress={() => {
-                                navigation.navigate('(pages)/RestaurantScreen', { id: item.id });
+                                router.push({ pathname: "(pages)/RestaurantScreen", params: { id :item.id } } );
                             }}>
                                 <Text style={styles.buttonText}>View Details</Text>
                             </TouchableOpacity>

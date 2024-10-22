@@ -11,6 +11,8 @@ import CustomButton from '../../components/CustomButton';
 import RestaurantReviews from './RestaurantReviews';
 import CustomText from '../../components/CustomText/CustomText';
 import { Linking, TouchableOpacity } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { getRestaurantById } from '../../src/api/repositories/restaurantRepository';
 
 // Mock API response for the restaurant details
 const mockApiResponse = {
@@ -27,6 +29,7 @@ const mockApiResponse = {
             img: icons.restoFood1,
             type: 'allergen'
         },
+
         {
             name: 'Smoke Veggie Bowl',
             price: 20.30,
@@ -79,8 +82,23 @@ const reviews = [
 ];
 
 
-const RestaurantScreen = ({route}) => {
-    const { id } = route.params; // Get the 'id' passed in navigation
+const RestaurantScreen = () => {
+    
+    const { id } = useLocalSearchParams();
+
+    useEffect(() => {
+        const fetchRestaurantByID = async () => {
+            try {
+                const restaurantData = await getRestaurantById(id);
+                setRestaurantDetails(restaurantData.data.data); // Assuming response.data.data contains the array of restaurants
+            } catch (error) {
+                console.error("Error fetching restaurants:", error);
+            }
+        };
+
+        fetchRestaurantByID();
+    }, []);
+
 
     console.log("resturant id",id)
     const [menuType, setMenuType] = useState('normal'); // State for selected menu type (normal/allergen)

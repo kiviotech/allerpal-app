@@ -1,11 +1,11 @@
 import axios from 'axios';
 import { getToken } from '../utils/storage';
 
-// export const BASE_URL = 'http://localhost:1337/api';
-// export const MEDIA_BASE_URL = 'http://localhost:1337';
+export const BASE_URL = 'http://localhost:1337/api';
+export const MEDIA_BASE_URL = 'http://localhost:1337';
 
-export const BASE_URL = 'https://api.allerpal.com/api';
-export const MEDIA_BASE_URL = 'https://api.allerpal.com/uploads';
+// export const BASE_URL = 'https://api.allerpal.com/api';
+// export const MEDIA_BASE_URL = 'https://api.allerpal.com/uploads';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -16,7 +16,8 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   config => {
-    const token = "98da4f877426b04f7fdce7a239431b9d6d72eaa08aa6aa89bff6d56ee28f8eb8ae083a04ea4f8d6ff41d0f53a2baed4d0aa4e5cf4b2f03d4d4097642f38e973b61ed4087eb177ff95a24a1955a17cb10889979d20b97389334eefdb95e4604462b0b185831bdd142410f52b4ef561d08439e6fc519ba50eb64b08df45a54b8fc"; // Call the function to get the token
+    const token =
+      "e2f511edf40c318a5e20d08ce125ea797eaa0ad3060b165cb6b4132c5e68ac3d1d8de2eb0935123a5b554972506295f02d4486d7168f2868d4218e601895c36e248bf4807bcf00c7f540c5658a6f0abb5dd910fdf26e941d60f3603433fee8b9cd226a5ff2d3c25451c132a57f6ccb7f60fbb0d609842041a9009d31075db089"; // Call the function to get the token
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
