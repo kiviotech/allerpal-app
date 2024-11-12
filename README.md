@@ -1,1 +1,0 @@
-# allerpal-app

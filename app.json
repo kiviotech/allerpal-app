@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Food Delivery",
-    "slug": "Food Delivery",
-    "scheme": "Food Delivery",
+    "name": "allerpal",
+    "slug": "allerpal",
+    "scheme":"allerpal",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -23,9 +23,6 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      "expo-router"
-    ]
+    }
   }
 }
