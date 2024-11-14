@@ -1,44 +1,71 @@
-import React,{useState} from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView,CheckBox } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, CheckBox, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {useRouter} from 'expo-router'
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router'
+import Account from "./Account"
 
 const Profile = () => {
   const router = useRouter()
-    const [allergens, setAllergens] = useState({
-        Celery: false,
-        Eggs: false,
-        'Cereals containing gluteen': false,
-        Lupin: false,
-        Mustard: false,
-        milk: false,
-        Peanuts: false,
-        sesame: false,
-        'Silphur dioxide/Sulphites': false,
-        Soyabeans: false,
-        'Molluscs (such as mussels and oysters)': false,
-        'Crustaceans(such as prawns,crabs and lobsters)': false,
-        'Tree nuts (such as almonds,hazelnuts,walnuts,Brazil nuts,Cashews,pecans)': false,
-      });
+  const [allergens, setAllergens] = useState({
+    Celery: false,
+    Eggs: false,
+    'Cereals containing gluteen': false,
+    Lupin: false,
+    Mustard: false,
+    milk: false,
+    Peanuts: false,
+    sesame: false,
+    'Silphur dioxide/Sulphites': false,
+    Soyabeans: false,
+    'Molluscs (such as mussels and oysters)': false,
+    'Crustaceans(such as prawns,crabs and lobsters)': false,
+    'Tree nuts (such as almonds,hazelnuts,walnuts)': false,
+  });
 
-      const toggleAllergen = (key) => {
-        setAllergens((prev) => ({ ...prev, [key]: !prev[key] }));
-      };
 
-      const allergenKeys = Object.keys(allergens);
-      const mainAllergens = allergenKeys.slice(0, -3); // All but the last three
-      const lastThreeAllergens = allergenKeys.slice(-3);
+  const allergenImages = {
+    Celery: require('../../assets/celery.png'),
+    Eggs: require('../../assets/eggs.png'),
+    'Cereals containing gluten': require('../../assets/cereals.png'),
+    Lupin: require('../../assets/lupin.png'),
+    Mustard: require('../../assets/mustard.png'),
+    Milk: require('../../assets/milk.png'),
+    Peanuts: require('../../assets/peanuts.png'),
+    Sesame: require('../../assets/sesame.png'),
+    'Sulphur dioxide/Sulphites': require('../../assets/sulphur.png'),
+    Soyabeans: require('../../assets/soyabeans.png'),
+    'Molluscs (such as mussels and oysters)': require('../../assets/mollusca.png'),
+    'Crustaceans (such as prawns, crabs and lobsters)': require('../../assets/crustaceans.png'),
+    'Tree nuts (such as almonds, hazelnuts, walnuts)': require('../../assets/treenuts.png'),
+  };
+
+  const toggleAllergen = (key) => {
+    setAllergens((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const allergenKeys = Object.keys(allergens);
+  const mainAllergens = allergenKeys.slice(0, -3); // All but the last three
+  const lastThreeAllergens = allergenKeys.slice(-3);
+
+
+
+  const CustomCheckBox = ({ checked, onPress }) => (
+    <TouchableOpacity style={[styles.checkBox, checked && styles.checkBoxSelected]} onPress={onPress}>
+      {checked && <Ionicons name="checkmark" size={16} color="#00c4cc" />}
+    </TouchableOpacity>
+  );
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
         <View style={styles.profileArrow}>
-        <TouchableOpacity onPress={()=>router.push('./Profile')}>
-          <Icon name="arrow-back-outline" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>My Profile</Text>
+          <TouchableOpacity onPress={() => router.push('./Profile')}>
+            <Icon name="arrow-back-outline" size={24} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.headerText}>My Profile</Text>
         </View>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={()=>router.push('./Account')}>
           <Text style={styles.editText}>Cancel</Text>
         </TouchableOpacity>
       </View>
@@ -64,33 +91,29 @@ const Profile = () => {
         <View style={styles.checkboxContainer}>
           {mainAllergens.map((key) => (
             <View key={key} style={styles.checkboxRow}>
-              <View style={styles.checkboxWrapper}>
-                <CheckBox
-                  value={allergens[key]}
-                  onValueChange={() => toggleAllergen(key)}
-           
-                />
+              <CustomCheckBox checked={allergens[key]} onPress={() => toggleAllergen(key)} />
+              <View style={styles.imageiconContainer}>
+                <Image source={allergenImages[key]} style={styles.icon} />
+                <Text style={styles.checkboxLabel}>{key}</Text>
               </View>
-              <Text style={styles.checkboxLabel}>{String(key).charAt(0).toUpperCase() + String(key).slice(1)}</Text>
             </View>
           ))}
-                    
-                    {lastThreeAllergens.map((key) => (
+          {lastThreeAllergens.map((key) => (
             <View key={key} style={styles.singleAllergenRow}>
-              <CheckBox
-                value={allergens[key]}
-                onValueChange={() => toggleAllergen(key)}
-              />
-              <Text style={styles.checkboxLabel1}>{String(key).charAt(0).toUpperCase() + String(key).slice(1)}</Text>
+              <CustomCheckBox checked={allergens[key]} onPress={() => toggleAllergen(key)} />
+              <View style={styles.imageiconContainer}>
+                <Image source={allergenImages[key]} style={styles.icon1} />
+                <Text style={styles.checkboxLabel}>{key}</Text>
+              </View>
             </View>
           ))}
-
         </View>
-        <TouchableOpacity style={styles.signOutButton}>
+      </View>
+      <TouchableOpacity style={styles.signOutButton}>
         <Text style={styles.signOutText}>Save Changes</Text>
       </TouchableOpacity>
-      </View>
-    </ScrollView>
+    {/* </View> */}
+    </ScrollView >
   );
 };
 
@@ -99,6 +122,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: '#fff',
     padding: 20,
+    width:'100%'
   },
   header: {
     flexDirection: 'row',
@@ -106,12 +130,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 30,
   },
-  profileArrow:{
-    display:'flex',
-    flexDirection:'row',
-    gap:5,
-    alignItems:'center',
-    justifyContent:'center'
+  profileArrow: {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: 5,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   headerText: {
     fontSize: 23,
@@ -137,60 +161,61 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     fontSize: 16,
   },
- 
- 
- 
+
+
+
   allergensContainer: {
     // borderColor: 'blue',
     // borderWidth: 1,
     borderRadius: 8,
     padding: 16,
-   marginTop:'10%'
+    marginTop: '10%',
+    width:'100%'
   },
   checkboxContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    
+
   },
- 
+
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '48%',
+    width: '38%',
     marginBottom: 10,
-    gap:'5%',
-   
+    gap:'3%'
+
   },
-  singleAllergenRow: { 
+  singleAllergenRow: {
     flexDirection: 'row',
-     alignItems: 'center',
-      width: '100%', 
-      marginTop:10,
-     
-    }, 
- 
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 10,
+
+  },
+
   checkboxLabel: {
-    fontSize: 15,
+    fontSize: 13,
     color: '#555',
   },
-  checkboxLabel1:{
-    marginLeft:10,
+  checkboxLabel1: {
+    marginLeft: 10,
     color: '#555',
     fontSize: 15,
   },
-//     checkboxWrapper: {
-//     borderWidth: 1,
-//     borderColor: '#00CFFF', // Blue border color
-//     borderRadius: 4,
-//     padding: 2,
-//     marginRight: 8,
-//   },
-signOutButton: {
+  //     checkboxWrapper: {
+  //     borderWidth: 1,
+  //     borderColor: '#00CFFF', // Blue border color
+  //     borderRadius: 4,
+  //     padding: 2,
+  //     marginRight: 8,
+  //   },
+  signOutButton: {
     marginTop: 50,
     paddingVertical: 15,
     alignItems: 'center',
-   
+
     borderRadius: 10,
     shadowColor: '#00CFFF',
     // shadowOffset: { width: 0, height: 3 },
@@ -202,6 +227,29 @@ signOutButton: {
     color: '#00CFFF',
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  checkBox: {
+    width: 20,
+    height: 20,
+    borderColor: '#00c4cc',
+    borderWidth: 2,
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    // marginLeft: 10,
+    marginRight:10
+  },
+  checkBoxSelected: {
+    backgroundColor: '#e0f7fa',
+  },
+  imageiconContainer: {
+    borderColor: '#00c4cc', // Add the blue color
+    borderWidth: 1,      // Specify the border width
+    borderRadius: 8,     // Optionally, add rounded corners
+    padding: 5,          // Add padding to give some space between border and content
+    display: 'flex',
+    flexDirection: 'row',
+    gap: 5,
   },
 });
 

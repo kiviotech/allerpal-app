@@ -1,81 +1,51 @@
-// import React, { useState } from "react";
-// import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-// import { Ionicons } from "@expo/vector-icons";
-// import { useRouter } from "expo-router";
-
-// const AccountSetup = () => {
-//   const router = useRouter();
-//   const [selectedOptions, setSelectedOptions] = useState({
-//     Myself: false,
-//     "My Child": false,
-//     "My Partner": false,
-//   });
-
-//   const handleOptionChange = (option) => {
-//     setSelectedOptions((prevOptions) => ({
-//       ...prevOptions,
-//       [option]: !prevOptions[option], // Toggle the selected state
-//     }));
-//     console.log("Current selected option:", option);
-//   };
-
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.title}>Account Setup</Text>
-
-//       <Text style={styles.label}>I am creating an Allergy profile for</Text>
-
-//       <View style={styles.optionContainer}>
-//         {Object.keys(selectedOptions).map((option) => (
-//           <TouchableOpacity
-//             key={option}
-//             onPress={() => handleOptionChange(option)}
-//             style={styles.checkboxContainer}
-//           >
-//             <View
-//               style={[
-//                 styles.checkbox,
-//                 selectedOptions[option] && styles.checkedCheckbox,
-//               ]}
-//             >
-//               {selectedOptions[option] && (
-//                 <Ionicons name="checkmark" size={16} color="white" />
-//               )}
-//             </View>
-//             <Text style={styles.optionText}>{option}</Text>
-//           </TouchableOpacity>
-//         ))}
-//       </View>
-//       <View style={styles.outerButtonContainer}>
-//         <TouchableOpacity
-//           style={styles.nextButton}
-//           onPress={() => router.push("./Disclamier")}
-//         >
-//           <Text style={styles.nextButtonText}>Next </Text>
-//           <Ionicons name="arrow-forward" size={24} color="#fff" />
-//         </TouchableOpacity>
-//       </View>
-//     </View>
-//   );
-// };
-
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+  StyleSheet,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import apiClient from "../../src/api/apiClient";
+import useAuthStore from "../../useAuthStore";
 
 const AccountSetup = () => {
   const router = useRouter();
-  const [selectedOption, setSelectedOption] = useState(null); // Only one option can be selected
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [inputValue, setInputValue] = useState("");
+  const userId = useAuthStore((state) => state.user.id);
 
   const handleOptionChange = (option) => {
-    setSelectedOption(option); // Set the selected option
-    console.log("Current selected option:", option);
+    setSelectedOption(option);
+    setInputValue("");
   };
 
-  const handleNextPress = () => {
+  const handleNextPress = async () => {
     if (selectedOption === "Myself") {
-      router.push("./Disclamier"); // Only navigate if "Myself" is selected
+      router.push("./Disclamier");
+    } else if (selectedOption && inputValue.trim() === "") {
+      alert("Please fill in the details for the selected option.");
+    } else {
+      const profileData = {
+        data: {
+          name: inputValue,
+          relation: selectedOption.toLowerCase(),
+          user: userId.toString(),
+        },
+      };
+
+      try {
+        const response = await apiClient.post("/profiles", profileData);
+        console.log("Profile created successfully:", response);
+        Alert.alert("Success", "Profile created successfully!");
+        router.push("./Disclamier");
+      } catch (error) {
+        console.error("Error creating profile:", error);
+        Alert.alert("Error", "Failed to create profile. Please try again.");
+      }
     }
   };
 
@@ -86,7 +56,7 @@ const AccountSetup = () => {
       <Text style={styles.label}>I am creating an Allergy profile for</Text>
 
       <View style={styles.optionContainer}>
-        {["Myself", "My Child", "My Partner"].map((option) => (
+        {["Myself", "Children", "Partner", "Friend", "Family"].map((option) => (
           <TouchableOpacity
             key={option}
             onPress={() => handleOptionChange(option)}
@@ -99,22 +69,33 @@ const AccountSetup = () => {
               ]}
             >
               {selectedOption === option && (
-                <Ionicons name="checkmark" size={16} color="white" />
+                <Ionicons name="checkmark" size={16} color="cyan" />
               )}
             </View>
             <Text style={styles.optionText}>{option}</Text>
           </TouchableOpacity>
         ))}
       </View>
-      <View style={styles.outerButtonContainer}>
-        <TouchableOpacity style={styles.nextButton} onPress={handleNextPress}>
-          <Text style={styles.nextButtonText}>Next </Text>
-          <Ionicons name="arrow-forward" size={24} color="#fff" />
-        </TouchableOpacity>
+
+      {selectedOption && selectedOption !== "Myself" && (
+        <TextInput
+          style={styles.input}
+          placeholder={`Enter ${selectedOption.toLowerCase()} details`}
+          value={inputValue}
+          onChangeText={(text) => setInputValue(text)}
+        />
+      )}
+
+      <View style={styles.buttonContainer}>
+      <TouchableOpacity style={styles.nextButton} onPress={handleNextPress}>
+        <Text style={styles.nextButtonText}>Next </Text>
+        <Ionicons name="arrow-forward" size={24} color="#fff" />
+      </TouchableOpacity>
       </View>
     </View>
   );
 };
+
 // !=============================================================================================================
 
 const styles = StyleSheet.create({
@@ -141,16 +122,17 @@ const styles = StyleSheet.create({
     marginLeft: "10%",
   },
   checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 20,
-    borderColor: "cyan",
+    borderColor:'cyan',
+    borderWidth:'bold'
   },
   checkbox: {
     width: 20,
     height: 20,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "cyan",
     borderRadius: 5,
     marginRight: 10,
     justifyContent: "center",
@@ -158,10 +140,21 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   checkedCheckbox: {
-    backgroundColor: "cyan", // Change this color as needed
+    color: "cyan", // Change this color as needed
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 20,
   },
   optionText: {
     fontSize: 16,
+  },
+  buttonContainer:{
+    display:'flex',
+   alignItems:'flex'
   },
   nextButton: {
     backgroundColor: "cyan",
@@ -180,7 +173,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
-  outerButtonContainer: {
+  buttonContainer: {
     display: "flex",
     alignItems: "flex-end",
   },

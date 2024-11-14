@@ -3,8 +3,11 @@
 import React from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet, Image } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Poll from "./Poll"
+import { useRouter } from 'expo-router';
 
 const CommunityPost = () => {
+  const router = useRouter()
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -32,7 +35,7 @@ const CommunityPost = () => {
           <TouchableOpacity>
             <Ionicons name="videocam-outline" size={26} color="#666" />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={()=>router.push('./Poll')}>
             <Ionicons name="stats-chart-outline" size={26} color="#666" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.publishButton}>

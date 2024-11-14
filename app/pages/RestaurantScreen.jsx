@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, Switch, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import MenuCard from './MenuCard';
+import Footer from './Footer'
 import ReviewsSection from './ReviewsSection';
 import { useRouter } from 'expo-router';
 import ReviewCards from './ReviewCards';
@@ -11,7 +12,11 @@ import { useLocalSearchParams } from 'expo-router';
 export default function () {
    const router =useRouter()
 
-const { id, name, rating, categories ,image} = useLocalSearchParams();
+const { id, name, rating, categories ,image,documentId} = useLocalSearchParams();
+// console.log(name)
+// console.log(id)
+// console.log(rating)
+// console.log(documentId)
 
     const [isAllergenOn, setIsAllergenOn] = React.useState(false);
 
@@ -94,13 +99,16 @@ const { id, name, rating, categories ,image} = useLocalSearchParams();
                 </View>
 
                 <View style={styles.Review}>
-                    <ReviewsSection />
+                    <ReviewsSection   restaurantId={documentId} />
                 </View>
                 <View>
                     <ReviewCards/>
                 </View>
 
             </ScrollView>
+           <View>
+            <Footer/>
+           </View>
         </SafeAreaView>
     );
 }
@@ -109,6 +117,7 @@ const { id, name, rating, categories ,image} = useLocalSearchParams();
 
 
 const styles = StyleSheet.create({
+   
 
     categories: {
         flexDirection: 'row',
@@ -129,7 +138,7 @@ const styles = StyleSheet.create({
     AreaContainer: {
         flex: 1,
         padding: 10,
-        marginTop: 20,
+        // marginTop: 20,
         //  backgroundColor: '#fff',
         width: "100%"
 

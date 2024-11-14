@@ -1,48 +1,49 @@
-import { View, TextInput, StyleSheet, Text, SafeAreaView, Dimensions } from 'react-native'
-import React, { useState } from 'react'
-import FoodItem from './FoodItem'
-import { Ionicons } from '@expo/vector-icons';
-import FoodRecommendations from './FoodRecommandation';
-import RestaurantRecommendation from './RestaurantRecommendation';
-import Favourites from './Favorites';
-import { ScrollView } from 'react-native-web';
-import Footer from './Footer';
-import useAuthStore from '../../useAuthStore';
-import useSetupStore from '../../useSetupStore';
-
-
-
-
+import {
+  View,
+  TextInput,
+  StyleSheet,
+  Text,
+  SafeAreaView,
+  Dimensions,
+  TouchableOpacity
+} from "react-native";
+import React, { useEffect, useState } from "react";
+import FoodItem from "./FoodItem";
+import { Ionicons } from "@expo/vector-icons";
+import FoodRecommendations from "./FoodRecommandation";
+import RestaurantRecommendation from "./RestaurantRecommendation";
+import Favourites from "./Favorites";
+import { ScrollView } from "react-native-web";
+import Footer from "./Footer";
+import useAuthStore from "../../useAuthStore";
+import {useRouter, useStore} from 'expo-router'
 
 const Home = () => {
+  const router = useRouter()
   const [allergens, setAllergens] = useState({});
+  const { width, height } = Dimensions.get("window");
 
-  const { width, height } = Dimensions.get('window');
+  const userId = useAuthStore((state) => state.user.id);
+  console.log("zustand", userId);
 
-  const user = useAuthStore()
-  console.log("user",user);
-
-
-  const userid=useSetupStore()
-  console.log("zustand",userid);
   console.log("Allergy profile saved home", allergens);
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.TextContainer}>
-        <Text>
-          Location
-        </Text>
-        <Text>
-          Bangalore , India
-        </Text>
+        <Text>Location</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => router.push('./LocationAccessScreen')}>
+            <Ionicons name="location-outline" size={24} color="blue" /> {/* Location icon */}
+          </TouchableOpacity>
+          <Text style={{ marginLeft: 5 }}>Kalyan Nagar,Bangalore</Text> 
+        </View>
       </View>
       <View style={styles.container}>
         <Ionicons name="search" size={24} color="black" />
         <TextInput
           style={styles.input}
           placeholder="Find for Food and Restaurant..."
-        // placeholderTextColor="#aaa"
         />
       </View>
       <ScrollView style={styles.outerContainer}>
@@ -61,28 +62,28 @@ const Home = () => {
       </ScrollView>
       <Footer />
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;
 
 const styles = StyleSheet.create({
   outerContainer: {
-    width: '100%',
-    height: '66%',
-    marginTop: 20
+    width: "100%",
+    height: "66%",
+    marginTop: 20,
   },
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 10,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 20,
-    backgroundColor: '#fff',
-    marginTop: '10%',
-    marginLeft: '10%',
-    width: '70%'
+    backgroundColor: "#fff",
+    marginTop: "10%",
+    marginLeft: "10%",
+    width: "70%",
   },
   input: {
     flex: 1,
@@ -92,18 +93,15 @@ const styles = StyleSheet.create({
     // height:40
   },
   TextContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    marginTop: '5%'
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    marginTop: "5%",
   },
   FoodRestro: {
-    width: '100%',
-
+    width: "100%",
   },
   Restro: {
-    width: '100%',
-
-
-  }
+    width: "100%",
+  },
 });

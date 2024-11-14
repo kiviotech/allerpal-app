@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
 import { Icon } from 'react-native-elements';
+import {useRouter} from 'expo-router'
+import Feed from "./Feed"
+import CommunityApp from './Community';
+
 
 
 const CommunityScreen = () => {
+    const router= useRouter()
     const [activeTab, setActiveTab] = useState('About community');
 
-    const handleTabPress = (tab) => {
+    const handleTabPress = (tab,route) => {
         setActiveTab(tab);
+        if(route){
+            router.push(route)
+        }
+        
     };
 
     return (
@@ -15,8 +24,8 @@ const CommunityScreen = () => {
          <ScrollView style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton}>
-                    {/* <Text>{'< Back'}</Text> */}
+                <TouchableOpacity style={styles.backButton} onPress={()=>router.push('./Community')}>
+                   
 
                     <Icon name="arrow-back" size={24} color="#2D3748" />
                 </TouchableOpacity>
@@ -41,17 +50,49 @@ const CommunityScreen = () => {
 
             {/* Tabs */}
             <View style={styles.tabs}>
-                {['About community', 'Feed', 'Lorem', 'Lorem ipsum'].map((tab) => (
-                    <TouchableOpacity
-                        key={tab}
-                        onPress={() => handleTabPress(tab)}
-                        style={[styles.tab, activeTab === tab && styles.activeTab]}
-                    >
-                        <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
-                            {tab}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
+            <TouchableOpacity
+        onPress={() => handleTabPress('About community')}
+        style={[styles.tab, activeTab === 'About community' && styles.activeTab]}
+      >
+     
+        <Text style={[styles.tabText, activeTab === 'About community' && styles.activeTabText]}>
+          About community
+        </Text>
+      </TouchableOpacity>
+
+      {/* Tab 2 */}
+      <TouchableOpacity
+        onPress={() => handleTabPress('Feed',"./Feed")}
+        style={[styles.tab, activeTab === 'Feed' && styles.activeTab]}
+      >
+      
+        <Text style={[styles.tabText, activeTab === 'Feed' && styles.activeTabText]}>
+          Feed
+        </Text>
+      </TouchableOpacity>
+
+      {/* Tab 3 */}
+      <TouchableOpacity
+        onPress={() => handleTabPress('Lorem')}
+        style={[styles.tab, activeTab === 'Lorem' && styles.activeTab]}
+      >
+       
+        <Text style={[styles.tabText, activeTab === 'Lorem' && styles.activeTabText]}>
+          Lorem
+        </Text>
+      </TouchableOpacity>
+
+      {/* Tab 4 */}
+      <TouchableOpacity
+        onPress={() => handleTabPress('Lorem ipsum')}
+        style={[styles.tab, activeTab === 'Lorem ipsum' && styles.activeTab]}
+      >
+       
+        <Text style={[styles.tabText, activeTab === 'Lorem ipsum' && styles.activeTabText]}>
+          Lorem ipsum
+        </Text>
+      </TouchableOpacity>
+               
             </View>
 
             {/* Description Section */}

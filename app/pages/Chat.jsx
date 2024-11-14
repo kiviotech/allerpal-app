@@ -3,6 +3,7 @@ import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, SafeAreaView
 import { Ionicons } from '@expo/vector-icons'; // Import icon library
 import ChatScreen from './ChatScreen';
 import Footer from "./Footer"
+import Home from './Home'
 import {useRouter} from 'expo-router'
 const DATA = [
   { id: '1', name: 'Alyce Lambo', date: '10th Sept, 2024', message: 'Really convenient and the points system ....', image: 'https://source.unsplash.com/100x100/?face,person' },
@@ -27,11 +28,11 @@ const MessageItem = ({ name, date, message, image }) => (
 );
 
 const Chat = () => {
-  const handleBackPress = () => {
-    // Handle back button press
-    console.log('Back button pressed');
-  };
   const router = useRouter()
+  const handleBackPress = () => {
+    router.push('./Home')
+  };
+  
 
   return (
    <SafeAreaView style={styles.AreaContainer}>

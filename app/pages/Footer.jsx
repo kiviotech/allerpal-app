@@ -31,7 +31,7 @@ const Footer = () => {
 
         <TouchableOpacity
           style={styles.footerItem}
-          onPress={() => handleTabPress('Search')}
+          onPress={() => handleTabPress('Search','../pages/Search')}
         >
           <Ionicons name="search-outline" size={24} color={activeTab === 'Search' ? '#00aced' : '#888'} />
           <Text style={[styles.footerText, activeTab === 'Search' && styles.activeFooterText]}>Search</Text>
