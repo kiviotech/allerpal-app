@@ -15,6 +15,7 @@ import axios from "axios";
 import download from "../../assets/download_icon.png";
 import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import useAuthStore from "../../useAuthStore";
+import { BASE_URL } from "../../src/api/apiClient";
 
 const ReviewForm = () => {
   const { id } = useLocalSearchParams();
@@ -71,7 +72,7 @@ const ReviewForm = () => {
 
         // Make upload request to Strapi
         const uploadResponse = await axios.post(
-          "http://localhost:1337/api/upload",
+          `${BASE_URL}/api/upload`,
           formData,
           {
             headers: {
@@ -112,15 +113,11 @@ const ReviewForm = () => {
     const payload = { data: reviewData };
 
     try {
-      const response = await axios.post(
-        "http://localhost:1337/api/reviews",
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer dd026626aad98316a19cb314c2ec35410264da10f10c5198469cad8a1fc211fa8dac00ef1052db8fc9b6296494cbd3daa1e33766b75326514379156059b5a70685136cc53f156238baa0b315de54f649c995767f00bb9c15a511a7c057b5f2cadb912ba40b619c1c095f2a4826c11b92917d690c0573da4f64872217d2971af0`, // Replace with a valid JWT token
-          },
-        }
-      );
+      const response = await axios.post(`${BASE_URL}/api/reviews`, payload, {
+        headers: {
+          Authorization: `Bearer dd026626aad98316a19cb314c2ec35410264da10f10c5198469cad8a1fc211fa8dac00ef1052db8fc9b6296494cbd3daa1e33766b75326514379156059b5a70685136cc53f156238baa0b315de54f649c995767f00bb9c15a511a7c057b5f2cadb912ba40b619c1c095f2a4826c11b92917d690c0573da4f64872217d2971af0`, // Replace with a valid JWT token
+        },
+      });
 
       if (response.status === 201) {
         Alert.alert("Success", "Review submitted successfully!");
