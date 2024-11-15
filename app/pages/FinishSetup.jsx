@@ -308,8 +308,6 @@
 
 // export default FinishSetUp;
 
-
-
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -318,7 +316,7 @@ import {
   ScrollView,
   StyleSheet,
   CheckBox,
-  Image
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -383,26 +381,27 @@ const FinishSetUp = () => {
     });
   };
 
-
   const allergenImages = {
-    celery: require('../../assets/celery.png'),
-    egg: require('../../assets/eggs.png'),
-    'cereals ': require('../../assets/cereals.png'),
-    Lupin: require('../../assets/lupin.png'),
-    Musturd: require('../../assets/mustard.png'),
-    milk: require('../../assets/milk.png'),
-    peanut: require('../../assets/peanuts.png'),
-    Sesame: require('../../assets/sesame.png'),
-    'silphur dioxide/sulphites': require('../../assets/sulphur.png'),
-    SoyaBean: require('../../assets/soyabeans.png'),
-    'molluscs(such as mussels and oysters)': require('../../assets/mollusca.png'),
-    'Crustaceans (such as prawns, crabs and lobsters)': require('../../assets/crustaceans.png'),
-    'Tree nuts': require('../../assets/treenuts.png'),
+    celery: require("../../assets/celery.png"),
+    egg: require("../../assets/eggs.png"),
+    "cereals ": require("../../assets/cereals.png"),
+    Lupin: require("../../assets/lupin.png"),
+    Musturd: require("../../assets/mustard.png"),
+    milk: require("../../assets/milk.png"),
+    peanut: require("../../assets/peanuts.png"),
+    Sesame: require("../../assets/sesame.png"),
+    "silphur dioxide/sulphites": require("../../assets/sulphur.png"),
+    SoyaBean: require("../../assets/soyabeans.png"),
+    "molluscs(such as mussels and oysters)": require("../../assets/mollusca.png"),
+    "Crustaceans (such as prawns, crabs and lobsters)": require("../../assets/crustaceans.png"),
+    "Tree nuts": require("../../assets/treenuts.png"),
   };
 
-
   const CustomCheckBox = ({ checked, onPress }) => (
-    <TouchableOpacity style={[styles.checkBox, checked && styles.checkBoxSelected]} onPress={onPress}>
+    <TouchableOpacity
+      style={[styles.checkBox, checked && styles.checkBoxSelected]}
+      onPress={onPress}
+    >
       {checked && <Ionicons name="checkmark" size={16} color="#00c4cc" />}
     </TouchableOpacity>
   );
@@ -453,26 +452,29 @@ const FinishSetUp = () => {
         <View style={styles.checkboxContainer}>
           {mainAllergens.map((key) => (
             <View key={key} style={styles.checkboxRow}>
-               <CustomCheckBox checked={allergens[key]?.checked || false} onPress={() => handleToggleAllergen(key)} />
-               <View style={styles.imageiconContainer}>
-
-               <Image source={allergenImages[key]} style={styles.icon} />
-              <Text style={styles.checkboxLabel}>
-                {String(key).charAt(0).toUpperCase() + String(key).slice(1)}
-              </Text>
-
-               </View>
-
+              <CustomCheckBox
+                checked={allergens[key]?.checked || false}
+                onPress={() => handleToggleAllergen(key)}
+              />
+              <View style={styles.imageiconContainer}>
+                <Image source={allergenImages[key]} style={styles.icon} />
+                <Text style={styles.checkboxLabel}>
+                  {String(key).charAt(0).toUpperCase() + String(key).slice(1)}
+                </Text>
+              </View>
             </View>
           ))}
           {lastThreeAllergens.map((key) => (
             <View key={key} style={styles.singleAllergenRow}>
-               <CustomCheckBox checked={allergens[key]?.checked || false} onPress={() => handleToggleAllergen(key)} />
-               <View style={styles.imageiconContainer}>
-               <Image source={allergenImages[key]} style={styles.icon} />
-              <Text style={styles.checkboxLabel1}>
-                {String(key).charAt(0).toUpperCase() + String(key).slice(1)}
-              </Text>
+              <CustomCheckBox
+                checked={allergens[key]?.checked || false}
+                onPress={() => handleToggleAllergen(key)}
+              />
+              <View style={styles.imageiconContainer}>
+                <Image source={allergenImages[key]} style={styles.icon} />
+                <Text style={styles.checkboxLabel1}>
+                  {String(key).charAt(0).toUpperCase() + String(key).slice(1)}
+                </Text>
               </View>
             </View>
           ))}
@@ -529,19 +531,19 @@ const FinishSetUp = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 16,
   },
   header: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
-    left: '3%',
+    left: "3%",
   },
   backButtonContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 10,
     borderRadius: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -549,53 +551,51 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    color: '#333',
-   
-    marginTop: '19%',
+    color: "#333",
+
+    marginTop: "19%",
   },
   allergensContainer: {
-    
     borderRadius: 8,
     padding: 16,
-   marginTop:'10%',
-   width:'100%'
+    marginTop: "10%",
+    width: "100%",
   },
   checkboxContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
- 
+
   checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '38%',
+    flexDirection: "row",
+    alignItems: "center",
+    width: "38%",
     marginBottom: 10,
-    gap:'3%'
+    gap: "3%",
   },
-  singleAllergenRow: { 
-    flexDirection: 'row',
-     alignItems: 'center',
-      width: '100%', 
-      marginTop:10,
-     
-    }, // Last three allergens in full width
- 
+  singleAllergenRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    marginTop: 10,
+  }, // Last three allergens in full width
+
   checkboxLabel: {
     fontSize: 12,
-    color: '#555',
+    color: "#555",
   },
-  checkboxLabel1:{
-    marginLeft:12,
-    color: '#555',
+  checkboxLabel1: {
+    marginLeft: 12,
+    color: "#555",
     fontSize: 12,
   },
   toggleLabel: {
     fontSize: 14,
-    color: '#00c4cc',
+    color: "#00c4cc",
     marginRight: 10,
-    flex: 1, 
-fontWeight:'bold'
+    flex: 1,
+    fontWeight: "bold",
   },
   switchToggleContainer: {
     width: 50,
@@ -608,76 +608,75 @@ fontWeight:'bold'
     borderRadius: 20,
   },
   switchText: {
-    marginLeft: 10, 
+    marginLeft: 10,
     fontSize: 14,
-    color: '#00c4cc',
-    fontWeight:'bold'
+    color: "#00c4cc",
+    fontWeight: "bold",
   },
   button: {
-    backgroundColor: '#00c4cc',
+    backgroundColor: "#00c4cc",
     paddingVertical: 15,
     borderRadius: 25,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
-    marginTop:'10%'
+    marginTop: "10%",
   },
   buttonDisabled: {
-    backgroundColor: '#aaa',
+    backgroundColor: "#aaa",
   },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   termsContainer: {
-    flexDirection: 'row',
-    
-    marginTop: '13%',
+    flexDirection: "row",
+
+    marginTop: "13%",
   },
   termsText: {
-    fontSize: '90%',
-    color: '#555',
+    fontSize: "90%",
+    color: "#555",
     flex: 1,
     marginLeft: 10,
   },
   switchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center', // Align switch and text vertically
-    marginTop:'10%'
+    flexDirection: "row",
+    alignItems: "center", // Align switch and text vertically
+    marginTop: "10%",
   },
   icon: {
     width: 24,
     height: 24,
     // marginRight: ,
-    marginLeft:10
+    marginLeft: 10,
   },
-  icon1:{
+  icon1: {
     width: 24,
     height: 24,
-    marginLeft:10
-
+    marginLeft: 10,
   },
   imageiconContainer: {
-    borderColor: '#00c4cc', // Add the blue color
-    borderWidth: 1,      // Specify the border width
-    borderRadius: 8,     // Optionally, add rounded corners
-    padding: 5,          // Add padding to give some space between border and content
-    display: 'flex',
-    flexDirection: 'row',
+    borderColor: "#00c4cc", // Add the blue color
+    borderWidth: 1, // Specify the border width
+    borderRadius: 8, // Optionally, add rounded corners
+    padding: 5, // Add padding to give some space between border and content
+    display: "flex",
+    flexDirection: "row",
     gap: 5,
   },
   checkBox: {
     width: 20,
     height: 20,
-    borderColor: '#00c4cc',
+    borderColor: "#00c4cc",
     borderWidth: 2,
     borderRadius: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 10,
   },
   checkBoxSelected: {
-    backgroundColor: '#e0f7fa',
+    backgroundColor: "#e0f7fa",
   },
 });
 

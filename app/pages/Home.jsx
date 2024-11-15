@@ -5,7 +5,7 @@ import {
   Text,
   SafeAreaView,
   Dimensions,
-  TouchableOpacity
+  TouchableOpacity,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import FoodItem from "./FoodItem";
@@ -16,15 +16,15 @@ import Favourites from "./Favorites";
 import { ScrollView } from "react-native-web";
 import Footer from "./Footer";
 import useAuthStore from "../../useAuthStore";
-import {useRouter, useStore} from 'expo-router'
+import { useRouter, useStore } from "expo-router";
 
 const Home = () => {
-  const router = useRouter()
+  const router = useRouter();
   const [allergens, setAllergens] = useState({});
   const { width, height } = Dimensions.get("window");
 
-  const userId = useAuthStore((state) => state.user.id);
-  console.log("zustand", userId);
+  // const userId = useAuthStore((state) => state.user.id);
+  // console.log("zustand", userId);
 
   console.log("Allergy profile saved home", allergens);
 
@@ -32,11 +32,14 @@ const Home = () => {
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.TextContainer}>
         <Text>Location</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity onPress={() => router.push('./LocationAccessScreen')}>
-            <Ionicons name="location-outline" size={24} color="blue" /> {/* Location icon */}
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <TouchableOpacity
+            onPress={() => router.push("./LocationAccessScreen")}
+          >
+            <Ionicons name="location-outline" size={24} color="blue" />{" "}
+            {/* Location icon */}
           </TouchableOpacity>
-          <Text style={{ marginLeft: 5 }}>Kalyan Nagar,Bangalore</Text> 
+          <Text style={{ marginLeft: 5 }}>Kalyan Nagar,Bangalore</Text>
         </View>
       </View>
       <View style={styles.container}>

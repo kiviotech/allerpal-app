@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getToken } from "../utils/storage"
+import { getToken } from "../utils/storage";
 
 export const BASE_URL = "http://localhost:1337/api";
 export const MEDIA_BASE_URL = "http://localhost:1337";

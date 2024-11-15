@@ -40,6 +40,8 @@ const AccountSetup = () => {
       try {
         const response = await apiClient.post("/profiles", profileData);
         console.log("Profile created successfully:", response);
+        const documentId = response.data.data.documentId;
+        useAuthStore.getState().setDocumentId(documentId);
         Alert.alert("Success", "Profile created successfully!");
         router.push("./Disclamier");
       } catch (error) {
@@ -87,10 +89,10 @@ const AccountSetup = () => {
       )}
 
       <View style={styles.buttonContainer}>
-      <TouchableOpacity style={styles.nextButton} onPress={handleNextPress}>
-        <Text style={styles.nextButtonText}>Next </Text>
-        <Ionicons name="arrow-forward" size={24} color="#fff" />
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.nextButton} onPress={handleNextPress}>
+          <Text style={styles.nextButtonText}>Next </Text>
+          <Ionicons name="arrow-forward" size={24} color="#fff" />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -122,11 +124,11 @@ const styles = StyleSheet.create({
     marginLeft: "10%",
   },
   checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
-    borderColor:'cyan',
-    borderWidth:'bold'
+    borderColor: "cyan",
+    borderWidth: "bold",
   },
   checkbox: {
     width: 20,
@@ -152,9 +154,9 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 16,
   },
-  buttonContainer:{
-    display:'flex',
-   alignItems:'flex'
+  buttonContainer: {
+    display: "flex",
+    alignItems: "flex",
   },
   nextButton: {
     backgroundColor: "cyan",

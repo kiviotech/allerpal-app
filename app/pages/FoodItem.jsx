@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -25,15 +21,13 @@ const FoodItem = () => {
     const fetchAllergies = async () => {
       try {
         const data = await fetchUserAllergyById(userId);
-       
-      
 
-        const allergies = data?.data?.map((item) => item.allergies).flat() || [];
-        
+        const allergies =
+          data?.data?.map((item) => item.allergies).flat() || [];
+
         setAllergens(allergies);
-        console.log("Allergy data with images:",data.data);
-      }
-       catch (error) {
+        console.log("Allergy data with images:", data.data);
+      } catch (error) {
         console.log("Error fetching allergies:", error);
       } finally {
         setLoading(false);
@@ -63,8 +57,8 @@ const FoodItem = () => {
           renderItem={({ item }) => {
             // Construct the full image URL for each allergy
             const imageUrl = item?.Allergeimage?.[0]?.url
-            ? `${MEDIA_BASE_URL}${item.Allergeimage[0].url}`
-            : null;
+              ? `${MEDIA_BASE_URL}${item.Allergeimage[0].url}`
+              : null;
 
             return (
               <View style={styles.itemContainer}>
@@ -103,7 +97,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
-    height:'auto'
+    height: "auto",
   },
   image: {
     width: 50,

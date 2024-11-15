@@ -1,146 +1,164 @@
-
-
-
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, CheckBox,Button,Image } from 'react-native';
-import { Rating } from 'react-native-ratings';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker'
-import download from '../../assets/download_icon.png';
-import { submitReview } from '../../src/services/reviewServices';
-import { useLocalSearchParams } from 'expo-router';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Alert,
+} from "react-native";
+import { Rating } from "react-native-ratings";
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import axios from "axios";
+import download from "../../assets/download_icon.png";
+import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
+import useAuthStore from "../../useAuthStore";
 
 const ReviewForm = () => {
-  const {id} = useLocalSearchParams()
-  console.log(id)
+  const { id } = useLocalSearchParams();
+  const { documentId } = useAuthStore();
+  console.log("documentId", documentId);
+  const navigation = useNavigation();
+  const router = useRouter();
   const [formData, setFormData] = useState({
-    date: new Date(),
-    showDatePicker: false,
-    title: '',
-    description: '',
+    title: "",
+    description: "",
     isAnonymous: false,
     allergensRelated: false,
-    allergens: '',
-    rating: 4, // default rating value
+    allergens: "",
+    rating: 4,
   });
-const [image,setImage]= useState();
-
-  const handleDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || formData.date;
-    setFormData(prevData => ({
-      ...prevData,
-      showDatePicker: false,
-      date: currentDate,
-    }));
-  };
+  const [image, setImage] = useState(null);
+  const [imageIds, setImageIds] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   const handleInputChange = (field, value) => {
-    setFormData(prevData => ({
+    setFormData((prevData) => ({
       ...prevData,
       [field]: value,
     }));
   };
 
-
   const pickImage = async () => {
-    // Request permission
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permissionResult.granted === false) {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
       alert("Permission to access camera roll is required!");
       return;
     }
 
-
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [4, 3],
       quality: 1,
     });
 
-
     if (!result.canceled) {
-      setImage(result.uri);
+      setImage(result.assets[0].uri);
+      try {
+        setUploading(true);
+
+        // Convert URI to Blob and set up FormData
+        const formData = new FormData();
+        const imageBlob = await (await fetch(result.assets[0].uri)).blob();
+        formData.append(
+          "files",
+          imageBlob,
+          result.assets[0].uri.split("/").pop()
+        );
+
+        // Make upload request to Strapi
+        const uploadResponse = await axios.post(
+          "http://localhost:1337/api/upload",
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer dd026626aad98316a19cb314c2ec35410264da10f10c5198469cad8a1fc211fa8dac00ef1052db8fc9b6296494cbd3daa1e33766b75326514379156059b5a70685136cc53f156238baa0b315de54f649c995767f00bb9c15a511a7c057b5f2cadb912ba40b619c1c095f2a4826c11b92917d690c0573da4f64872217d2971af0`, // Replace with a valid JWT token
+            },
+          }
+        );
+
+        const uploadedImageId = uploadResponse.data[0]?.id;
+        if (uploadedImageId) {
+          setImageIds((prev) => [...prev, uploadedImageId]);
+        }
+      } catch (error) {
+        console.error("Failed to upload image:", error);
+        Alert.alert(
+          "Upload Error",
+          "Failed to upload image. Please try again."
+        );
+      } finally {
+        setUploading(false);
+      }
     }
   };
 
-const date= new Date();
-const formatDate = date.toLocaleDateString('en-GB',{
-  day:'2-digit',
-  month:'2-digit',
-  year:'numeric'
-})
-console.log(formatDate)
-
-  const handleSubmit = async ()=>{
-   
+  const handleSubmit = async () => {
     const reviewData = {
-      // title: formData.title,
+      title: formData.title,
       comment: formData.description,
-      restaurant:id,
-      profile:'asha',
       isAnonymous: formData.isAnonymous,
-      allergensRelated: formData.allergensRelated,
-      allergens: formData.allergens,
+      allergens: formData.allergensRelated ? null : formData.allergens,
       rating: formData.rating,
-      // date: formatDate,
-      image: null,
+      restaurant: id,
+      profile: documentId,
+      Image: imageIds,
+      locale: "en",
+    };
 
-  }
-  console.log("formdata is :",formData)
-  
-  try {
-    await submitReview(reviewData);  // Call submitReview from your service
-    alert("Review submitted successfully!");
-    // Optionally, reset the form or navigate to another screen
-    setFormData({
-      // date:formatDate,
-      showDatePicker: false,
-      title: '',
-      description: '',
-      isAnonymous: false,
-      allergensRelated: false,
-      allergens: '',
-      rating: 4,
-    });
-    setImage(null);  // Reset the image
-  } catch (error) {
-    alert("Failed to submit review: " + error.message);
-  }
-};
+    const payload = { data: reviewData };
+
+    try {
+      const response = await axios.post(
+        "http://localhost:1337/api/reviews",
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer dd026626aad98316a19cb314c2ec35410264da10f10c5198469cad8a1fc211fa8dac00ef1052db8fc9b6296494cbd3daa1e33766b75326514379156059b5a70685136cc53f156238baa0b315de54f649c995767f00bb9c15a511a7c057b5f2cadb912ba40b619c1c095f2a4826c11b92917d690c0573da4f64872217d2971af0`, // Replace with a valid JWT token
+          },
+        }
+      );
+
+      if (response.status === 201) {
+        Alert.alert("Success", "Review submitted successfully!");
+        setFormData({
+          title: "",
+          description: "",
+          isAnonymous: false,
+          allergensRelated: false,
+          allergens: "",
+          rating: 4,
+        });
+        setImage(null);
+        setImageIds([]);
+        // router.push("./RestaurantScreen");
+        navigation.goBack();
+      } else {
+        throw new Error("Failed to submit review");
+      }
+    } catch (error) {
+      console.error(
+        "Failed to submit review:",
+        error.response?.data || error.message
+      );
+      const errorMessage =
+        error.response?.data?.error?.message ||
+        "Failed to submit review. Please try again.";
+      Alert.alert("Submission Error", errorMessage);
+    }
+  };
 
   return (
     <View style={styles.container}>
-
-
-<View style={styles.ArrowContainer}>
-     <TouchableOpacity style={styles.backArrow} >
-        <Ionicons name="arrow-back" size={24} color="black" />
-      </TouchableOpacity>
-
-      
-      <Text style={styles.header}>Review</Text>
-     </View>
-
-
-      {/* <Text style={styles.label}>Date of Visit</Text>
-      <TouchableOpacity 
-        onPress={() => setFormData(prevData => ({ ...prevData, showDatePicker: true }))}
-        style={[styles.input, styles.dateInput]}
-      >
-        <Text>{formData.date.toDateString()}</Text>
-        <Ionicons name="calendar" size={24} color="cyan" style={styles.dateIcon} />
-      </TouchableOpacity>
-      
-      {formData.showDatePicker && (
-        <DateTimePicker
-          value={formData.date}
-          mode="date"
-          display="default"
-          onChange={handleDateChange}
-        />
-      )} */}
+      <View style={styles.ArrowContainer}>
+        <TouchableOpacity style={styles.backArrow}>
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.header}>Review</Text>
+      </View>
 
       <Text style={styles.label}>Title of Review</Text>
       <TextInput
@@ -148,41 +166,51 @@ console.log(formatDate)
         placeholder="Enter name of title"
         placeholderTextColor="#a0a0a0"
         value={formData.title}
-        onChangeText={value => handleInputChange('title', value)}
+        onChangeText={(value) => handleInputChange("title", value)}
       />
 
       <Text style={styles.label}>Review Description</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
         placeholder="Enter experience about food and visit here"
-         placeholderTextColor="#a0a0a0"
+        placeholderTextColor="#a0a0a0"
         value={formData.description}
-        onChangeText={value => handleInputChange('description', value)}
+        onChangeText={(value) => handleInputChange("description", value)}
         multiline
       />
 
       <View style={styles.row}>
-        <CheckBox
-          value={formData.isAnonymous}
-          onValueChange={value => handleInputChange('isAnonymous', value)}
-        />
         <Text style={styles.checkboxLabel}>Post this review anonymously</Text>
+        <TouchableOpacity
+          style={[
+            styles.checkbox,
+            formData.isAnonymous && styles.checkedCheckbox,
+          ]}
+          onPress={() =>
+            handleInputChange("isAnonymous", !formData.isAnonymous)
+          }
+        >
+          {formData.isAnonymous && (
+            <Ionicons name="checkmark" size={15} color="#00C9D6" />
+          )}
+        </TouchableOpacity>
       </View>
 
-    <View style={styles.reviewContainer}>
-    <Text style={styles.label1}>Are you writing this review on your saved allergens?</Text>
-    <View style={styles.row}>
+      <View style={styles.reviewContainer}>
+        <Text style={styles.label}>
+          Is this review related to your saved allergens?
+        </Text>
+        <View style={styles.row}>
           <TouchableOpacity
             style={[
               styles.checkboxContainer,
               formData.allergensRelated && styles.selectedCheckbox,
             ]}
-            onPress={() => handleInputChange('allergensRelated', true)}
+            onPress={() => handleInputChange("allergensRelated", true)}
           >
             {formData.allergensRelated && (
               <Ionicons name="checkmark" size={15} color="#00C9D6" />
             )}
-           
           </TouchableOpacity>
           <Text style={styles.checkboxLabel}>Yes</Text>
           <TouchableOpacity
@@ -190,58 +218,62 @@ console.log(formatDate)
               styles.checkboxContainer,
               !formData.allergensRelated && styles.selectedCheckbox,
             ]}
-            onPress={() => handleInputChange('allergensRelated', false)}
+            onPress={() => handleInputChange("allergensRelated", false)}
           >
             {!formData.allergensRelated && (
               <Ionicons name="checkmark" size={15} color="#00C9D6" />
             )}
-            
           </TouchableOpacity>
           <Text style={styles.checkboxLabel}>No</Text>
         </View>
-    </View>
+      </View>
 
       {!formData.allergensRelated && (
         <>
-          <Text style={styles.label2}>If no, please specify which allergens your review relates to</Text>
+          <Text style={styles.label}>Please specify any allergens</Text>
           <TextInput
-            style={styles.input1}
+            style={styles.input}
             placeholder="Type your allergens here"
-             placeholderTextColor="#a0a0a0"
+            placeholderTextColor="#a0a0a0"
             value={formData.allergens}
-            onChangeText={value => handleInputChange('allergens', value)}
+            onChangeText={(value) => handleInputChange("allergens", value)}
           />
         </>
       )}
 
-<View style={styles.uploadContainer}>
-      <Text style={styles.label}>Upload related photos</Text>
-      <TouchableOpacity style={styles.uploadBox} onPress={pickImage}>
-        <View style={styles.uploadContent}>
-        <Image source={download} style={styles.icon} />
-          <Text style={styles.uploadText}>Drag & Drop or Choose file to Upload</Text>
-          <Text style={styles.fileTypes}>JPG, PNG or CVS</Text>
-        </View>
-        <Button title="Browse file" onPress={pickImage} color="#00C9D6" />
-      </TouchableOpacity>
-      {image && <Image source={{ uri: image }} style={styles.previewImage} />}
-    </View>
+      <View style={styles.uploadContainer}>
+        <Text style={styles.label}>Upload related photos</Text>
+        <TouchableOpacity
+          style={styles.uploadBox}
+          onPress={pickImage}
+          disabled={uploading}
+        >
+          <View style={styles.uploadContent}>
+            <Image source={download} style={styles.icon} />
+            <Text style={styles.uploadText}>
+              Drag & Drop or Choose file to Upload
+            </Text>
+          </View>
+        </TouchableOpacity>
+        {image && <Image source={{ uri: image }} style={styles.previewImage} />}
+        {uploading && <Text>Uploading image...</Text>}
+      </View>
 
-      <Text style={styles.label2}>Rate your Experience</Text>
-     <View style={styles.ratingContainer}>
-     <Rating
-        startingValue={formData.rating} // Starting value should reflect the state
-        imageSize={30}
-        onFinishRating={value => handleInputChange('rating', value)} // Update the state correctly
-        style={styles.rating}
-      />
-     </View>
+      <Text style={styles.label}>Rate your Experience</Text>
+      <View style={styles.ratingContainer}>
+        <Rating
+          startingValue={formData.rating}
+          imageSize={30}
+          onFinishRating={(value) => handleInputChange("rating", value)}
+          style={styles.rating}
+        />
+      </View>
 
-     <View style={styles.buttonContainer}>
-     <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitButtonText}>Submit Review</Text>
-      </TouchableOpacity>
-     </View>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+          <Text style={styles.submitButtonText}>Submit Review</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -250,137 +282,130 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
-  
-  label1:{
+
+  label1: {
     fontSize: 18,
-    marginTop:30,
-    color: '#333',
-  }, label2:{
+    marginTop: 30,
+    color: "#333",
+  },
+  label2: {
     fontSize: 18,
-    marginTop:20,
-    color: '#333',
+    marginTop: 20,
+    color: "#333",
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     padding: 10,
     borderRadius: 5,
     marginBottom: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop:8,
-    
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
   },
   input1: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     padding: 10,
     borderRadius: 5,
     marginBottom: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop:8,
-    height:100
-    
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+    height: 100,
   },
   dateInput: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   textArea: {
     height: 80,
   },
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 15,
-    gap:8
+    gap: 8,
   },
   checkboxLabel: {
     fontSize: 14,
-    color: '#333',
+    color: "#333",
   },
   option: {
     fontSize: 16,
-    color: '#333',
+    color: "#333",
     marginHorizontal: 10,
   },
   selectedOption: {
-    fontWeight: 'bold',
-    color: '#00f',
+    fontWeight: "bold",
+    color: "#00f",
   },
-  ratingContainer:{
-    display:'flex',
-   
-   
+  ratingContainer: {
+    display: "flex",
   },
   rating: {
-  marginTop:20,
-  marginHorizontal:15
-  
-   
+    marginTop: 20,
+    marginHorizontal: 15,
   },
   dateIcon: {
-    position: 'absolute',
+    position: "absolute",
     right: 10,
   },
-  buttonContainer:{
-    display:'flex',
-    justifyContent:'center',
-    alignItems:'center'
+  buttonContainer: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
   },
   submitButton: {
-    backgroundColor: '#00aced',
+    backgroundColor: "#00aced",
     paddingVertical: 15,
     borderRadius: 25,
-    alignItems: 'center',
-    marginTop:25,
-    
-    width:'40%',
-   
+    alignItems: "center",
+    marginTop: 25,
+
+    width: "40%",
   },
   submitButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
   },
-  reviewContainer:{
-    display:'flex',
-    flexDirection:'row',
-  justifyContent:'center',
- alignItems:'center'
+  reviewContainer: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   label: {
     fontSize: 16,
-    color: '#a0a0a0',
+    color: "#a0a0a0",
     marginBottom: 10,
   },
   uploadBox: {
-  
-    borderColor: '#00C9D6',
+    borderColor: "#00C9D6",
     borderRadius: 10,
     padding: 20,
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
     marginBottom: 10,
-   
-    borderStyle:'dashed',
-    borderWidth:3
+
+    borderStyle: "dashed",
+    borderWidth: 3,
   },
   uploadContent: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 10,
   },
   uploadText: {
     fontSize: 16,
-    color: '#808080',
-    textAlign: 'center',
+    color: "#808080",
+    textAlign: "center",
   },
   fileTypes: {
     fontSize: 12,
-    color: '#C0C0C0',
+    color: "#C0C0C0",
     marginTop: 5,
   },
   previewImage: {
@@ -390,39 +415,36 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 2,
-    borderColor: '#00C9D6',
+    borderColor: "#00C9D6",
     borderRadius: 5,
     padding: 4,
-    width:20,
-    height:20,
+    width: 20,
+    height: 20,
     marginHorizontal: 8,
   },
   selectedCheckbox: {
-    backgroundColor: '#E0F7FA',
+    backgroundColor: "#E0F7FA",
   },
-  ArrowContainer:{
-    display:'flex',
-    flexDirection:'row',
-    alignItems:'center',
-    
-
+  ArrowContainer: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
   },
   backArrow: {
-   
-    marginTop: 13,  // Add some space above the back arrow
+    marginTop: 13, // Add some space above the back arrow
   },
   header: {
     fontSize: 26,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     padding: 15,
-    color: '#000',
+    color: "#000",
     marginTop: 10, // Move header down a bit
   },
   icon: {
-    width: 24,   // Adjust size as needed
+    width: 24, // Adjust size as needed
     height: 24,
     marginRight: 5,
   },

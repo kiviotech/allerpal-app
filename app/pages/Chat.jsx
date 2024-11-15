@@ -1,138 +1,218 @@
-import React from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Import icon library
-import ChatScreen from './ChatScreen';
-import Footer from "./Footer"
-import Home from './Home'
-import {useRouter} from 'expo-router'
-const DATA = [
-  { id: '1', name: 'Alyce Lambo', date: '10th Sept, 2024', message: 'Really convenient and the points system ....', image: 'https://source.unsplash.com/100x100/?face,person' },
-  { id: '2', name: 'Alyce Lambo', date: '10th Sept, 2024', message: 'Really convenient and the points system ....', image: 'https://source.unsplash.com/100x100/?face,smile' },
-  { id: '3', name: 'Alyce Lambo', date: '10th Sept, 2024', message: 'Really convenient and the points system ....', image: 'https://source.unsplash.com/100x100/?face,man' },
-  { id: '4', name: 'Alyce Lambo', date: '10th Sept, 2024', message: 'Really convenient and the points system ....', image: 'https://source.unsplash.com/100x100/?face,woman' },
-  { id: '5', name: 'Alyce Lambo', date: '10th Sept, 2024', message: 'Really convenient and the points system ....', image: 'https://source.unsplash.com/100x100/?face,people' },
-];
+import React, { useState, useRef } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import Footer from "./Footer";
+import { useNavigation, useRouter } from "expo-router";
 
-const MessageItem = ({ name, date, message, image }) => (
-  <View style={styles.messageContainer}>
-    <Image
-      source={{ uri: "https://img.freepik.com/free-vector/man-profile-account-picture_24908-81754.jpg" }}
-      style={styles.avatar}
-    />
-    <View style={styles.textContainer}>
-      <Text style={styles.name}>{name}</Text>
-      <Text style={styles.date}>{date}</Text>
-      <Text style={styles.message}>{message}</Text>
-    </View>
-  </View>
-);
+const predefinedResponses = {
+  price: "The price of Product X is $50.",
+  support:
+    "Please contact our support team at support@ecommerce.com for assistance.",
+  return:
+    "To initiate a return, please go to your order history and select the item you wish to return.",
+  default: "Sorry, I didn't understand that. Could you please rephrase?",
+  "track order": "Your order is in transit and will arrive soon.",
+  "cancel order": "Your order cancellation request has been received.",
+  "change address":
+    "Please provide the new address to proceed with the change.",
+  "return item": "Please select the item you'd like to return.",
+};
 
-const Chat = () => {
-  const router = useRouter()
-  const handleBackPress = () => {
-    router.push('./Home')
+const quickReplies = ["track order", "cancel order", "Return", "Support"];
+
+const ChatScreen = () => {
+  const router = useRouter();
+  const navigation = useNavigation();
+  const [messages, setMessages] = useState([
+    { text: "Hi! How can I help you today?", sender: "bot" },
+  ]);
+  const [userInput, setUserInput] = useState("");
+  const flatListRef = useRef(null); // Ref for the FlatList
+
+  // const handleBackPress = () => {
+  //   router.push('./Home');
+  // };
+
+  const handleSendMessage = () => {
+    if (userInput.trim()) {
+      addMessage(userInput, "user");
+      setUserInput("");
+      setTimeout(() => generateAndAddResponse(userInput.toLowerCase()), 300);
+    }
   };
-  
+
+  const handleQuickReply = (reply) => {
+    addMessage(reply, "user");
+    setTimeout(() => generateAndAddResponse(reply.toLowerCase()), 300);
+  };
+
+  const generateAndAddResponse = (input) => {
+    const botResponse =
+      predefinedResponses[input] || predefinedResponses["default"];
+    addMessage(botResponse, "bot");
+  };
+
+  const addMessage = (text, sender) => {
+    setMessages((prevMessages) => [...prevMessages, { text, sender }]);
+    // Scroll to the end of the chat
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+  };
 
   return (
-   <SafeAreaView style={styles.AreaContainer}>
-     <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header with Back Arrow and Title */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Messages</Text>
+        <Text style={styles.headerTitle}>Chat Support</Text>
       </View>
 
       {/* Message List */}
       <FlatList
-        data={DATA}
-        keyExtractor={(item) => item.id}
+        ref={flatListRef} // Attach ref to FlatList
+        data={messages}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => router.push('./ChatScreen')}>
-          <MessageItem
-            name={item.name}
-            date={item.date}
-            message={item.message}
-            image={item.image}
-          />
-        </TouchableOpacity>
+          <View
+            style={[
+              styles.messageContainer,
+              item.sender === "user"
+                ? styles.userMessageContainer
+                : styles.botMessageContainer,
+            ]}
+          >
+            <Text
+              style={
+                item.sender === "user" ? styles.userMessage : styles.botMessage
+              }
+            >
+              {item.text}
+            </Text>
+          </View>
         )}
+        keyExtractor={(item, index) => index.toString()}
+        contentContainerStyle={styles.messageList}
+        onContentSizeChange={() =>
+          flatListRef.current?.scrollToEnd({ animated: true })
+        } // Auto-scroll when new messages are added
       />
-    </View>
-   <View style={styles.footer}>
-   <Footer />
-   </View>
-   </SafeAreaView>
+
+      {/* Quick Replies and Input Field */}
+      <View style={styles.footer}>
+        <View style={styles.quickRepliesContainer}>
+          {quickReplies.map((reply, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.quickReplyButton}
+              onPress={() => handleQuickReply(reply)}
+            >
+              <Text style={styles.quickReplyText}>{reply}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            value={userInput}
+            onChangeText={setUserInput}
+            placeholder="Type a message..."
+          />
+          <Button title="Send" onPress={handleSendMessage} />
+        </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-    AreaContainer: {
-        flex: 1,
-        padding: 10,
-        // marginTop: 20,
-         backgroundColor: '#fff',
-        width: "100%",
-        minHeight: '80%'
-
-
-    },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#F5F5F5",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+    backgroundColor: "#FFF",
+    elevation: 2,
   },
   backButton: {
-    paddingRight: 10,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  messageContainer: {
-    flexDirection: 'row',
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: 'black',
-    backgroundColor:'lightgray'
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
     marginRight: 10,
   },
-  textContainer: {
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  messageList: {
+    flexGrow: 1,
+    justifyContent: "flex-end",
+    paddingHorizontal: 10,
+  },
+  messageContainer: {
+    marginVertical: 5,
+    padding: 10,
+    borderRadius: 10,
+  },
+  userMessageContainer: {
+    alignSelf: "flex-end",
+    backgroundColor: "#2196F3",
+  },
+  botMessageContainer: {
+    alignSelf: "flex-start",
+    backgroundColor: "#EEE",
+  },
+  userMessage: {
+    color: "#FFF",
+  },
+  botMessage: {
+    color: "#000",
+  },
+  footer: {
+    backgroundColor: "#FFF",
+    padding: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#DDD",
+  },
+  quickRepliesContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginBottom: 10,
+  },
+  quickReplyButton: {
+    padding: 8,
+    borderRadius: 10,
+    margin: 10,
+    borderColor: "#000",
+    borderStyle: "solid",
+    borderWidth: 1,
+  },
+  quickReplyText: {
+    fontWeight: "bold",
+    textTransform: "capitalize",
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  input: {
     flex: 1,
-    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    marginRight: 10,
   },
-  name: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  date: {
-    fontSize: 12,
-    color: '#888',
-  },
-  message: {
-    fontSize: 14,
-    color: '#444',
-    marginTop: 2,
-  },
-  footer:{
-    display:'flex',
-    
-    
-  }
-
 });
 
-export default Chat;
+export default ChatScreen;

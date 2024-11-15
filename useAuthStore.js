@@ -1,12 +1,15 @@
 import { create } from "zustand";
 
 const useAuthStore = create((set) => ({
-  user: null, // Stores the user data (null initially)
-  isAuthenticated: false, // Tracks if the user is logged in
-  jwt: null, // Stores the JWT token
+  user: null,
+  isAuthenticated: false,
+  jwt: null,
+  documentId: null,
   login: (userData, token) =>
     set({ user: userData, isAuthenticated: true, jwt: token }),
-  logout: () => set({ user: null, isAuthenticated: false, jwt: null }),
+  logout: () =>
+    set({ user: null, isAuthenticated: false, jwt: null, documentId: null }),
+  setDocumentId: (id) => set({ documentId: id }),
 }));
 
 export default useAuthStore;
