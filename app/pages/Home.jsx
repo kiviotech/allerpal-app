@@ -23,8 +23,8 @@ const Home = () => {
   const [allergens, setAllergens] = useState({});
   const { width, height } = Dimensions.get("window");
 
-  // const userId = useAuthStore((state) => state.user.id);
-  // console.log("zustand", userId);
+  const user = useAuthStore((state) => state.user);
+  console.log("zustand", user);
 
   console.log("Allergy profile saved home", allergens);
 

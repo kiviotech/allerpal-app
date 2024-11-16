@@ -16,6 +16,7 @@ const FoodItem = () => {
   const [loading, setLoading] = useState(true);
 
   const userId = useAuthStore((state) => state.user.id);
+  console.log("fooditem", userId);
 
   useEffect(() => {
     const fetchAllergies = async () => {
@@ -60,6 +61,13 @@ const FoodItem = () => {
               ? `${MEDIA_BASE_URL}${item.Allergeimage[0].url}`
               : null;
 
+            // Truncate the name to a maximum length (e.g., 10 characters)
+            const truncateName = (name, maxLength = 5) => {
+              return name.length > maxLength
+                ? `${name.slice(0, maxLength)}...`
+                : name;
+            };
+
             return (
               <View style={styles.itemContainer}>
                 {imageUrl ? (
@@ -67,7 +75,7 @@ const FoodItem = () => {
                 ) : (
                   <Text style={styles.noImageText}>No Image</Text>
                 )}
-                <Text style={styles.text}>{item.name}</Text>
+                <Text style={styles.text}>{truncateName(item.name)}</Text>
               </View>
             );
           }}
@@ -113,6 +121,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     color: "#333",
+    textAlign: "center",
+  },
+  noDataText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "gray",
+    textAlign: "center",
+    marginTop: 20,
+  },
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 
