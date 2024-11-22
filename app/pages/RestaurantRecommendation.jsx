@@ -28,78 +28,81 @@ const RestaurantCard = ({ restaurant, onPress }) => {
       : Restro;
 
   return (
-    <View style={styles.card}>
-      {/* <Image source={{ uri: imageUrl ? ` MEDIA_BASE_URL${imageUrl}` : Restro }} style={styles.image} /> */}
-      <Image source={{ uri: imageUrl }} style={styles.image} />
-      <View style={styles.iconContainer}>
-        <View style={styles.heart}>
-          <TouchableOpacity>
-            <Ionicons
-              name="heart-outline"
-              size={20}
-              color="white"
-              style={styles.icon}
-            />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.heart}>
-          <TouchableOpacity>
-            <Ionicons
-              name="chatbubble-outline"
-              size={20}
-              color="white"
-              style={styles.icon}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
+    <TouchableOpacity onPress={() =>
+      router.push({
+        pathname: "pages/RestaurantScreen",
+        params: {
+          id: restaurant.documentId,
+          documentId: restaurant.documentId,
 
-      <View style={styles.ratingContainer}>
-        <Text style={styles.ratingText}>{restaurant.rating} ⭐</Text>
-        <Text style={styles.reviewText}>({restaurant.reviews}+)</Text>
-      </View>
+          name: restaurant.name,
+          rating: restaurant.rating,
+          categories: restaurant.categories,
+          image: imageUrl,
+          // add other properties as needed
+        },
+      })
+    }>
 
-      <View style={styles.detailsContainer}>
-        <Text style={styles.name}>{restaurant.name}</Text>
-
-        {/* Check if categories is an array before mapping */}
-        <View style={styles.categories}>
-          {Array.isArray(restaurant.categories) &&
-            restaurant.categories.map((category, index) => (
-              <Text key={index} style={styles.category}>
-                {category}
-              </Text>
-            ))}
+      <View style={styles.card}>
+        {/* <Image source={{ uri: imageUrl ? ` MEDIA_BASE_URL${imageUrl}` : Restro }} style={styles.image} /> */}
+        <Image source={{ uri: imageUrl }} style={styles.image} />
+        <View style={styles.iconContainer}>
+          <View style={styles.heart}>
+            <TouchableOpacity>
+              <Ionicons
+                name="heart-outline"
+                size={20}
+                color="white"
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.heart}>
+            <TouchableOpacity>
+              <Ionicons
+                name="chatbubble-outline"
+                size={20}
+                color="white"
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <View style={styles.buttonContainer}>
-          {/* <TouchableOpacity style={styles.button} onPress={() => router.push('./RestaurantScreen')}>
+        <View style={styles.ratingContainer}>
+          <Text style={styles.ratingText}>{restaurant.rating} ⭐</Text>
+          <Text style={styles.reviewText}>({restaurant.reviews}+)</Text>
+        </View>
+
+        <View style={styles.detailsContainer}>
+          <Text style={styles.name}>{restaurant.name}</Text>
+
+          {/* Check if categories is an array before mapping */}
+          <View style={styles.categories}>
+            {Array.isArray(restaurant.categories) &&
+              restaurant.categories.map((category, index) => (
+                <Text key={index} style={styles.category}>
+                  {category}
+                </Text>
+              ))}
+          </View>
+
+          <View style={styles.buttonContainer}>
+            {/* <TouchableOpacity style={styles.button} onPress={() => router.push('./RestaurantScreen')}>
             <Text style={styles.buttonText}>View details</Text>
           </TouchableOpacity> */}
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() =>
-              router.push({
-                pathname: "./RestaurantScreen",
-                params: {
-                  id: restaurant.documentId,
-                  documentId: restaurant.documentId,
-
-                  name: restaurant.name,
-                  rating: restaurant.rating,
-                  categories: restaurant.categories,
-                  image: imageUrl,
-                  // add other properties as needed
-                },
-              })
-            }
-          >
-            <Text style={styles.buttonText}>View details</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.button}>
+              <Text style={styles.buttonText}>View details</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
+
+    </TouchableOpacity>
+
   );
 };
 
@@ -110,7 +113,6 @@ const RestaurantRecommendation = () => {
     const fetchRestaurants = async () => {
       try {
         const response = await getAllRestaurants();
-        console.log("API Response:", response.data.data); // Log the full data array for verification
         setRestaurants(response.data.data || []); // Access nested data directly
       } catch (error) {
         // console.error("Error fetching restaurants:", error);

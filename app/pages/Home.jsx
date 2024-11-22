@@ -36,8 +36,7 @@ const Home = () => {
           <TouchableOpacity
             onPress={() => router.push("./LocationAccessScreen")}
           >
-            <Ionicons name="location-outline" size={24} color="blue" />{" "}
-            {/* Location icon */}
+            <Ionicons name="location-outline" size={24} color="blue" />
           </TouchableOpacity>
           <Text style={{ marginLeft: 5 }}>Kalyan Nagar,Bangalore</Text>
         </View>

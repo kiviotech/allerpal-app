@@ -69,7 +69,9 @@ export default function () {
             <View style={styles.titleRow}>
               <Text style={styles.restaurantName}>{name}</Text>
               <View style={styles.iconRow}>
-                <TouchableOpacity style={styles.iconButton}>
+                <TouchableOpacity style={styles.iconButton}
+                // onPress={}
+                >
                   <FontAwesome name="phone" size={20} color="#ff6347" />
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.iconButton, styles.mapIcon]}>
@@ -104,7 +106,9 @@ export default function () {
             </Text>
 
             {/* Contact Button */}
-            <TouchableOpacity style={styles.contactButton}>
+            <TouchableOpacity style={styles.contactButton}
+            onPress={() => router.push('pages/Chat')}
+            >
               <Text style={styles.contactButtonText}>Contact Restaurant</Text>
             </TouchableOpacity>
 

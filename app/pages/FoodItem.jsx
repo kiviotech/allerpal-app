@@ -10,23 +10,38 @@ import {
 import { MEDIA_BASE_URL } from "../../src/api/apiClient";
 import useAuthStore from "../../useAuthStore";
 import { fetchUserAllergyById } from "../../src/services/userAllergyServices";
+import useAllergyStore from "../../src/stores/allergyStore";
 
 const FoodItem = () => {
   const [allergens, setAllergens] = useState([]);
   const [loading, setLoading] = useState(true);
+  const setSelectedAllergies = useAllergyStore(
+    (state) => state.setSelectedAllergies
+  );
 
-  const userId = useAuthStore((state) => state.user.id);
-  console.log("fooditem", userId);
+  let userId;
+
+  try {
+    userId = useAuthStore((state) => state.user?.id);
+    if (!userId) {
+      throw new Error("User ID is not available.");
+    }
+  } catch (error) {
+    console.error("Error accessing user ID:", error.message);
+    userId = null;
+  }
 
   useEffect(() => {
     const fetchAllergies = async () => {
       try {
         const data = await fetchUserAllergyById(userId);
-
         const allergies =
           data?.data?.map((item) => item.allergies).flat() || [];
 
         setAllergens(allergies);
+        // Now only storing the names
+        setSelectedAllergies(allergies);
+
         console.log("Allergy data with images:", data.data);
       } catch (error) {
         console.log("Error fetching allergies:", error);
@@ -36,7 +51,7 @@ const FoodItem = () => {
     };
 
     fetchAllergies();
-  }, [userId]);
+  }, [userId, setSelectedAllergies]);
 
   if (loading) {
     return (

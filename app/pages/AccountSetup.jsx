@@ -17,6 +17,8 @@ const AccountSetup = () => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [inputValue, setInputValue] = useState("");
   const userId = useAuthStore((state) => state.user.id);
+  const userName = useAuthStore((state) => state.user.username);
+  console.log("userName", userName);
 
   const handleOptionChange = (option) => {
     setSelectedOption(option);
@@ -25,7 +27,30 @@ const AccountSetup = () => {
 
   const handleNextPress = async () => {
     if (selectedOption === "Myself") {
-      router.push("./Disclamier");
+      const profileData = {
+        data: {
+          name: userName,
+          relation: selectedOption.toLowerCase(),
+          user: userId.toString(),
+        },
+      };
+
+      try {
+        const response = await apiClient.post("/profiles", profileData);
+        console.log("Profile created successfully:", response);
+        const documentId = response.data.data.documentId;
+        const profileId = response.data.data.id;
+        console.log("id", profileId);
+        useAuthStore.getState().setDocumentId(documentId);
+        Alert.alert("Success", "Profile created successfully!");
+        router.push({
+          pathname: "./Disclamier",
+          params: { profileId: profileId },
+        });
+      } catch (error) {
+        console.error("Error creating profile:", error);
+        Alert.alert("Error", "Failed to create profile. Please try again.");
+      }
     } else if (selectedOption && inputValue.trim() === "") {
       alert("Please fill in the details for the selected option.");
     } else {

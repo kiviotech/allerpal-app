@@ -17,7 +17,7 @@ const ReviewsSection = ({ restaurantId }) => {
         style={styles.inputContainer}
         onPress={() =>
           router.push({
-            pathname: "./ReviewForm",
+            pathname: "pages/ReviewForm",
             params: {
               id: restaurantId,
             },
