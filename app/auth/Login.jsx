@@ -10,20 +10,22 @@ import {
   Dimensions,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
+import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { login } from "../../src/utils/auth";
 import useAuthStore from "../../useAuthStore";
 
 const { width, height } = Dimensions.get("window");
 
-const Login = ({ navigation }) => {
+const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false); // Optional loading state
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const navigation = useNavigation();
 
   const handleInputChange = (field, value) => {
     setFormData((prevFormData) => ({
@@ -38,7 +40,7 @@ const Login = ({ navigation }) => {
   };
 
   const gotoSignUp = () => {
-    router.push("../auth/SignUp");
+    router.push("/auth/SignUp");
   };
 
   const handleLogin = async () => {
@@ -87,19 +89,18 @@ const Login = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.contentContainer}>
-        <Text style={styles.title}>LogIn</Text>
+        <Text style={styles.title}>Login</Text>
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter your email"
+            placeholderTextColor={"#B3B3B3"}
             keyboardType="email-address"
             value={formData.email}
             onChangeText={(value) => handleInputChange("email", value)}
           />
-        </View>
-        <View>
           {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
         </View>
 
@@ -108,24 +109,27 @@ const Login = ({ navigation }) => {
           <TextInput
             style={styles.input}
             placeholder="Enter your password"
+            placeholderTextColor={"#B3B3B3"}
             secureTextEntry
             value={formData.password}
             onChangeText={(value) => handleInputChange("password", value)}
           />
+          {errors.password && (
+            <Text style={styles.errorText}>{errors.password}</Text>
+          )}
         </View>
-        {errors.password && (
-          <Text style={styles.errorText}>{errors.password}</Text>
-        )}
 
-        <Text
-          style={styles.forgot_password}
-          onPress={() => router.push("../pages/ResetPassWord")}
-        >
-          Forgot Password
-        </Text>
+        <View style={styles.forgotPasswordContainer}>
+          <Text
+            style={styles.forgot_password}
+            onPress={() => router.push("../pages/ResetPassWord")}
+          >
+            Forgot Password?
+          </Text>
+        </View>
 
         <TouchableOpacity style={styles.signUpButton} onPress={handleLogin}>
-          <Text style={styles.signUpButtonText}>Login</Text>
+          <Text style={styles.signUpButtonText}>LOGIN</Text>
         </TouchableOpacity>
 
         <Text style={styles.loginText}>
@@ -211,26 +215,26 @@ const styles = StyleSheet.create({
     fontSize: width < 360 ? 14 : 16,
   },
   signUpButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#00D0DD",
     borderRadius: 28,
     padding: "4%",
     marginBottom: "5%",
     width: "50%",
-    marginTop: "5%",
+    marginTop: "15%",
   },
   signUpButtonText: {
     color: "#fff",
     textAlign: "center",
-    fontSize: width < 360 ? 14 : 16,
+    fontSize: width < 360 ? 18 : 20,
     fontWeight: "bold",
   },
   loginText: {
     textAlign: "center",
     marginBottom: "5%",
-    fontSize: width < 360 ? 14 : 16,
+    fontSize: width < 360 ? 16 : 18,
   },
   loginLink: {
-    color: "#007bff",
+    color: "#00D0DD",
   },
   socialButtons: {
     flexDirection: "row",
@@ -242,7 +246,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
-
     borderRadius: 5,
     padding: "3%",
     justifyContent: "center",
@@ -250,23 +253,29 @@ const styles = StyleSheet.create({
   },
   socialButtonText: {
     color: "#007bff",
-    marginLeft: 5, // Space between icon and text
+    marginLeft: 5,
   },
   iconContainer: {
-    //   backgroundColor: 'blue',
-    borderRadius: "50%", // Make it round
-    padding: 5, // Add padding for round effect
+    borderRadius: "50%",
+    padding: 5,
     justifyContent: "center",
     alignItems: "center",
   },
+  forgotPasswordContainer: {
+    width: "80%",
+    alignItems: "flex-end",
+  },
   forgot_password: {
-    color: "#007bff",
-    fontSize: 20,
+    color: "#00D0DD",
+    fontSize: 16,
+    textAlign: "left",
   },
   errorText: {
     color: "red",
     fontSize: 12,
     marginTop: 5,
+    alignSelf: "flex-start",
+    marginLeft: "10%",
   },
 });
 

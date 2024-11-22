@@ -151,7 +151,10 @@ const ReviewForm = () => {
   return (
     <View style={styles.container}>
       <View style={styles.ArrowContainer}>
-        <TouchableOpacity style={styles.backArrow}>
+        <TouchableOpacity
+          style={styles.backArrow}
+          onPress={() => navigation.goBack()}
+        >
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         <Text style={styles.header}>Review</Text>

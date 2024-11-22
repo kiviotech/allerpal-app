@@ -104,7 +104,10 @@ export default function () {
             </Text>
 
             {/* Contact Button */}
-            <TouchableOpacity style={styles.contactButton}>
+            <TouchableOpacity
+              style={styles.contactButton}
+              onPress={() => router.push("pages/Chat")}
+            >
               <Text style={styles.contactButtonText}>Contact Restaurant</Text>
             </TouchableOpacity>
 

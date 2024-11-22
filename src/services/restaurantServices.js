@@ -1,10 +1,10 @@
-// Import repository functions
 import {
   getAllRestaurants,
   getRestaurantById,
   createRestaurant,
   updateRestaurant,
   deleteRestaurant,
+  getFavoriteRestaurants,
 } from "../api/repositories/restaurantRepositories";
 
 // Fetch all restaurants
@@ -44,7 +44,7 @@ export const submitNewRestaurant = async (restaurantData) => {
 export const updateRestaurantDetails = async (id, restaurantData) => {
   try {
     const response = await updateRestaurant(id, restaurantData);
-    return response.data; // Return updated restaurant details
+    return response.data;
   } catch (error) {
     console.error(`Error updating restaurant with ID ${id}:`, error);
     throw new Error("Failed to update restaurant.");
@@ -59,5 +59,19 @@ export const deleteRestaurantEntry = async (id) => {
   } catch (error) {
     console.error(`Error deleting restaurant with ID ${id}:`, error);
     throw new Error("Failed to delete restaurant.");
+  }
+};
+
+// Get favorite restaurants for a user
+export const getFavoriteRestaurantsForUser = async (userId) => {
+  try {
+    const response = await getFavoriteRestaurants(userId);
+    return response.data;
+  } catch (error) {
+    console.error(
+      `Error fetching favorite restaurants for user ${userId}:`,
+      error
+    );
+    throw new Error("Failed to fetch favorite restaurants.");
   }
 };

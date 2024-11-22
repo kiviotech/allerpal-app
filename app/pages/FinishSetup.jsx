@@ -307,7 +307,6 @@
 // });
 
 // export default FinishSetUp;
-
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -319,16 +318,18 @@ import {
   Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import SwitchToggle from "react-native-switch-toggle";
 
 import { getAllergies } from "./../../src/api/repositories/allergyRepositories";
 import { createNewUserAllergy } from "../../src/services/userAllergyServices";
+import { createNewProfileAllergy } from "../../src/services/profileAllergiesServices";
 import useAuthStore from "../../useAuthStore";
 import useSetupStore from "../../useSetupStore";
 
 const FinishSetUp = () => {
   const router = useRouter();
+  const { profileId } = useLocalSearchParams();
   const [allergens, setAllergensState] = useState({});
   const {
     selectedAllergies,
@@ -341,8 +342,9 @@ const FinishSetUp = () => {
 
   const user = useAuthStore((state) => state.user);
   useEffect(() => {
-    console.log("User:", user.id); // Log user info when the component mounts
-  }, [user]);
+    console.log("User:", user.documentId); // Log user info when the component mounts
+    console.log("Profile ID received finish setup:", profileId); // Log the received profileId
+  }, [user, profileId]);
 
   useEffect(() => {
     const fetchAllergies = async () => {
@@ -409,7 +411,7 @@ const FinishSetUp = () => {
   const handleFinishSetup = async () => {
     if (selectedAllergies.length > 0 && termsAccepted) {
       const payload = {
-        user: [user.id], // Assuming userId is fetched correctly from the auth store
+        user: [user.id],
         allergies: selectedAllergies,
         custom_description: "Custom description here",
         locale: "en",
@@ -417,10 +419,23 @@ const FinishSetUp = () => {
 
       try {
         const response = await createNewUserAllergy(payload);
-        console.log("Allergy profile saved", response);
+        console.log("User allergy profile saved", response);
+
+        // Create profile allergies with allergies as array
+        const profileAllergyPayload = {
+          data: {
+            profile: profileId,
+            severity: "mild",
+            allergies: selectedAllergies, // Changed 'allergy' to 'allergies'
+            locale: "en",
+          },
+        };
+
+        await createNewProfileAllergy(profileAllergyPayload);
+
         router.push("./Home");
       } catch (error) {
-        console.error("Error creating allergy profile:", error);
+        console.error("Error creating/updating allergy profiles:", error);
       }
     } else {
       alert("Please select at least one allergen and accept the terms.");
@@ -483,7 +498,7 @@ const FinishSetUp = () => {
 
       <View style={styles.switchContainer}>
         <Text style={styles.toggleLabel}>
-          Do you wish to EXCLUDE dishes that ‘MAY CONTAIN’ the selected
+          Do you wish to EXCLUDE dishes that 'MAY CONTAIN' the selected
           Allergies
         </Text>
         <SwitchToggle

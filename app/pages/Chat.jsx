@@ -72,7 +72,7 @@ const ChatScreen = () => {
       {/* Header with Back Arrow and Title */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => router.push("/pages/Home")}
           style={styles.backButton}
         >
           <Ionicons name="arrow-back" size={24} color="black" />
