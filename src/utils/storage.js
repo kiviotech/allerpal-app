@@ -1,29 +1,21 @@
-// Save the token securely
-export function saveToken(token) {
-  localStorage.setItem("userToken", token);
-  
-}
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Retrieve the token securely
-export function getToken() {
-  return localStorage.getItem("userToken");
-}
+export const getToken = () => {
+  return AsyncStorage.getItem("authToken");
+};
 
-// Save the id securely
-export function saveUserId(id) {
-  localStorage.setItem("id", id);
-  
-}
-// Retrieve the id securely
-export function getUserId() {
-  return localStorage.getItem("id");
-}
+// Function to save JWT token
+export const saveToken = async (token) => {
+  await AsyncStorage.setItem('jwt', token);
+};
 
-// Delete the token securely
-export function deleteToken() {
-  try {
-    localStorage.removeItem("userToken");
-  } catch (error) {
-    console.error("Error deleting token", error);
-  }
-}
+// Function to save user ID
+export const saveUserId = async (userId) => {
+  await AsyncStorage.setItem('userId', userId.toString());
+};
+
+// Function to remove JWT and user ID from storage (logout)
+export const deleteToken = async () => {
+  await AsyncStorage.removeItem('jwt');
+  await AsyncStorage.removeItem('userId');
+};

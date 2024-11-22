@@ -1,13 +1,28 @@
-const userAllergyEndpoints = {
-  getUserAllergies: "/user-allergies",
-  getUserAllergyById: (id) => `/user-allergies/${id}?populate=*`,
-  createUserAllergy: "/user-allergies",
-  updateUserAllergy: (id) => `/user-allergies/${id}`,
-  deleteUserAllergy: (id) => `/user-allergies/${id}`,
+// const userAllergyEndpoints = {
+//   getUserAllergies: "/user-allergies?populate=*",
+//   //   getUserAllergyById: (id) => `/user-allergies/${id}?populate=*`,
+//   getUserAllergyById: (id) => `user-allergies?filters[user]=${id}&populate=*`,
+//   createUserAllergy: "/user-allergies",
+//   updateUserAllergy: (id) => `/user-allergies/${id}`,
+//   deleteUserAllergy: (id) => `/user-allergies/${id}`, // DELETE a user allergy by ID
+// };
 
-  // Endpoint to fetch user allergies by userId
-  getUserAllergiesByUser: (userId) =>
-    `/user-allergies?filters[user][id][$eq]=${userId}&populate=*`,
+// export default userAllergyEndpoints;
+
+const userAllergyEndpoints = {
+  getUserAllergies: "/user-allergies?populate=*",
+  //   getUserAllergyById: (id) => /user-allergies/${id}?populate=*,
+  // getUserAllergyById: (id) => user-allergies?filters[user]=${id}&populate=*,
+
+  getUserAllergyById: (id) => `user-allergies?filters[user]=${id}&populate=allergies.Allergeimage`,
+
+
+ 
+
+
+  createUserAllergy: "/user-allergies",
+  updateUserAllergy: (id) =>` /user-allergies/${id}`,
+  deleteUserAllergy: (id) => `/user-allergies/${id}`, // DELETE a user allergy by ID
 };
 
 export default userAllergyEndpoints;
