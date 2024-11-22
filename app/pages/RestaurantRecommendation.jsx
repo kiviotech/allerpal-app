@@ -1,5 +1,3 @@
-// !====================================================================
-
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -15,11 +13,57 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { getAllRestaurants } from "../../src/api/repositories/restaurantRepositories";
 import { MEDIA_BASE_URL } from "../../src/api/apiClient";
+import { updateRestaurantDetails } from "../../src/services/restaurantServices";
+import useAuthStore from "../../useAuthStore";
 
 const { width } = Dimensions.get("window");
 
 const RestaurantCard = ({ restaurant, onPress }) => {
   const router = useRouter();
+  const { user, isAuthenticated } = useAuthStore();
+  const [isFavorite, setIsFavorite] = useState(
+    restaurant.favourites?.includes(user?.id)
+  );
+
+  const handleFavoritePress = async () => {
+    if (!isAuthenticated) {
+      router.push("/pages/Login");
+      return;
+    }
+
+    try {
+      const updatedFavorites = isFavorite
+        ? restaurant.favourites.filter((id) => id !== user.id)
+        : [...(restaurant.favourites || []), user.id];
+
+      const cleanedImage = restaurant.image?.map((img) => ({
+        id: img.id,
+        name: img.name,
+        alternativeText: img.alternativeText,
+        url: img.url,
+      }));
+
+      const payload = {
+        data: {
+          name: restaurant.name,
+          favourites: updatedFavorites,
+          rating: restaurant.rating,
+          image: cleanedImage,
+        },
+      };
+
+      Object.keys(payload.data).forEach((key) => {
+        if (payload.data[key] === undefined || payload.data[key] === null) {
+          delete payload.data[key];
+        }
+      });
+
+      await updateRestaurantDetails(restaurant.documentId, payload);
+      setIsFavorite(!isFavorite);
+    } catch (error) {
+      console.error("Error updating favorites:", error);
+    }
+  };
 
   // Construct the full image URL or use a fallback image
   const imageUrl =
@@ -28,32 +72,30 @@ const RestaurantCard = ({ restaurant, onPress }) => {
       : Restro;
 
   return (
-    <TouchableOpacity onPress={() =>
-      router.push({
-        pathname: "pages/RestaurantScreen",
-        params: {
-          id: restaurant.documentId,
-          documentId: restaurant.documentId,
-
-          name: restaurant.name,
-          rating: restaurant.rating,
-          categories: restaurant.categories,
-          image: imageUrl,
-          // add other properties as needed
-        },
-      })
-    }>
-
+    <TouchableOpacity
+      onPress={() =>
+        router.push({
+          pathname: "pages/RestaurantScreen",
+          params: {
+            id: restaurant.documentId,
+            documentId: restaurant.documentId,
+            name: restaurant.name,
+            rating: restaurant.rating,
+            categories: restaurant.categories,
+            image: imageUrl,
+          },
+        })
+      }
+    >
       <View style={styles.card}>
-        {/* <Image source={{ uri: imageUrl ? ` MEDIA_BASE_URL${imageUrl}` : Restro }} style={styles.image} /> */}
         <Image source={{ uri: imageUrl }} style={styles.image} />
         <View style={styles.iconContainer}>
           <View style={styles.heart}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={handleFavoritePress}>
               <Ionicons
-                name="heart-outline"
+                name={isFavorite ? "heart" : "heart-outline"}
                 size={20}
-                color="white"
+                color={isFavorite ? "red" : "white"}
                 style={styles.icon}
               />
             </TouchableOpacity>
@@ -89,20 +131,13 @@ const RestaurantCard = ({ restaurant, onPress }) => {
           </View>
 
           <View style={styles.buttonContainer}>
-            {/* <TouchableOpacity style={styles.button} onPress={() => router.push('./RestaurantScreen')}>
-            <Text style={styles.buttonText}>View details</Text>
-          </TouchableOpacity> */}
-
-            <TouchableOpacity
-              style={styles.button}>
+            <TouchableOpacity style={styles.button}>
               <Text style={styles.buttonText}>View details</Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
-
     </TouchableOpacity>
-
   );
 };
 

@@ -186,7 +186,6 @@
 // });
 
 // export default FoodRecommendations;
-
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -253,12 +252,11 @@ const FoodCard = ({ item, onPress }) => {
   );
 };
 
-
 const FoodRecommendations = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const selectedAllergies = useAllergyStore((state) => state.selectedAllergies);
-  const router = useRouter()
+  const router = useRouter();
 
   const onFoodCardPress = async (menuItemId) => {
     console.log("Selected Menu Item ID:", menuItemId);
@@ -271,7 +269,7 @@ const FoodRecommendations = () => {
       const data = await response.json();
       console.log("Associated Restaurants:", data);
       const restaurant = data?.data?.[0]?.restaurant; // Adjust according to your API response structure
-      console.log(restaurant)
+      console.log(restaurant);
       // Navigate to another screen or update the state to display the restaurants
       const imageUrl =
         restaurant.image && restaurant.image[0]?.url
@@ -283,8 +281,7 @@ const FoodRecommendations = () => {
           pathname: "/pages/RestaurantScreen",
           params: {
             id: restaurant.documentId,
-            // documentId: restaurant.documentId,
-
+            documentId: restaurant.documentId,
             name: restaurant.name,
             rating: restaurant.rating,
             categories: restaurant.categories,
@@ -294,7 +291,6 @@ const FoodRecommendations = () => {
       } else {
         console.log("No restaurant found for this menu item.");
       }
-
     } catch (error) {
       console.error("Error fetching restaurants:", error);
     }
