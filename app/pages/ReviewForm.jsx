@@ -72,11 +72,11 @@ const ReviewForm = () => {
 
         // Make upload request to Strapi
         const uploadResponse = await axios.post(
-          `${BASE_URL}/api/upload`,
+          `${BASE_URL}/upload`,
           formData,
           {
             headers: {
-              Authorization: `Bearer dd026626aad98316a19cb314c2ec35410264da10f10c5198469cad8a1fc211fa8dac00ef1052db8fc9b6296494cbd3daa1e33766b75326514379156059b5a70685136cc53f156238baa0b315de54f649c995767f00bb9c15a511a7c057b5f2cadb912ba40b619c1c095f2a4826c11b92917d690c0573da4f64872217d2971af0`, // Replace with a valid JWT token
+              Authorization: `Bearer 8204599028bbb232d3c9812d84b2b3558aad0531f9d1b4679ac919d9fd416292a2d2e04145fe6a946065397df33e560349aeae80c1881fb75043bbec688846f82b6c438b405b84ab72ba3272b9efd34d395792ab5ef695192e7f1cf5e3c0918a1e61345ce346c2eb3375ff678e6494cfbbd9b8534adab205424cd2e124ebdef7`, // Replace with a valid JWT token
             },
           }
         );
@@ -113,9 +113,9 @@ const ReviewForm = () => {
     const payload = { data: reviewData };
 
     try {
-      const response = await axios.post(`${BASE_URL}/api/reviews`, payload, {
+      const response = await axios.post(`${BASE_URL}/reviews`, payload, {
         headers: {
-          Authorization: `Bearer dd026626aad98316a19cb314c2ec35410264da10f10c5198469cad8a1fc211fa8dac00ef1052db8fc9b6296494cbd3daa1e33766b75326514379156059b5a70685136cc53f156238baa0b315de54f649c995767f00bb9c15a511a7c057b5f2cadb912ba40b619c1c095f2a4826c11b92917d690c0573da4f64872217d2971af0`, // Replace with a valid JWT token
+          Authorization: `Bearer 8204599028bbb232d3c9812d84b2b3558aad0531f9d1b4679ac919d9fd416292a2d2e04145fe6a946065397df33e560349aeae80c1881fb75043bbec688846f82b6c438b405b84ab72ba3272b9efd34d395792ab5ef695192e7f1cf5e3c0918a1e61345ce346c2eb3375ff678e6494cfbbd9b8534adab205424cd2e124ebdef7`, // Replace with a valid JWT token
         },
       });
 
