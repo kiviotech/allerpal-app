@@ -6,6 +6,8 @@ import {
   createUserAllergy,
   updateUserAllergy,
   deleteUserAllergy,
+  getUserAllergyByUserId,
+  updateUserAllergyByUserId,
 } from './../api/repositories/userAllergyRepositories';
 
 // Fetch all user allergies
@@ -30,6 +32,17 @@ export const fetchUserAllergyById = async (id) => {
   }
 };
 
+// Fetch a specific user allergy by ID
+export const fetchUserAllergyByUserId = async (id) => {
+  try {
+    const response = await getUserAllergyByUserId(id);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching user allergy with ID ${id}:`, error);
+    throw error;
+  }
+};
+
 // Create a new user allergy
 export const createNewUserAllergy = async (data) => {
   try {
@@ -45,6 +58,16 @@ export const createNewUserAllergy = async (data) => {
 export const updateUserAllergyById = async (id, data) => {
   try {
     const response = await updateUserAllergy(id, data);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating user allergy with ID ${id}:`, error);
+    throw error;
+  }
+};
+
+export const updateUserAllergyByUser = async (id, data) => {
+  try {
+    const response = await updateUserAllergyByUserId(id, data);
     return response.data;
   } catch (error) {
     console.error(`Error updating user allergy with ID ${id}:`, error);

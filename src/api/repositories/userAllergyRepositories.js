@@ -6,11 +6,16 @@ export const getUserAllergies = () => apiClient.get(userAllergyEndpoints.getUser
 
 export const getUserAllergyById = (id) => apiClient.get(userAllergyEndpoints.getUserAllergyById(id));
 
+export const getUserAllergyByUserId = (id) => apiClient.get(userAllergyEndpoints.getUserAllergyByUserId(id));
+
 export const createUserAllergy = (data) => 
   apiClient.post(userAllergyEndpoints.createUserAllergy, data);
 
 export const updateUserAllergy = (id, data) => 
   apiClient.put(userAllergyEndpoints.updateUserAllergy(id), data);
+
+export const updateUserAllergyByUserId = (id, data) => 
+  apiClient.put(userAllergyEndpoints.updateUserAllergyByUserId(id), data);
 
 export const deleteUserAllergy = (id) => 
   apiClient.delete(userAllergyEndpoints.deleteUserAllergy(id));

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, CheckBox, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, CheckBox, Image, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router'
-import Account from "./Account"
+import useAuthStore from '../../useAuthStore'; // Assuming this holds user details
+import { fetchUserAllergyByUserId, updateUserAllergyByUser } from '../../src/services/userAllergyServices';
 
 const Profile = () => {
   const router = useRouter()
@@ -23,6 +24,9 @@ const Profile = () => {
     'Tree nuts (such as almonds,hazelnuts,walnuts)': false,
   });
 
+  const [loading, setLoading] = useState(true);
+  const userId = useAuthStore((state) => state.user?.id); // Fetch logged-in user's ID
+
 
   const allergenImages = {
     Celery: require('../../assets/celery.png'),
@@ -40,53 +44,92 @@ const Profile = () => {
     'Tree nuts (such as almonds, hazelnuts, walnuts)': require('../../assets/treenuts.png'),
   };
 
+  useEffect(() => {
+    const fetchUserAllergens = async () => {
+      try {
+        const response = await fetchUserAllergyByUserId(userId);
+        const userAllergies = response.data.data[0]?.allergies || [];
+        const allAllergens = {
+          Celery: false,
+          Eggs: false,
+          'Cereals containing gluteen': false,
+          Lupin: false,
+          Mustard: false,
+          milk: false,
+          Peanuts: false,
+          sesame: false,
+          'Silphur dioxide/Sulphites': false,
+          Soyabeans: false,
+          'Molluscs (such as mussels and oysters)': false,
+          'Crustaceans (such as prawns,crabs and lobsters)': false,
+          'Tree nuts (such as almonds,hazelnuts,walnuts)': false,
+        };
+
+        // Set allergens already selected by the user to true
+        userAllergies.forEach((allergy) => {
+          if (allAllergens[allergy.name] !== undefined) {
+            allAllergens[allergy.name] = true;
+          }
+        });
+        setAllergens(allAllergens);
+      } catch (error) {
+        console.error('Error fetching user allergens:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (userId) fetchUserAllergens();
+  }, [userId]);
+
+
   const toggleAllergen = (key) => {
     setAllergens((prev) => ({ ...prev, [key]: !prev[key] }));
   };
+
+  const handleSaveChanges = async () => {
+    try {
+      const selectedAllergies = Object.entries(allergens)
+        .filter(([, isSelected]) => isSelected)
+        .map((key) => ({ name: key }));
+      console.log('first', selectedAllergies)
+
+      const payload = {
+        data: {
+          allergies: selectedAllergies,
+        },
+      };
+
+      console.log('first', payload)
+
+      const response = await updateUserAllergyByUser(userId, payload);
+      console.log('Response:', response);
+      alert('Allergen preferences updated successfully.');
+    } catch (error) {
+      console.error('Error updating allergens:', error);
+      alert('Failed to update allergen preferences.');
+    }
+  };
+
+  if (loading) {
+    return <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />;
+  }
 
   const allergenKeys = Object.keys(allergens);
   const mainAllergens = allergenKeys.slice(0, -3); // All but the last three
   const lastThreeAllergens = allergenKeys.slice(-3);
 
-
-
   const CustomCheckBox = ({ checked, onPress }) => (
-    <TouchableOpacity style={[styles.checkBox, checked && styles.checkBoxSelected]} onPress={onPress}>
+    <TouchableOpacity
+      style={[styles.checkBox, checked && styles.checkBoxSelected]}
+      onPress={onPress}
+    >
       {checked && <Ionicons name="checkmark" size={16} color="#00c4cc" />}
     </TouchableOpacity>
   );
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.profileArrow}>
-          <TouchableOpacity onPress={() => router.push('./Profile')}>
-            <Icon name="arrow-back-outline" size={24} color="#333" />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>My Profile</Text>
-        </View>
-        <TouchableOpacity onPress={()=>router.push('./Account')}>
-          <Text style={styles.editText}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.label}>Full name</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Full name"
-        defaultValue="Arlene Mccoy"
-      />
-
-      <Text style={styles.label}>E-mail</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        keyboardType="email-address"
-        defaultValue="noname@roreply.com"
-        editable={false} // Disable editing for email if needed
-      />
-
-      <Text style={styles.label}>Allergens</Text>
+    <View contentContainerStyle={styles.container}>
       <View style={styles.allergensContainer}>
         <View style={styles.checkboxContainer}>
           {mainAllergens.map((key) => (
@@ -109,11 +152,10 @@ const Profile = () => {
           ))}
         </View>
       </View>
-      <TouchableOpacity style={styles.signOutButton}>
+      <TouchableOpacity style={styles.signOutButton} onPress={handleSaveChanges}>
         <Text style={styles.signOutText}>Save Changes</Text>
       </TouchableOpacity>
-    {/* </View> */}
-    </ScrollView >
+    </View >
   );
 };
 
@@ -122,7 +164,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: '#fff',
     padding: 20,
-    width:'100%'
+    width: '100%'
   },
   header: {
     flexDirection: 'row',
@@ -170,7 +212,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     marginTop: '10%',
-    width:'100%'
+    width: '100%'
   },
   checkboxContainer: {
     flexDirection: 'row',
@@ -184,7 +226,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '38%',
     marginBottom: 10,
-    gap:'3%'
+    gap: '3%'
 
   },
   singleAllergenRow: {
@@ -237,7 +279,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     // marginLeft: 10,
-    marginRight:10
+    marginRight: 10
   },
   checkBoxSelected: {
     backgroundColor: '#e0f7fa',

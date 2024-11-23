@@ -340,6 +340,8 @@ const FinishSetUp = () => {
     setTermsAccepted,
   } = useSetupStore();
 
+  console.log('allergies', selectedAllergies)
+
   const user = useAuthStore((state) => state.user);
   useEffect(() => {
     console.log("User:", user.documentId); // Log user info when the component mounts
