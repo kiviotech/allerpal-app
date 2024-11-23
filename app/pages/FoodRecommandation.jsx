@@ -252,7 +252,7 @@ const FoodCard = ({ item, onPress }) => {
   );
 };
 
-const FoodRecommendations = () => {
+const FoodRecommendations = ({ filteredFoodRecommendations }) => {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const selectedAllergies = useAllergyStore((state) => state.selectedAllergies);
@@ -297,27 +297,23 @@ const FoodRecommendations = () => {
   };
 
   useEffect(() => {
-    const getMenuItems = async () => {
-      try {
-        const response = await fetchAllMenuItems();
-        // Filter out items containing allergens
-        const filteredItems = response.data.filter((item) => {
-          const description = item.description?.toLowerCase() || "";
-          return !selectedAllergies.some((allergy) =>
-            description.includes(allergy.toLowerCase())
-          );
-        });
+    if (filteredFoodRecommendations) {
+      const filteredItems = filteredFoodRecommendations.filter((item) => {
+        const description = item.description?.toLowerCase() || "";
+        return !selectedAllergies.some((allergy) =>
+          description.includes(allergy.toLowerCase())
+        );
+      });
 
-        setMenuItems(filteredItems);
-      } catch (error) {
-        console.error("Error fetching menu items:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getMenuItems();
-  }, [selectedAllergies]);
+      setLoading(false);
+      setMenuItems(filteredItems); // Update menu items after filtering
+      console.log("Filtered Items:", filteredItems);
+    } else {
+      console.log("No food found");
+      setLoading(false);
+      setMenuItems([]); // Fallback to empty if no food recommendations
+    }
+  }, [filteredFoodRecommendations, selectedAllergies]); // Add filteredFoodRecommendations to dependency
 
   if (loading) {
     return (

@@ -141,22 +141,29 @@ const RestaurantCard = ({ restaurant, onPress }) => {
   );
 };
 
-const RestaurantRecommendation = () => {
+const RestaurantRecommendation = ({ filteredRestaurants }) => {
   const [restaurants, setRestaurants] = useState([]);
 
-  useEffect(() => {
-    const fetchRestaurants = async () => {
-      try {
-        const response = await getAllRestaurants();
-        setRestaurants(response.data.data || []); // Access nested data directly
-      } catch (error) {
-        // console.error("Error fetching restaurants:", error);
-        setRestaurants([]); // Fallback to an empty array on error
-      }
-    };
+  // useEffect(() => {
+  //   // const fetchRestaurants = async () => {
+  //   //   try {
+  //   //     const response = await getAllRestaurants();
+  //   //     setRestaurants(response.data.data || []); // Access nested data directly
+  //   //   } catch (error) {
+  //   //     // console.error("Error fetching restaurants:", error);
+  //   //     setRestaurants([]); // Fallback to an empty array on error
+  //   //   }
+  //   // };
 
-    fetchRestaurants();
-  }, []);
+  //   // fetchRestaurants();
+  //   setRestaurants(filteredRestaurants)
+  // }, []);
+
+  useEffect(() => {
+    // Update the list of restaurants whenever filteredRestaurants changes
+    setRestaurants(filteredRestaurants);
+  }, [filteredRestaurants]); // dependency array ensures this runs on updates to filteredRestaurants
+
 
   return (
     <View style={styles.container}>
