@@ -1,77 +1,75 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, CheckBox, Image, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, CheckBox, Image, ActivityIndicator, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router'
 import useAuthStore from '../../useAuthStore'; // Assuming this holds user details
 import { fetchUserAllergyByUserId, updateUserAllergyByUser } from '../../src/services/userAllergyServices';
+import { fetchAllAllergies } from '../../src/services/allergyServices';
+import { useRouter } from 'expo-router';
 
 const Profile = () => {
   const router = useRouter()
-  const [allergens, setAllergens] = useState({
-    Celery: false,
-    Eggs: false,
-    'Cereals containing gluteen': false,
-    Lupin: false,
-    Mustard: false,
-    milk: false,
-    Peanuts: false,
-    sesame: false,
-    'Silphur dioxide/Sulphites': false,
-    Soyabeans: false,
-    'Molluscs (such as mussels and oysters)': false,
-    'Crustaceans(such as prawns,crabs and lobsters)': false,
-    'Tree nuts (such as almonds,hazelnuts,walnuts)': false,
-  });
-
+  const [allegenList, setAllergenList] = useState([]);
+  const [userAllergenId, setUserAllergenId] = useState(''); // To store allergens of the user
+  const [selectedAllergens, setSelectedAllergens] = useState([]); // To track selected allergens
   const [loading, setLoading] = useState(true);
+
   const userId = useAuthStore((state) => state.user?.id); // Fetch logged-in user's ID
+
+  // const [allergens, setAllergens] = useState({
+  //   Celery: false,
+  //   Eggs: false,
+  //   'Cereals containing gluteen': false,
+  //   Lupin: false,
+  //   Mustard: false,
+  //   milk: false,
+  //   Peanuts: false,
+  //   sesame: false,
+  //   'Silphur dioxide/Sulphites': false,
+  //   Soyabeans: false,
+  //   'Molluscs (such as mussels and oysters)': false,
+  //   'Crustaceans(such as prawns,crabs and lobsters)': false,
+  //   'Tree nuts (such as almonds,hazelnuts,walnuts)': false,
+  // });
+
 
 
   const allergenImages = {
-    Celery: require('../../assets/celery.png'),
-    Eggs: require('../../assets/eggs.png'),
-    'Cereals containing gluten': require('../../assets/cereals.png'),
+    celery: require('../../assets/celery.png'),
+    egg: require('../../assets/eggs.png'),
+    'cereals containing gluteen': require('../../assets/cereals.png'),
     Lupin: require('../../assets/lupin.png'),
-    Mustard: require('../../assets/mustard.png'),
-    Milk: require('../../assets/milk.png'),
-    Peanuts: require('../../assets/peanuts.png'),
+    Musturd: require('../../assets/mustard.png'),
+    milk: require('../../assets/milk.png'),
+    peanut: require('../../assets/peanuts.png'),
     Sesame: require('../../assets/sesame.png'),
-    'Sulphur dioxide/Sulphites': require('../../assets/sulphur.png'),
-    Soyabeans: require('../../assets/soyabeans.png'),
-    'Molluscs (such as mussels and oysters)': require('../../assets/mollusca.png'),
-    'Crustaceans (such as prawns, crabs and lobsters)': require('../../assets/crustaceans.png'),
-    'Tree nuts (such as almonds, hazelnuts, walnuts)': require('../../assets/treenuts.png'),
+    'silphur dioxide/sulphites': require('../../assets/sulphur.png'),
+    SoyaBean: require('../../assets/soyabeans.png'),
+    'molluscs (such as mussels and oysters)': require('../../assets/mollusca.png'),
+    'crustaceans(such as prawns,crabs and lobsters)': require('../../assets/crustaceans.png'),
+    'Tree nuts( such as almonds,Cashews,pecans)': require('../../assets/treenuts.png'),
   };
 
   useEffect(() => {
+    const fetchAllergenData = async () => {
+      try {
+        const data = await fetchAllAllergies(); // Fetch allergens from backend
+        // const allergyName = data.data.map((allergy) => allergy.name);
+        // const allergyId = data.data.map((allergy) => allergy.id);
+        setAllergenList(data.data);
+      } catch (error) {
+        console.error('Error fetching allergens:', error);
+      }
+    };
+
     const fetchUserAllergens = async () => {
       try {
         const response = await fetchUserAllergyByUserId(userId);
-        const userAllergies = response.data.data[0]?.allergies || [];
-        const allAllergens = {
-          Celery: false,
-          Eggs: false,
-          'Cereals containing gluteen': false,
-          Lupin: false,
-          Mustard: false,
-          milk: false,
-          Peanuts: false,
-          sesame: false,
-          'Silphur dioxide/Sulphites': false,
-          Soyabeans: false,
-          'Molluscs (such as mussels and oysters)': false,
-          'Crustaceans (such as prawns,crabs and lobsters)': false,
-          'Tree nuts (such as almonds,hazelnuts,walnuts)': false,
-        };
-
-        // Set allergens already selected by the user to true
-        userAllergies.forEach((allergy) => {
-          if (allAllergens[allergy.name] !== undefined) {
-            allAllergens[allergy.name] = true;
-          }
-        });
-        setAllergens(allAllergens);
+        setUserAllergenId(response.data[0]?.documentId)
+        const userAllergies = response.data[0]?.allergies || [];
+        const userAllergenIds = userAllergies?.map((item) => item.id) || [];
+        // setUserAllergens(userAllergies);
+        setSelectedAllergens(userAllergenIds); // Set initially selected allergens for checkboxes
       } catch (error) {
         console.error('Error fetching user allergens:', error);
       } finally {
@@ -79,32 +77,46 @@ const Profile = () => {
       }
     };
 
-    if (userId) fetchUserAllergens();
+    if (userId) {
+      fetchAllergenData();
+      fetchUserAllergens();
+    }
   }, [userId]);
 
 
-  const toggleAllergen = (key) => {
-    setAllergens((prev) => ({ ...prev, [key]: !prev[key] }));
+  // Handle checkbox toggle
+  const handleCheckboxChange = (allergenId) => {
+    setSelectedAllergens((prevState) =>
+      prevState.includes(allergenId)
+        ? prevState.filter((id) => id !== allergenId) // Remove allergen
+        : [...prevState, allergenId] // Add allergen
+    );
   };
 
   const handleSaveChanges = async () => {
     try {
-      const selectedAllergies = Object.entries(allergens)
-        .filter(([, isSelected]) => isSelected)
-        .map((key) => ({ name: key }));
-      console.log('first', selectedAllergies)
+      const formattedAllergens = selectedAllergens.map((allergenId) => ({
+        id: allergenId,
+      }));
 
       const payload = {
         data: {
-          allergies: selectedAllergies,
+          allergies: formattedAllergens,
         },
       };
-
-      console.log('first', payload)
-
-      const response = await updateUserAllergyByUser(userId, payload);
-      console.log('Response:', response);
-      alert('Allergen preferences updated successfully.');
+  
+      const response = await updateUserAllergyByUser( userAllergenId, payload);
+  
+      if (response?.data) {
+        console.log('Allergen preferences updated successfully.');
+        Alert.alert('Allergen preferences updated successfully.', '', [
+         router.push('/pages/Account'),
+        ]);
+        
+      } else {
+        console.error('Unexpected response:', response);
+        alert('Failed to update allergen preferences. Please try again.');
+      }
     } catch (error) {
       console.error('Error updating allergens:', error);
       alert('Failed to update allergen preferences.');
@@ -115,10 +127,9 @@ const Profile = () => {
     return <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />;
   }
 
-  const allergenKeys = Object.keys(allergens);
-  const mainAllergens = allergenKeys.slice(0, -3); // All but the last three
-  const lastThreeAllergens = allergenKeys.slice(-3);
-
+  // const allergenKeys = Object.keys(allergens);
+  // const mainAllergens = allergenKeys.slice(0, -3); // All but the last three
+  // const lastThreeAllergens = allergenKeys.slice(-3);
   const CustomCheckBox = ({ checked, onPress }) => (
     <TouchableOpacity
       style={[styles.checkBox, checked && styles.checkBoxSelected]}
@@ -132,24 +143,27 @@ const Profile = () => {
     <View contentContainerStyle={styles.container}>
       <View style={styles.allergensContainer}>
         <View style={styles.checkboxContainer}>
-          {mainAllergens.map((key) => (
-            <View key={key} style={styles.checkboxRow}>
-              <CustomCheckBox checked={allergens[key]} onPress={() => toggleAllergen(key)} />
-              <View style={styles.imageiconContainer}>
-                <Image source={allergenImages[key]} style={styles.icon} />
-                <Text style={styles.checkboxLabel}>{key}</Text>
-              </View>
+        {allegenList.map((allergen) => (
+          <View key={allergen.id} style={styles.checkboxRow}>
+            <CustomCheckBox
+              checked={selectedAllergens.includes(allergen.id)} // Check if allergen is selected
+              onPress={() => handleCheckboxChange(allergen.id)} // Toggle allergen selection
+            />
+            <View style={styles.imageiconContainer}>
+              <Image source={allergenImages[allergen.name]} style={styles.icon} />
+              <Text style={styles.checkboxLabel}>{allergen.name}</Text>
             </View>
-          ))}
-          {lastThreeAllergens.map((key) => (
+          </View>
+        ))}
+          {/* {lastThreeAllergens.map((key) => (
             <View key={key} style={styles.singleAllergenRow}>
-              <CustomCheckBox checked={allergens[key]} onPress={() => toggleAllergen(key)} />
+              <CustomCheckBox checked={allergens[key]} onPress={() => handleCheckboxChange(key)} />
               <View style={styles.imageiconContainer}>
                 <Image source={allergenImages[key]} style={styles.icon1} />
                 <Text style={styles.checkboxLabel}>{key}</Text>
               </View>
             </View>
-          ))}
+          ))} */}
         </View>
       </View>
       <TouchableOpacity style={styles.signOutButton} onPress={handleSaveChanges}>
@@ -224,7 +238,7 @@ const styles = StyleSheet.create({
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '38%',
+    width: '35%',
     marginBottom: 10,
     gap: '3%'
 

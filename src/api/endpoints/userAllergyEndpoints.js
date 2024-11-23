@@ -18,7 +18,7 @@ const userAllergyEndpoints = {
   getUserAllergyByUserId: (id) => `/user-allergies?populate=*&filters[user][id]=${id}`,
   createUserAllergy: "/user-allergies",
   updateUserAllergy: (id) =>` /user-allergies/${id}`,
-  updateUserAllergyByUserId: (id) => `/user-allergies?populate=*&filters[user][id]=${id}`,
+  updateUserAllergyByUserId: (id) => `/user-allergies/${id}`,
   deleteUserAllergy: (id) => `/user-allergies/${id}`, // DELETE a user allergy by ID
 };
 
