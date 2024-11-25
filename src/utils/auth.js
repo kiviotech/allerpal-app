@@ -111,6 +111,40 @@ export const signup = async (username, email, password) => {
   }
 };
 
+export const forgotPassword = async (email) => {
+  try {
+    const response = await apiClient.post("/auth/forgot-password", {
+      email,
+    });
+
+    // Handle the response and notify the user
+    console.log("Forgot password response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    throw error;
+  }
+};
+
+export const resetPassword = async (data) => {
+  try {
+    const response = await apiClient.post("/auth/reset-password", 
+      {
+        "password": data.password,
+        "passwordConfirmation": data.passwordConfirm,
+        "code": data.code
+      }
+    );
+
+    // Handle the response and notify the user
+    console.log("Forgot password response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    throw error;
+  }
+};
+
 // Logout function
 export const logout = () => {
   deleteToken(); // Remove the JWT token from storage

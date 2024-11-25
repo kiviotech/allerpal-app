@@ -269,6 +269,7 @@ const styles = StyleSheet.create({
     color: "#00D0DD",
     fontSize: 16,
     textAlign: "left",
+    marginTop: 5
   },
   errorText: {
     color: "red",
