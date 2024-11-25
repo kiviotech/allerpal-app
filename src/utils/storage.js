@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const getToken = () => {
-  return AsyncStorage.getItem("authToken");
+  const token = AsyncStorage.getItem("jwt");
+  return token;
 };
 
 // Function to save JWT token

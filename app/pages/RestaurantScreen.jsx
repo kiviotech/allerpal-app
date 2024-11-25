@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -24,6 +24,8 @@ export default function () {
   const [isAllergenOn, setIsAllergenOn] = React.useState(false);
   const [type, setType] = useState("normal");
 
+  const scrollViewRef = useRef(null); // Added ref for ScrollView
+
   const toggleAllergen = (value) => {
     setIsAllergenOn(value);
     setType(value ? "allergen" : "normal"); // Set type based on switch
@@ -31,9 +33,6 @@ export default function () {
 
   const { id, name, rating, categories, image, documentId } =
     useLocalSearchParams();
-  // console.log(name)
-  // console.log(rating)
-  // console.log(documentId)
 
   useEffect(() => {
     const fetchMenus = async () => {
@@ -45,10 +44,18 @@ export default function () {
   }, []);
 
   const filteredMenuItems = menuData.filter((item) => item.type === type);
-  console.log("filter", menuData);
+
+  // Scroll to reviews section
+  const scrollToReviews = () => {
+    scrollViewRef.current?.scrollTo({
+      y: 500, // Adjust this value to control scroll position if needed
+      animated: true,
+    });
+  };
+
   return (
     <SafeAreaView style={styles.AreaContainer}>
-      <ScrollView>
+      <ScrollView ref={scrollViewRef}> {/* Assigned ref to ScrollView */}
         <View style={styles.container}>
           {/* Header Icons */}
           <View style={styles.headerIcons}>
@@ -83,7 +90,7 @@ export default function () {
               <FontAwesome name="star" size={16} color="#FFD700" />
               <Text style={styles.ratingText}>{rating} </Text>
               <Text style={styles.reviewText}>(30+)</Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={scrollToReviews}> {/* onPress now calls scrollToReviews */}
                 <Text style={styles.reviewLink}>See Reviews</Text>
               </TouchableOpacity>
             </View>
@@ -123,19 +130,19 @@ export default function () {
             </View>
           </View>
         </View>
+
         {/* Menu Card or Message */}
         <View>
           {filteredMenuItems.length > 0 ? (
-            // Render MenuCard component if filtered data is present
             <MenuCard menuItems={filteredMenuItems} />
           ) : (
-            // Display message if no filtered items are available
             <Text style={styles.noItemsText}>
               There are no foods available for this option.
             </Text>
           )}
         </View>
 
+        {/* Review Section */}
         <View style={styles.Review}>
           <ReviewsSection restaurantId={documentId} />
         </View>
@@ -149,6 +156,7 @@ export default function () {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   categories: {

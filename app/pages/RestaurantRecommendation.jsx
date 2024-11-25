@@ -20,10 +20,12 @@ const { width } = Dimensions.get("window");
 
 const RestaurantCard = ({ restaurant, onPress }) => {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, jwt, isAuthenticated } = useAuthStore();
   const [isFavorite, setIsFavorite] = useState(
     restaurant.favourites?.includes(user?.id)
   );
+
+  console.log('user', user, jwt)
 
   const handleFavoritePress = async () => {
     if (!isAuthenticated) {
@@ -272,6 +274,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: "center",
     width: "50%",
+
   },
   buttonText: {
     color: "#fff",

@@ -111,6 +111,24 @@ export const signup = async (username, email, password) => {
   }
 };
 
+export const changePassword = async (currentPassword, password, passwordConfirmation) => {
+  try {
+    const response = await apiClient.post("/auth/change-password", {
+      currentPassword,
+      password,
+      passwordConfirmation,
+    });
+
+    // Log and return the response to notify the user
+    console.log("Change password response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Change password error:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
 export const forgotPassword = async (email) => {
   try {
     const response = await apiClient.post("/auth/forgot-password", {

@@ -11,12 +11,23 @@ const apiClient = axios.create({
   },
 });
 
+// Add a request interceptor
 apiClient.interceptors.request.use(
-  (config) => {
-    const token = getToken(); // Retrieve the token from storage
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+  async (config) => {
+    try {
+      const token = await getToken(); // Ensure the function call is correct
+      // console.log('Fetched token:', token); // Debugging log
+
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        //console.log("Token set in headers"); // Debugging log
+      } else {
+        //console.warn("No token available"); // Warn if no token is found
+      }
+    } catch (error) {
+      console.error("Error fetching token:", error); // Log any error in fetching the token
     }
+
     return config;
   },
   (error) => Promise.reject(error)

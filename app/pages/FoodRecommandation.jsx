@@ -267,9 +267,9 @@ const FoodRecommendations = () => {
         `${MEDIA_BASE_URL}/api/menus?filters[menu_items][id][$eq]=${menuItemId}&populate=*`
       );
       const data = await response.json();
-      console.log("Associated Restaurants:", data);
+      // console.log("Associated Restaurants:", data);
       const restaurant = data?.data?.[0]?.restaurant; // Adjust according to your API response structure
-      console.log(restaurant);
+      // console.log(restaurant);
       // Navigate to another screen or update the state to display the restaurants
       const imageUrl =
         restaurant.image && restaurant.image[0]?.url

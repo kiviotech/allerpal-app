@@ -1,33 +1,84 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
-import Icon from 'react-native-vector-icons/Ionicons';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import Icon from "react-native-vector-icons/Ionicons";
+import useAuthStore from "../../useAuthStore"; // Corrected import path
+import apiClient from "../../src/api/apiClient";
 
 const ChangePassword = () => {
-    const router = useRouter()
+    const router = useRouter();
+    const { jwt } = useAuthStore(state => state); // Access the jwt from the store
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [showPassword, setShowPassword] = useState({
-        current: false,
-        new: false,
-        confirm: false,
+    const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] = useState(false);
+    const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
+    const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+
+    const [validation, setValidation] = useState({
+        minLength: false,
+        hasNumber: false,
+        noSpaces: true,
+        hasUpperLower: false,
     });
 
-    const handlePasswordChange = () => {
-        if (newPassword !== confirmPassword) {
-            alert("New password and confirm password do not match!");
-            return;
-        }
+    const handlePasswordChange = async () => {
+        // Validate passwords
+        if (
+            newPassword === confirmPassword &&
+            validation.minLength &&
+            validation.hasNumber &&
+            validation.noSpaces &&
+            validation.hasUpperLower
+        ) {
 
-        // Handle password update logic here
-        alert("Password changed successfully!");
+            console.log('token', jwt, currentPassword, newPassword, confirmPassword)
+            try {
+                const response = await apiClient.post(
+                    "/auth/change-password",
+                    {
+                        currentPassword,
+                        password: newPassword,
+                        passwordConfirmation: confirmPassword,
+                    },
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${jwt}`
+                        },
+                    }
+                );
+                if (response.status === 200) {
+                    Alert.alert("Success", "Password changed successfully!");
+                    router.push("./Account"); // Navigate back to account page
+                } else {
+                    alert(response.data.error?.message || "Failed to update password.");
+                }
+            } catch (error) {
+                console.error("Password change error:", error.response?.data || error.message);
+                Alert.alert("Error", error.response?.data?.message || "Failed to change password. Please try again.");
+            }
+        } else {
+            alert("Please ensure all requirements are met.");
+            Alert.alert("Please ensure all requirements are met.");
+        }
+    };
+
+    // Optional: Handle password validation during input
+    const handlePasswordValidation = (password) => {
+        setNewPassword(password);
+        setValidation({
+            minLength: password.length >= 8,
+            hasNumber: /\d/.test(password),
+            noSpaces: !/\s/.test(password),
+            hasUpperLower: /[a-z]/.test(password) && /[A-Z]/.test(password),
+        });
     };
 
     return (
         <View style={styles.container}>
             <View style={styles.profileArrow}>
-                <TouchableOpacity onPress={() => router.push('./Account')}>
+                <TouchableOpacity onPress={() => router.push("./Account")}>
                     <Icon name="arrow-back-outline" size={24} color="#333" />
                 </TouchableOpacity>
                 <Text style={styles.title}>Change Password</Text>
@@ -41,15 +92,15 @@ const ChangePassword = () => {
                         <TextInput
                             style={styles.input}
                             placeholder="Current Password"
-                            secureTextEntry={!showPassword.current}
+                            secureTextEntry={!isCurrentPasswordVisible}
                             value={currentPassword}
                             onChangeText={setCurrentPassword}
                         />
                         <TouchableOpacity
                             style={styles.eyeIcon}
-                            onPress={() => setShowPassword((prev) => ({ ...prev, current: !prev.current }))}
+                            onPress={() => setIsCurrentPasswordVisible(!isCurrentPasswordVisible)}
                         >
-                            <Text>{showPassword.current ? "" : "👁️"}</Text>
+                            <Text>{isCurrentPasswordVisible ? "" : "👁️"}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -61,15 +112,15 @@ const ChangePassword = () => {
                         <TextInput
                             style={styles.input}
                             placeholder="New Password"
-                            secureTextEntry={!showPassword.new}
+                            secureTextEntry={!isNewPasswordVisible}
                             value={newPassword}
-                            onChangeText={setNewPassword}
+                            onChangeText={handlePasswordValidation} // Validates as user types
                         />
                         <TouchableOpacity
                             style={styles.eyeIcon}
-                            onPress={() => setShowPassword((prev) => ({ ...prev, new: !prev.new }))}
+                            onPress={() => setIsNewPasswordVisible(!isNewPasswordVisible)}
                         >
-                            <Text>{showPassword.new ? "" : "👁️"}</Text>
+                            <Text>{isNewPasswordVisible ? "" : "👁️"}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -81,19 +132,18 @@ const ChangePassword = () => {
                         <TextInput
                             style={styles.input}
                             placeholder="Confirm New Password"
-                            secureTextEntry={!showPassword.confirm}
+                            secureTextEntry={!isConfirmPasswordVisible}
                             value={confirmPassword}
                             onChangeText={setConfirmPassword}
                         />
                         <TouchableOpacity
                             style={styles.eyeIcon}
-                            onPress={() => setShowPassword((prev) => ({ ...prev, confirm: !prev.confirm }))}
+                            onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
                         >
-                            <Text>{showPassword.confirm ? "" : "👁️"}</Text>
+                            <Text>{isConfirmPasswordVisible ? "" : "👁️"}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
-
 
                 {/* Change Password Button */}
                 <TouchableOpacity style={styles.button} onPress={handlePasswordChange}>
@@ -103,6 +153,7 @@ const ChangePassword = () => {
         </View>
     );
 };
+
 
 const styles = StyleSheet.create({
     container: {
