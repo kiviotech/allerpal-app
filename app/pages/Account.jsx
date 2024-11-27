@@ -229,7 +229,7 @@ const Account = () => {
           {/* Change Password */}
           <TouchableOpacity
             style={styles.option}
-            onPress={() => showUnavailableMessage("Change Password")}
+            onPress={() => router.push("./ChangePassword")}
           >
             <Icon name="lock-closed-outline" size={24} color="#00CFFF" />
             <Text style={styles.optionText}>Change Password</Text>

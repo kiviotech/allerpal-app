@@ -397,6 +397,7 @@ const FinishSetUp = () => {
     "molluscs(such as mussels and oysters)": require("../../assets/mollusca.png"),
     "Crustaceans (such as prawns, crabs and lobsters)": require("../../assets/crustaceans.png"),
     "Tree nuts": require("../../assets/treenuts.png"),
+    Fish: require("../../assets/fish.png"),
   };
 
   const CustomCheckBox = ({ checked, onPress }) => (

@@ -10,24 +10,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import Footer from "./Footer";
 import { useNavigation, useRouter } from "expo-router";
-
-const predefinedResponses = {
-  price: "The price of Product X is $50.",
-  support:
-    "Please contact our support team at support@ecommerce.com for assistance.",
-  return:
-    "To initiate a return, please go to your order history and select the item you wish to return.",
-  default: "Sorry, I didn't understand that. Could you please rephrase?",
-  "track order": "Your order is in transit and will arrive soon.",
-  "cancel order": "Your order cancellation request has been received.",
-  "change address":
-    "Please provide the new address to proceed with the change.",
-  "return item": "Please select the item you'd like to return.",
-};
-
-const quickReplies = ["track order", "cancel order", "Return", "Support"];
 
 const ChatScreen = () => {
   const router = useRouter();
@@ -38,26 +21,16 @@ const ChatScreen = () => {
   const [userInput, setUserInput] = useState("");
   const flatListRef = useRef(null); // Ref for the FlatList
 
-  // const handleBackPress = () => {
-  //   router.push('./Home');
-  // };
-
   const handleSendMessage = () => {
     if (userInput.trim()) {
       addMessage(userInput, "user");
       setUserInput("");
-      setTimeout(() => generateAndAddResponse(userInput.toLowerCase()), 300);
+      setTimeout(() => generateAndAddResponse(), 300);
     }
   };
 
-  const handleQuickReply = (reply) => {
-    addMessage(reply, "user");
-    setTimeout(() => generateAndAddResponse(reply.toLowerCase()), 300);
-  };
-
-  const generateAndAddResponse = (input) => {
-    const botResponse =
-      predefinedResponses[input] || predefinedResponses["default"];
+  const generateAndAddResponse = () => {
+    const botResponse = "Thank you for chatting with us. We will inform the restaurant and get back to you after 24 hours.";
     addMessage(botResponse, "bot");
   };
 
@@ -109,19 +82,8 @@ const ChatScreen = () => {
         } // Auto-scroll when new messages are added
       />
 
-      {/* Quick Replies and Input Field */}
+      {/* Input Field */}
       <View style={styles.footer}>
-        <View style={styles.quickRepliesContainer}>
-          {quickReplies.map((reply, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.quickReplyButton}
-              onPress={() => handleQuickReply(reply)}
-            >
-              <Text style={styles.quickReplyText}>{reply}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
@@ -184,23 +146,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderTopWidth: 1,
     borderTopColor: "#DDD",
-  },
-  quickRepliesContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 10,
-  },
-  quickReplyButton: {
-    padding: 8,
-    borderRadius: 10,
-    margin: 10,
-    borderColor: "#000",
-    borderStyle: "solid",
-    borderWidth: 1,
-  },
-  quickReplyText: {
-    fontWeight: "bold",
-    textTransform: "capitalize",
   },
   inputContainer: {
     flexDirection: "row",

@@ -14,8 +14,11 @@ const Layout = () => {
           <Stack.Screen name="index" />
           <Stack.Screen name="auth/Login" />
           <Stack.Screen name="auth/SignUp" />
+          <Stack.Screen name="auth/createNewPassword" />
+          <Stack.Screen name="auth/passwordChangedNotification" />
           <Stack.Screen name="pages/AccountSetup" />
           <Stack.Screen name="pages/ResetPassWord" />
+          <Stack.Screen name="pages/ChangePassword" />
           <Stack.Screen name="pages/Home" />
           <Stack.Screen name="pages/Search" />
           <Stack.Screen name="pages/Community" />

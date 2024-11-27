@@ -186,6 +186,8 @@
 // });
 
 // export default FoodRecommendations;
+
+
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -307,7 +309,6 @@ const FoodRecommendations = ({ filteredFoodRecommendations }) => {
 
       setLoading(false);
       setMenuItems(filteredItems); // Update menu items after filtering
-      console.log("Filtered Items:", filteredItems);
     } else {
       console.log("No food found");
       setLoading(false);

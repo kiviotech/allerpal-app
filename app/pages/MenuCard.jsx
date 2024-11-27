@@ -61,13 +61,6 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     // paddingBottom: 15,
     borderRadius: 15,
-    backgroundColor: "#fff",
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    // height:105,
   },
   cardContainer: {
     // flexDirection: 'column',

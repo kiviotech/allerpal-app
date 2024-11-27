@@ -139,7 +139,6 @@ const Home = () => {
     const filteredFood = menuItems.filter((food) =>
       food.item_name.toLowerCase().includes(query.toLowerCase())
     );
-
     setFilteredFoodRecommendations(filteredFood);
   };
   return (
