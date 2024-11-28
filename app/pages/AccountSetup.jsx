@@ -83,7 +83,7 @@ const AccountSetup = () => {
       <Text style={styles.label}>I am creating an Allergy profile for</Text>
 
       <View style={styles.optionContainer}>
-        {["Myself", "Children", "Partner", "Friend", "Family"].map((option) => (
+        {["Myself", "Children", "Partner"].map((option) => (
           <TouchableOpacity
             key={option}
             onPress={() => handleOptionChange(option)}

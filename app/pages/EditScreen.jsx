@@ -34,111 +34,111 @@ const Profile = () => {
 
 
 
-  const allergenImages = {
-    celery: require('../../assets/celery.png'),
-    egg: require('../../assets/eggs.png'),
-    'cereals containing gluteen': require('../../assets/cereals.png'),
-    Lupin: require('../../assets/lupin.png'),
-    Musturd: require('../../assets/mustard.png'),
-    milk: require('../../assets/milk.png'),
-    peanut: require('../../assets/peanuts.png'),
-    Sesame: require('../../assets/sesame.png'),
-    'silphur dioxide/sulphites': require('../../assets/sulphur.png'),
-    SoyaBean: require('../../assets/soyabeans.png'),
-    'molluscs (such as mussels and oysters)': require('../../assets/mollusca.png'),
-    'crustaceans(such as prawns,crabs and lobsters)': require('../../assets/crustaceans.png'),
-    'Tree nuts( such as almonds,Cashews,pecans)': require('../../assets/treenuts.png'),
-    Fish: require('../../assets/fish.png'),
-  };
-
-  useEffect(() => {
-    const fetchAllergenData = async () => {
-      try {
-        const data = await fetchAllAllergies(); // Fetch allergens from backend
-        // const allergyName = data.data.map((allergy) => allergy.name);
-        // const allergyId = data.data.map((allergy) => allergy.id);
-        setAllergenList(data.data);
-      } catch (error) {
-        console.error('Error fetching allergens:', error);
-      }
+    const allergenImages = {
+      celery: require('../../assets/celery.png'),
+      egg: require('../../assets/eggs.png'),
+      'cereals containing gluteen': require('../../assets/cereals.png'),
+      Lupin: require('../../assets/lupin.png'),
+      Musturd: require('../../assets/mustard.png'),
+      milk: require('../../assets/milk.png'),
+      peanut: require('../../assets/peanuts.png'),
+      Sesame: require('../../assets/sesame.png'),
+      'silphur dioxide/sulphites': require('../../assets/sulphur.png'),
+      SoyaBean: require('../../assets/soyabeans.png'),
+      'molluscs (such as mussels and oysters)': require('../../assets/mollusca.png'),
+      'crustaceans(such as prawns,crabs and lobsters)': require('../../assets/crustaceans.png'),
+      'Tree nuts( such as almonds,Cashews,pecans)': require('../../assets/treenuts.png'),
+      Fish: require('../../assets/fish.png'),
     };
 
-    const fetchUserAllergens = async () => {
-      try {
-        const response = await fetchUserAllergyByUserId(userId);
-        setUserAllergenId(response.data[0]?.documentId)
-        const userAllergies = response.data[0]?.allergies || [];
-        const userAllergenIds = userAllergies?.map((item) => item.id) || [];
-        // setUserAllergens(userAllergies);
-        setSelectedAllergens(userAllergenIds); // Set initially selected allergens for checkboxes
-      } catch (error) {
-        console.error('Error fetching user allergens:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (userId) {
-      fetchAllergenData();
-      fetchUserAllergens();
-    }
-  }, [userId]);
-
-
-  // Handle checkbox toggle
-  const handleCheckboxChange = (allergenId) => {
-    setSelectedAllergens((prevState) =>
-      prevState.includes(allergenId)
-        ? prevState.filter((id) => id !== allergenId) // Remove allergen
-        : [...prevState, allergenId] // Add allergen
-    );
-  };
-
-  const handleSaveChanges = async () => {
-    try {
-      const formattedAllergens = selectedAllergens.map((allergenId) => ({
-        id: allergenId,
-      }));
-
-      const payload = {
-        data: {
-          allergies: formattedAllergens,
-        },
+    useEffect(() => {
+      const fetchAllergenData = async () => {
+        try {
+          const data = await fetchAllAllergies(); // Fetch allergens from backend
+          // const allergyName = data.data.map((allergy) => allergy.name);
+          // const allergyId = data.data.map((allergy) => allergy.id);
+          setAllergenList(data.data);
+        } catch (error) {
+          console.error('Error fetching allergens:', error);
+        }
       };
-  
-      const response = await updateUserAllergyByUser( userAllergenId, payload);
-  
-      if (response?.data) {
-        console.log('Allergen preferences updated successfully.');
-        Alert.alert('Allergen preferences updated successfully.', '', [
-         router.push('/pages/Account'),
-        ]);
-        
-      } else {
-        console.error('Unexpected response:', response);
-        alert('Failed to update allergen preferences. Please try again.');
+
+      const fetchUserAllergens = async () => {
+        try {
+          const response = await fetchUserAllergyByUserId(userId);
+          setUserAllergenId(response.data[0]?.documentId)
+          const userAllergies = response.data[0]?.allergies || [];
+          const userAllergenIds = userAllergies?.map((item) => item.id) || [];
+          // setUserAllergens(userAllergies);
+          setSelectedAllergens(userAllergenIds); // Set initially selected allergens for checkboxes
+        } catch (error) {
+          console.error('Error fetching user allergens:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      if (userId) {
+        fetchAllergenData();
+        fetchUserAllergens();
       }
-    } catch (error) {
-      console.error('Error updating allergens:', error);
-      alert('Failed to update allergen preferences.');
+    }, [userId]);
+
+
+    // Handle checkbox toggle
+    const handleCheckboxChange = (allergenId) => {
+      setSelectedAllergens((prevState) =>
+        prevState.includes(allergenId)
+          ? prevState.filter((id) => id !== allergenId) // Remove allergen
+          : [...prevState, allergenId] // Add allergen
+      );
+    };
+
+    const handleSaveChanges = async () => {
+      try {
+        const formattedAllergens = selectedAllergens.map((allergenId) => ({
+          id: allergenId,
+        }));
+
+        const payload = {
+          data: {
+            allergies: formattedAllergens,
+          },
+        };
+    
+        const response = await updateUserAllergyByUser( userAllergenId, payload);
+    
+        if (response?.data) {
+          console.log('Allergen preferences updated successfully.');
+          Alert.alert('Allergen preferences updated successfully.', '', [
+          router.push('/pages/Account'),
+          ]);
+          
+        } else {
+          console.error('Unexpected response:', response);
+          alert('Failed to update allergen preferences. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error updating allergens:', error);
+        alert('Failed to update allergen preferences.');
+      }
+    };
+
+    if (loading) {
+      return <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />;
     }
-  };
 
-  if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />;
-  }
-
-  // const allergenKeys = Object.keys(allergens);
-  // const mainAllergens = allergenKeys.slice(0, -3); // All but the last three
-  // const lastThreeAllergens = allergenKeys.slice(-3);
-  const CustomCheckBox = ({ checked, onPress }) => (
-    <TouchableOpacity
-      style={[styles.checkBox, checked && styles.checkBoxSelected]}
-      onPress={onPress}
-    >
-      {checked && <Ionicons name="checkmark" size={16} color="#00c4cc" />}
-    </TouchableOpacity>
-  );
+    // const allergenKeys = Object.keys(allergens);
+    // const mainAllergens = allergenKeys.slice(0, -3); // All but the last three
+    // const lastThreeAllergens = allergenKeys.slice(-3);
+    const CustomCheckBox = ({ checked, onPress }) => (
+      <TouchableOpacity
+        style={[styles.checkBox, checked && styles.checkBoxSelected]}
+        onPress={onPress}
+      >
+        {checked && <Ionicons name="checkmark" size={16} color="#00c4cc" />}
+      </TouchableOpacity>
+    );
 
   return (
     <View contentContainerStyle={styles.container}>

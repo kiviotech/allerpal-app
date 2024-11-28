@@ -1,27 +1,31 @@
-
-
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, FlatList, Image, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView,Dimensions } from 'react-native';
+import { View, Text, TextInput, FlatList, Image, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Dimensions, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 const { width } = Dimensions.get('window');
 import foodrestro from '../../assets/foodrestro.png'
 import Restro from "../../assets/Restro.png";
-import Filter from "../../assets/filtericon.png"
+// import Filter from "../../assets/filtericon.png"
 import Footer from './Footer';
 
 const foodData = [
-  { id: '1', name: 'Idli', rating: 4.8, price: "$5.50", image: foodrestro,  reviews: 25,},
-  { id: '2', name: 'Tacos', rating: 4.6, price: "$8.50", image: foodrestro,  reviews: 35, },
-  { id: '3', name: 'Birayani', rating: 4.8, price: "$5.50", image: foodrestro,  reviews: 25,},
-  { id: '4', name: 'Kabab', rating: 4.6, price: "$8.50", image: foodrestro,  reviews: 35, },
+  { id: '1', name: 'Idli', rating: 4.8, price: "$5.50", image: foodrestro, reviews: 25, },
+  { id: '2', name: 'Tacos', rating: 4.6, price: "$8.50", image: foodrestro, reviews: 35, },
+  { id: '3', name: 'Birayani', rating: 4.8, price: "$5.50", image: foodrestro, reviews: 25, },
+  { id: '4', name: 'Kabab', rating: 4.6, price: "$8.50", image: foodrestro, reviews: 35, },
 ];
 
 const restaurantData = [
-  { id: '1', name: "McDonald's", rating: 4.5, reviews: 25, tags: ['BURGER', 'FAST FOOD'], image:Restro},
-  { id: '2', name: 'Burger King', rating: 4.3, reviews: 40, tags: ['BURGER', 'FAST FOOD'], image: Restro },
+  { id: '1', name: "McDonald's", rating: 4.5, reviews: 25, tags: ['BURGER', 'FAST FOOD'], image: Restro, location: 'Birmingham', },
+  { id: '2', name: 'Burger King', rating: 4.3, reviews: 40, tags: ['BURGER', 'FAST FOOD'], image: Restro, location: 'Bangalore', },
 ];
 
-const recentSearches = ['Mexican Food', 'Italian'];
+const popularSearches = [
+  { id: '1', name: 'Top Rated', image: require('../../assets/star.png') },
+  { id: '2', name: 'Best Cuisines', image: require('../../assets/cusines.png') },
+  // { id: '3', name: 'Vegan Options', image: require('../../assets/vegan.png') }, // Add more images as needed
+];
+
+const recentSearches = ['Mexican Food', 'Italian', 'Birmingham'];
 const recentViews = restaurantData;
 
 const Search = () => {
@@ -29,6 +33,8 @@ const Search = () => {
   const [filteredFood, setFilteredFood] = useState([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
   const [showInitial, setShowInitial] = useState(true);
+  const [filterVisible, setFilterVisible] = useState(false); // State for the filter modal
+  const [selectedSortOption, setSelectedSortOption] = useState(null); // State for selected sort option
 
   useEffect(() => {
     // Reset to initial view when search is cleared
@@ -39,10 +45,25 @@ const Search = () => {
     }
   }, [searchTerm]);
 
+  const applyFilters = () => {
+    // Handle filter application logic here...
+    setFilterVisible(false); // Close the modal after applying filters
+  };
+
+  const handleSortOptionPress = (option) => {
+    setSelectedSortOption(option); // Update the selected option
+  };
+
+  const getSortOptionStyle = (option) => {
+    return option === selectedSortOption
+      ? { backgroundColor: '#00D0DD', color: 'white' } // Selected option style
+      : {}; // Default style
+  };
+
   const handleSearch = (text) => {
     setSearchTerm(text);
     setShowInitial(false);
-  
+
     if (text.toLowerCase() === 'food') {
       // Show all food data
       setFilteredFood(foodData);
@@ -58,7 +79,7 @@ const Search = () => {
       const restaurantMatches = restaurantData.filter((restaurant) =>
         restaurant.name.toLowerCase().includes(text.toLowerCase())
       );
-  
+
       if (foodMatches.length > 0) {
         setFilteredFood(foodMatches);
         setFilteredRestaurants(restaurantData);
@@ -68,29 +89,27 @@ const Search = () => {
       }
     }
   };
-  
+
 
   // food card format data
-  
-    const [liked, setLiked] = useState(false);
-  
-    const handleHeartPress = () => {
-      setLiked(!liked);
-    };
+
+  const [liked, setLiked] = useState(false);
+
+  const handleHeartPress = () => {
+    setLiked(!liked);
+  };
 
   const renderFoodItem = ({ item }) => (
- 
-
-<View style={styles.card}>
+    <View style={styles.card}>
       <Image source={item.image} style={styles.image} />
       <View style={styles.priceContainer}>
         <Text style={styles.priceText}>{item.price}</Text>
         <TouchableOpacity onPress={handleHeartPress} style={[styles.heartContainer, liked && styles.heartContainerLiked]}>
 
           <Ionicons
-            name={liked ? "heart" : "heart-outline"} 
+            name={liked ? "heart" : "heart-outline"}
             size={18}
-            color= 'white'
+            color='white'
             style={styles.heartIcon}
           />
 
@@ -111,37 +130,38 @@ const Search = () => {
   );
 
   const renderRestaurantItem = ({ item }) => (
-   
-<View style={styles.cardContainer}>
-<View style={styles.card1}>
-      <Image source={item.image} style={styles.image1} />
-      {/* Icons positioned at the top-right corner */}
-      <View style={styles.iconContainer1}>
-        <View style={styles.heart1}>
-        <Ionicons name="heart-outline" size={20} color="white" style={styles.icon1} />
-        </View>
-        <View style={styles.heart1}>
-        <Ionicons name="chatbubble-outline" size={20} color="white" style={styles.icon1} />
-        </View>
-      </View>
-      <View style={styles.ratingContainer1}>
-        <Text style={styles.ratingText1}>{item.rating} ⭐</Text>
-        <Text style={styles.reviewText1}>({item.reviews}+)</Text>
-      </View>
-      <View style={styles.detailsContainer1}>
-        <Text style={styles.name1}>{item.name}</Text>
-        <View style={styles.categories1}>
-          {item.tags.map((category, index) => (
-            <Text key={index} style={styles.category1}>
-              {category}
-            </Text>
-          ))}
-        </View>
-        
-      </View>
-    </View>
 
-</View>
+    <View style={styles.cardContainer}>
+      <View style={styles.card1}>
+        <Image source={item.image} style={styles.image1} />
+        {/* Icons positioned at the top-right corner */}
+        <View style={styles.iconContainer1}>
+          <View style={styles.heart1}>
+            <Ionicons name="heart-outline" size={20} color="white" style={styles.icon1} />
+          </View>
+          <View style={styles.heart1}>
+            <Ionicons name="chatbubble-outline" size={20} color="white" style={styles.icon1} />
+          </View>
+        </View>
+        <View style={styles.ratingContainer1}>
+          <Text style={styles.ratingText1}>{item.rating} ⭐</Text>
+          <Text style={styles.reviewText1}>({item.reviews}+)</Text>
+        </View>
+        <View style={styles.detailsContainer1}>
+          <Text style={styles.name1}>{item.name}</Text>
+          <View style={styles.categories1}>
+            {item.tags.map((category, index) => (
+              <Text key={index} style={styles.category1}>
+                {category}
+              </Text>
+            ))}
+          <Text style={{flex: 1, justifyContent: 'flex-end',marginLeft:100}}>{item.location}</Text>
+          </View>
+
+        </View>
+      </View>
+
+    </View>
   );
 
   return (
@@ -156,10 +176,61 @@ const Search = () => {
               value={searchTerm}
               onChangeText={handleSearch}
             />
-              {searchTerm ? (
-            <Image source={require('../../assets/filtericon.png')} style={styles.filterImage} />
-            ) : null}
+            <TouchableOpacity onPress={() => setFilterVisible(true)}>
+              <Image source={require('../../assets/filter.png')} style={styles.filterImage} />
+            </TouchableOpacity>
           </View>
+
+          {/* Filter Modal */}
+          <Modal
+            visible={filterVisible}
+            animationType="slide"
+            transparent={true}
+            onRequestClose={() => setFilterVisible(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Filters</Text>
+
+                {/* Sort Options */}
+                <Text style={styles.sectionTitle}>Sort by</Text>
+                <View style={styles.sortOptions}>
+                  {['Relevance', 'Price: low to high', 'Price: high to low', 'Location: nearest to farthest', 'Location: farthest to nearest'].map((option) => (
+                    <TouchableOpacity
+                      key={option}
+                      style={[styles.optionButton, getSortOptionStyle(option)]} // Apply conditional style
+                      onPress={() => handleSortOptionPress(option)} // Handle press
+                    >
+                      <Text style={{ color: option === selectedSortOption ? 'white' : 'black' }}>{option}</Text> {/* Conditional text color */}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Cuisine Options */}
+                <Text style={styles.sectionTitle}>By Cuisine</Text>
+                <View style={styles.cusinesOptions}>
+                  {['Italian', 'Mexican', 'Chinese', 'Indian', 'British', 'Korean'].map((cuisine, index) => (
+                    <TouchableOpacity key={index} 
+                    style={[styles.optionButton, getSortOptionStyle(index)]} // Apply conditional style
+                    onPress={() => handleSortOptionPress(index)} // Handle press
+                    >
+                      <Text style={{ color: index === selectedSortOption ? 'white' : 'black' }}>{cuisine}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Buttons */}
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity onPress={() => setFilterVisible(false)} style={styles.cancelButton}>
+                    <Text style={styles.cancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={applyFilters} style={styles.applyButton}>
+                    <Text style={styles.applyText}>Apply</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
 
           {showInitial ? (
             <>
@@ -167,6 +238,16 @@ const Search = () => {
               <View style={styles.recentSearchContainer}>
                 {recentSearches.map((item, index) => (
                   <Text key={index} style={styles.searchTag}>{item}</Text>
+                ))}
+              </View>
+
+              <Text style={styles.sectionTitle}>Popular Searches</Text>
+              <View style={styles.popularSearchContainer}>
+                {popularSearches.map((item) => (
+                  <TouchableOpacity key={item.id} style={styles.popularSearchItem}>
+                    <Image source={item.image} style={styles.popularSearchImage} />
+                    <Text style={styles.searchTag}>{item.name}</Text>
+                  </TouchableOpacity>
                 ))}
               </View>
 
@@ -208,32 +289,32 @@ const Search = () => {
           )}
         </View>
       </ScrollView>
-      <View style={{display:'flex'}}>
-        <Footer/>
+      <View style={{ display: 'flex' }}>
+        <Footer />
       </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  AreaContainer: { flex: 1, padding: 10,  width: '100%' },
+  AreaContainer: { flex: 1, padding: 10, width: '100%' },
   container: { flex: 1, padding: 16, backgroundColor: '#f9f9f9' },
-  searchContainer: { flexDirection: 'row', alignItems: 'center', padding: 12, borderWidth: 1, borderColor: '#ddd', borderRadius: 20, marginBottom: 20 },
-  searchIcon: { marginRight: 8 },
-  searchInput: { flex: 1 },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', padding: 12, marginBottom: 20 },
+  searchIcon: { marginRight: 8, },
+  searchInput: { flex: 1, borderWidth: 1, borderColor: '#ddd', borderRadius: 20, padding: 10 },
   filterImage: {
     width: 20,
     height: 20,
-    marginLeft: 10,
+    // marginLeft: 10,
   },
   sectionTitle: { fontSize: 18, fontWeight: '600', marginTop: 20, marginBottom: 10 },
   recentSearchContainer: { flexDirection: 'row', gap: 10, marginBottom: 20 },
-  searchTag: { paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: '#ddd', borderRadius: 20, fontSize: 14, backgroundColor: '#f1f1f1' },
+  searchTag: { paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: '#ddd', borderStyle: 'solid', borderRadius: 20, fontSize: 14, backgroundColor: '#f1f1f1' },
 
-  cardContainer:{
-    display:'flex',
-    justifyContent:'center',
-    alignItems:'center'
+  cardContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   card: {
     backgroundColor: '#fff',
@@ -251,6 +332,37 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: 120,  // Reduced height for a shorter card
+  },
+  popularSearchContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginVertical: 10,
+  },
+
+  popularSearchItem: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    margin: 5,
+    width: width * 0.25, // Adjust size based on the layout
+    borderColor: '#00D0DD',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    backgroundColor: '#fff'
+  },
+
+  popularSearchImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25, // For rounded images
+    marginBottom: 5,
+  },
+
+  searchTag: {
+    fontSize: 14,
+    color: '#555',
+    textAlign: 'center',
   },
   priceContainer: {
 
@@ -308,7 +420,7 @@ const styles = StyleSheet.create({
     width: 25,
     height: 25,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)', 
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
@@ -316,10 +428,10 @@ const styles = StyleSheet.create({
 
   },
   heartContainerLiked: {
-    backgroundColor: '#00aced', 
+    backgroundColor: '#00aced',
   },
   card1: {
-    width:'90%',
+    width: '90%',
     // width: width * 0.7,
     marginRight: 16,
     backgroundColor: '#fff',
@@ -343,7 +455,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap:'3%'
+    gap: '3%'
   },
   icon1: {
     marginLeft: 0,
@@ -392,15 +504,28 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
 
-  heart1:{
-    width: 30,       
-    height: 30,      
-    borderRadius: '50%', 
-    backgroundColor: '#00aced', 
+  heart1: {
+    width: 30,
+    height: 30,
+    borderRadius: '50%',
+    backgroundColor: '#00aced',
     justifyContent: 'center',
     alignItems: 'center',
-   
-  }
+
+  },
+  // Modal styles
+  modalContainer: { flex: 1, justifyContent: 'flex-end', alignItems: 'center' },
+  modalContent: { width: '100%', backgroundColor: 'white', borderRadius: 8, padding: 16 },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 16 },
+  sectionTitle: { fontSize: 16, fontWeight: 'bold', marginTop: 16 },
+  sortOptions: { flexDirection: 'column', flexWrap: 'wrap', marginVertical: 8 },
+  cusinesOptions: { flexDirection: 'row', flexWrap: 'wrap', marginVertical: 10,  },
+  optionButton: { padding: 8, borderWidth: 1, borderColor: '#00D0DD', borderRadius: 20, margin: 4, },
+  buttonContainer: { flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 16 },
+  cancelButton: { padding: 12, paddingHorizontal: 40, backgroundColor: '#fff', borderRadius: 8 },
+  applyButton: { paddingVertical: 12,paddingHorizontal: 40, backgroundColor: '#00D0DD', borderRadius: 8 },
+  cancelText: { color: '#00D0DD' },
+  applyText: { color: '#fff' },
 });
 
 export default Search;

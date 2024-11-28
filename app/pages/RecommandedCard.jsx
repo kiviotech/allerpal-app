@@ -52,6 +52,7 @@ const RestaurantCard = ({ restaurant,onPress }) => {
       </View>
       <View style={styles.detailsContainer}>
         <Text style={styles.name}>{restaurant.name}</Text>
+        <Text>{restaurant.location}</Text>
         <View style={styles.categories}>
           {restaurant.categories.map((category, index) => (
             <Text key={index} style={styles.category}>
@@ -72,7 +73,8 @@ const RecommandedCard = () => {
       <Text style={styles.title}>Recommanfded for You</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
         {restaurantData.map((restaurant) => (
-          <RestaurantCard key={restaurant.id} restaurant={restaurant}  />
+          console.log('eee',restaurant)
+          // <RestaurantCard key={restaurant.id} restaurant={restaurant}  />
         ))}
       </ScrollView>
     </View>

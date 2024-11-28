@@ -119,6 +119,7 @@ const RestaurantCard = ({ restaurant, onPress }) => {
 
         <View style={styles.detailsContainer}>
           <Text style={styles.name}>{restaurant.name}</Text>
+          <Text >{restaurant.location}</Text>
 
           {/* Check if categories is an array before mapping */}
           <View style={styles.categories}>
@@ -175,6 +176,7 @@ const RestaurantRecommendation = ({ filteredRestaurants }) => {
       >
         {Array.isArray(restaurants) &&
           restaurants.map((restaurant) => (
+            // console.log(restaurant)
             <RestaurantCard key={restaurant.id} restaurant={restaurant} />
           ))}
       </ScrollView>
@@ -208,7 +210,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
     elevation: 5,
-    height: 230,
+    minHeight: 230,
   },
   image: {
     width: "100%",
