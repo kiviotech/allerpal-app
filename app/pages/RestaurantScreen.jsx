@@ -8,6 +8,7 @@ import {
   StyleSheet,
   ScrollView,
   SafeAreaView,
+  Linking,
 } from "react-native";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import MenuCard from "./MenuCard";
@@ -17,6 +18,7 @@ import { useRouter } from "expo-router";
 import ReviewCards from "./ReviewCards";
 import { useLocalSearchParams } from "expo-router";
 import { fetchMenuByRestaurantId } from "../../src/services/menuServices";
+import * as Location from 'expo-location';
 
 export default function () {
   const router = useRouter();
@@ -43,6 +45,48 @@ export default function () {
   }, []);
 
   const filteredMenuItems = menuData.filter((item) => item.type === type);
+
+  const callResto = () => {
+    const phoneNumber = '+918277238505'; // Replace with the restaurant's phone number
+
+    // Open the phone dialer
+    Linking.openURL(`tel:${phoneNumber}`).catch((err) =>
+      Alert.alert('Error', 'Unable to make a call. Please try again later.')
+    );
+  };
+
+  const openLocation = async () => {
+    try {
+      // Request location permissions
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission Denied", "Location access is required.");
+        return;
+      }
+
+      // Get current location
+      const currentLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      console.log("Current Location Coordinates:", currentLocation.coords);
+
+      // Get latitude and longitude from current location
+      const { latitude, longitude } = currentLocation.coords;
+
+      // Construct the URL for Google Maps
+      const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+      // Open Google Maps with the location
+      Linking.openURL(url).catch((err) => {
+        console.error('Error opening location:', err);
+      });
+
+    } catch (error) {
+      console.error("Error fetching location:", error);
+      Alert.alert("Error", "Unable to fetch location or address.");
+    }
+  };
 
   // Scroll to reviews section
   const scrollToReviews = () => {
@@ -75,10 +119,10 @@ export default function () {
             <View style={styles.titleRow}>
               <Text style={styles.restaurantName}>{name}</Text>
               <View style={styles.iconRow}>
-                <TouchableOpacity style={styles.iconButton}>
+                <TouchableOpacity style={styles.iconButton} onPress={callResto}>
                   <FontAwesome name="phone" size={20} color="#ff6347" />
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.iconButton, styles.mapIcon]}>
+                </TouchableOpacity>              
+                <TouchableOpacity style={[styles.iconButton, styles.mapIcon]} onPress={openLocation}>
                   <FontAwesome name="map-marker" size={20} color="#ff6347" />
                 </TouchableOpacity>
               </View>

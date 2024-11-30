@@ -10,6 +10,8 @@ import { useRouter } from 'expo-router';
 const Profile = () => {
   const router = useRouter()
   const [allegenList, setAllergenList] = useState([]);
+  const [mainAllergens, setMainAllergens] = useState([]);
+  const [lastAllergens, setLastAllergens] = useState([]);
   const [userAllergenId, setUserAllergenId] = useState(''); // To store allergens of the user
   const [selectedAllergens, setSelectedAllergens] = useState([]); // To track selected allergens
   const [loading, setLoading] = useState(true);
@@ -55,9 +57,19 @@ const Profile = () => {
       const fetchAllergenData = async () => {
         try {
           const data = await fetchAllAllergies(); // Fetch allergens from backend
-          // const allergyName = data.data.map((allergy) => allergy.name);
-          // const allergyId = data.data.map((allergy) => allergy.id);
           setAllergenList(data.data);
+
+          const main = [];
+        const last = [];
+        data.data.forEach((allergen) => {
+          if (allergen.name.length >= 20) {
+            last.push(allergen);
+          } else {
+            main.push(allergen);
+          }
+        });
+        setMainAllergens(main);
+        setLastAllergens(last);
         } catch (error) {
           console.error('Error fetching allergens:', error);
         }
@@ -105,6 +117,8 @@ const Profile = () => {
             allergies: formattedAllergens,
           },
         };
+
+        console.log(userAllergenId, payload)
     
         const response = await updateUserAllergyByUser( userAllergenId, payload);
     
@@ -144,7 +158,7 @@ const Profile = () => {
     <View contentContainerStyle={styles.container}>
       <View style={styles.allergensContainer}>
         <View style={styles.checkboxContainer}>
-        {allegenList.map((allergen) => (
+        {mainAllergens.map((allergen) => (
           <View key={allergen.id} style={styles.checkboxRow}>
             <CustomCheckBox
               checked={selectedAllergens.includes(allergen.id)} // Check if allergen is selected
@@ -156,15 +170,18 @@ const Profile = () => {
             </View>
           </View>
         ))}
-          {/* {lastThreeAllergens.map((key) => (
-            <View key={key} style={styles.singleAllergenRow}>
-              <CustomCheckBox checked={allergens[key]} onPress={() => handleCheckboxChange(key)} />
+          {lastAllergens.map((allergen) => (
+            <View key={allergen.id} style={styles.singleAllergenRow}>
+              <CustomCheckBox
+                checked={selectedAllergens.includes(allergen.id)}
+                onPress={() => handleCheckboxChange(allergen.id)}
+              />
               <View style={styles.imageiconContainer}>
-                <Image source={allergenImages[key]} style={styles.icon1} />
-                <Text style={styles.checkboxLabel}>{key}</Text>
+                <Image source={allergenImages[allergen.name]} style={styles.icon} />
+                <Text style={styles.checkboxLabel}>{allergen.name}</Text>
               </View>
             </View>
-          ))} */}
+          ))}
         </View>
       </View>
       <TouchableOpacity style={styles.signOutButton} onPress={handleSaveChanges}>
@@ -218,9 +235,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     fontSize: 16,
   },
-
-
-
+  icon: {
+    width: 24,
+    height: 24,
+    marginLeft: 10,
+  },
   allergensContainer: {
     // borderColor: 'blue',
     // borderWidth: 1,
@@ -233,7 +252,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-
   },
 
   checkboxRow: {
@@ -241,15 +259,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '35%',
     marginBottom: 10,
-    gap: '3%'
-
+    gap: '3%',
   },
   singleAllergenRow: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
     marginTop: 10,
-
   },
 
   checkboxLabel: {
@@ -260,6 +276,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     color: '#555',
     fontSize: 15,
+
   },
   //     checkboxWrapper: {
   //     borderWidth: 1,

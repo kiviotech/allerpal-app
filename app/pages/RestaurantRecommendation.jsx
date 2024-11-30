@@ -42,7 +42,7 @@ const RestaurantCard = ({ restaurant, onPress }) => {
         alternativeText: img.alternativeText,
         url: img.url,
       }));
-
+      
       const payload = {
         data: {
           name: restaurant.name,

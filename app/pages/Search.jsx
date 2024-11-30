@@ -1,43 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, FlatList, Image, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Dimensions, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-const { width } = Dimensions.get('window');
-import foodrestro from '../../assets/foodrestro.png'
+import foodrestro from '../../assets/foodrestro.png';
 import Restro from "../../assets/Restro.png";
-// import Filter from "../../assets/filtericon.png"
 import Footer from './Footer';
+import { getAllRestaurants } from '../../src/api/repositories/restaurantRepositories';
+import { fetchAllMenuItems } from '../../src/services/menuItemsServices';
 
-const foodData = [
-  { id: '1', name: 'Idli', rating: 4.8, price: "$5.50", image: foodrestro, reviews: 25, },
-  { id: '2', name: 'Tacos', rating: 4.6, price: "$8.50", image: foodrestro, reviews: 35, },
-  { id: '3', name: 'Birayani', rating: 4.8, price: "$5.50", image: foodrestro, reviews: 25, },
-  { id: '4', name: 'Kabab', rating: 4.6, price: "$8.50", image: foodrestro, reviews: 35, },
-];
+const { width } = Dimensions.get('window');
 
-const restaurantData = [
-  { id: '1', name: "McDonald's", rating: 4.5, reviews: 25, tags: ['BURGER', 'FAST FOOD'], image: Restro, location: 'Birmingham', },
-  { id: '2', name: 'Burger King', rating: 4.3, reviews: 40, tags: ['BURGER', 'FAST FOOD'], image: Restro, location: 'Bangalore', },
-];
 
 const popularSearches = [
   { id: '1', name: 'Top Rated', image: require('../../assets/star.png') },
   { id: '2', name: 'Best Cuisines', image: require('../../assets/cusines.png') },
-  // { id: '3', name: 'Vegan Options', image: require('../../assets/vegan.png') }, // Add more images as needed
 ];
 
-const recentSearches = ['Mexican Food', 'Italian', 'Birmingham'];
-const recentViews = restaurantData;
+// const recentSearches = ['Mexican Food', 'Italian', 'Birmingham'];
 
 const Search = () => {
+  const [restaurants, setRestaurants] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredFood, setFilteredFood] = useState([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
   const [showInitial, setShowInitial] = useState(true);
-  const [filterVisible, setFilterVisible] = useState(false); // State for the filter modal
-  const [selectedSortOption, setSelectedSortOption] = useState(null); // State for selected sort option
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [selectedSortOption, setSelectedSortOption] = useState(null);
+
+  const [restaurantPage, setRestaurantPage] = useState(1);
+  const [foodPage, setFoodPage] = useState(1);
+  const [loadingRestaurants, setLoadingRestaurants] = useState(false);
+  const [loadingFood, setLoadingFood] = useState(false);
+  const [recentSearches, setRecentSearches] = useState([]);
 
   useEffect(() => {
-    // Reset to initial view when search is cleared
     if (!searchTerm) {
       setShowInitial(true);
       setFilteredFood([]);
@@ -45,58 +41,127 @@ const Search = () => {
     }
   }, [searchTerm]);
 
+  useEffect(() => {
+    fetchRestaurants();
+  }, []);
+
+  const fetchRestaurants = async (page = 1, limit = 3) => {
+    try {
+      const response = await getAllRestaurants({ page, limit });
+      setRestaurants(response.data.data || []);
+      setFilteredRestaurants(response.data.data || []);
+    } catch (error) {
+      console.error("Error fetching restaurants:", error);
+      setRestaurants([]);
+      setFilteredRestaurants([]);
+    }
+  };
+
+  const loadMoreRestaurants = () => {
+    if (!loadingRestaurants) {
+      setRestaurantPage((prevPage) => prevPage + 1);
+      fetchRestaurants(restaurantPage + 1);
+    }
+  };
+
+  useEffect(() => {
+    const getMenuItems = async () => {
+      try {
+        const response = await fetchAllMenuItems();
+        if (response && response.data) {
+          const menuItems = response.data;
+          setMenuItems(menuItems);
+          setFilteredFood(menuItems);
+        } else {
+          setMenuItems([]);
+          setFilteredFood([]);
+        }
+      } catch (error) {
+        console.error("Error fetching menu items:", error);
+        setMenuItems([]);
+        setFilteredFood([]);
+      }
+    };
+    getMenuItems();
+  }, []);
+
   const applyFilters = () => {
-    // Handle filter application logic here...
-    setFilterVisible(false); // Close the modal after applying filters
+    setFilterVisible(false);
   };
 
   const handleSortOptionPress = (option) => {
-    setSelectedSortOption(option); // Update the selected option
+    setSelectedSortOption(option);
   };
 
   const getSortOptionStyle = (option) => {
     return option === selectedSortOption
-      ? { backgroundColor: '#00D0DD', color: 'white' } // Selected option style
-      : {}; // Default style
+      ? { backgroundColor: '#00D0DD', color: 'white' }
+      : {};
   };
 
   const handleSearch = (text) => {
     setSearchTerm(text);
     setShowInitial(false);
-
-    if (text.toLowerCase() === 'food') {
-      // Show all food data
-      setFilteredFood(foodData);
-      setFilteredRestaurants(restaurantData);
-    } else if (text.toLowerCase() === 'restaurant') {
-      // Show all restaurant data
+    if (text.length < 3) {
+      setFilteredRestaurants([]);
       setFilteredFood([]);
-      setFilteredRestaurants(restaurantData);
-    } else if (text) {
-      const foodMatches = foodData.filter((food) =>
-        food.name.toLowerCase().includes(text.toLowerCase())
-      );
-      const restaurantMatches = restaurantData.filter((restaurant) =>
-        restaurant.name.toLowerCase().includes(text.toLowerCase())
-      );
-
-      if (foodMatches.length > 0) {
-        setFilteredFood(foodMatches);
-        setFilteredRestaurants(restaurantData);
-      } else {
-        setFilteredFood([]);
-        setFilteredRestaurants(restaurantMatches);
-      }
+      return;
     }
+
+
+    else {
+      const searchWords = text.toLowerCase().split(' ');
+
+      const filtered = restaurants.filter((restaurant) => {
+        const locationWords = restaurant.location.toLowerCase().split(',');
+        const nameWords = restaurant.name.toLowerCase().split(' ');
+        
+        const filteredFood = menuItems.filter((food) => {
+          const foodNameWords = food.item_name.toLowerCase().split(' '); // Split item name into words
+          const categoryWords = food.category?.toLowerCase().split(' ') || []; // Split category if it exists
+
+        const locationMatch = searchWords.some((searchWord) =>
+          locationWords.includes(searchWord)
+        );
+
+        const nameMatch = searchWords.some((searchWord) =>
+          nameWords.includes(searchWord))
+
+        const foodNameMatch = searchWords.some((searchWord) =>
+          foodNameWords.includes(searchWord)
+        );
+  
+        const categoryMatch = searchWords.some((searchWord) =>
+          categoryWords.includes(searchWord)
+        );
+
+        return locationMatch || nameMatch || foodNameMatch || categoryMatch;
+        });
+    
+        setFilteredFood(filteredFood);
+      });
+
+      setFilteredRestaurants(filtered);
+
+      const matchedSearches = filtered
+      .map((restaurant) => restaurant.name || restaurant.location)
+      .filter((value, index, self) => self.indexOf(value) === index); // Ensure uniqueness
+
+    setRecentSearches((prevSearches) => [
+      ...matchedSearches,
+      ...prevSearches,
+    ].slice(0, 3));
+  }
   };
-
-
-  // food card format data
 
   const [liked, setLiked] = useState(false);
 
   const handleHeartPress = () => {
     setLiked(!liked);
+  };
+
+  const handleClearRecentSearches = () => {
+    setRecentSearches([]); // Clear recent searches
   };
 
   const renderFoodItem = ({ item }) => (
@@ -105,14 +170,12 @@ const Search = () => {
       <View style={styles.priceContainer}>
         <Text style={styles.priceText}>{item.price}</Text>
         <TouchableOpacity onPress={handleHeartPress} style={[styles.heartContainer, liked && styles.heartContainerLiked]}>
-
           <Ionicons
             name={liked ? "heart" : "heart-outline"}
             size={18}
             color='white'
             style={styles.heartIcon}
           />
-
         </TouchableOpacity>
       </View>
 
@@ -122,19 +185,14 @@ const Search = () => {
       </View>
       <View style={styles.detailsContainer}>
         <Text style={styles.name}>{item.name}</Text>
-
       </View>
     </View>
-
-
   );
 
   const renderRestaurantItem = ({ item }) => (
-
     <View style={styles.cardContainer}>
       <View style={styles.card1}>
         <Image source={item.image} style={styles.image1} />
-        {/* Icons positioned at the top-right corner */}
         <View style={styles.iconContainer1}>
           <View style={styles.heart1}>
             <Ionicons name="heart-outline" size={20} color="white" style={styles.icon1} />
@@ -150,17 +208,10 @@ const Search = () => {
         <View style={styles.detailsContainer1}>
           <Text style={styles.name1}>{item.name}</Text>
           <View style={styles.categories1}>
-            {item.tags.map((category, index) => (
-              <Text key={index} style={styles.category1}>
-                {category}
-              </Text>
-            ))}
-          <Text style={{flex: 1, justifyContent: 'flex-end',marginLeft:100}}>{item.location}</Text>
+            <Text style={{ flex: 1, justifyContent: 'flex-end', marginLeft: 100 }}>{item.location}</Text>
           </View>
-
         </View>
       </View>
-
     </View>
   );
 
@@ -177,11 +228,10 @@ const Search = () => {
               onChangeText={handleSearch}
             />
             <TouchableOpacity onPress={() => setFilterVisible(true)}>
-              <Image source={require('../../assets/filter.png')} style={styles.filterImage} />
+              <Ionicons name="options" size={26} color="#00D0DD" style={{ marginLeft: 15 }} />
             </TouchableOpacity>
           </View>
 
-          {/* Filter Modal */}
           <Modal
             visible={filterVisible}
             animationType="slide"
@@ -192,34 +242,34 @@ const Search = () => {
               <View style={styles.modalContent}>
                 <Text style={styles.modalTitle}>Filters</Text>
 
-                {/* Sort Options */}
                 <Text style={styles.sectionTitle}>Sort by</Text>
                 <View style={styles.sortOptions}>
                   {['Relevance', 'Price: low to high', 'Price: high to low', 'Location: nearest to farthest', 'Location: farthest to nearest'].map((option) => (
                     <TouchableOpacity
                       key={option}
-                      style={[styles.optionButton, getSortOptionStyle(option)]} // Apply conditional style
-                      onPress={() => handleSortOptionPress(option)} // Handle press
+                      style={[styles.optionButton, getSortOptionStyle(option)]}
+                      onPress={() => handleSortOptionPress(option)}
                     >
-                      <Text style={{ color: option === selectedSortOption ? 'white' : 'black' }}>{option}</Text> {/* Conditional text color */}
+                      <Text style={{ color: option === selectedSortOption ? 'white' : 'black' }}>
+                        {option}
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
 
-                {/* Cuisine Options */}
                 <Text style={styles.sectionTitle}>By Cuisine</Text>
                 <View style={styles.cusinesOptions}>
                   {['Italian', 'Mexican', 'Chinese', 'Indian', 'British', 'Korean'].map((cuisine, index) => (
-                    <TouchableOpacity key={index} 
-                    style={[styles.optionButton, getSortOptionStyle(index)]} // Apply conditional style
-                    onPress={() => handleSortOptionPress(index)} // Handle press
+                    <TouchableOpacity
+                      key={index}
+                      style={[styles.optionButton, getSortOptionStyle(index)]}
+                      onPress={() => handleSortOptionPress(index)}
                     >
                       <Text style={{ color: index === selectedSortOption ? 'white' : 'black' }}>{cuisine}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
 
-                {/* Buttons */}
                 <View style={styles.buttonContainer}>
                   <TouchableOpacity onPress={() => setFilterVisible(false)} style={styles.cancelButton}>
                     <Text style={styles.cancelText}>Cancel</Text>
@@ -233,65 +283,57 @@ const Search = () => {
           </Modal>
 
           {showInitial ? (
+
             <>
-              <Text style={styles.sectionTitle}>Recent Searches</Text>
-              <View style={styles.recentSearchContainer}>
-                {recentSearches.map((item, index) => (
-                  <Text key={index} style={styles.searchTag}>{item}</Text>
-                ))}
-              </View>
-
-              <Text style={styles.sectionTitle}>Popular Searches</Text>
-              <View style={styles.popularSearchContainer}>
-                {popularSearches.map((item) => (
-                  <TouchableOpacity key={item.id} style={styles.popularSearchItem}>
-                    <Image source={item.image} style={styles.popularSearchImage} />
-                    <Text style={styles.searchTag}>{item.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={styles.sectionTitle}>Recent Views</Text>
-              <FlatList
-                data={recentViews}
-                renderItem={renderRestaurantItem}
-                keyExtractor={(item) => item.id}
-                showsVerticalScrollIndicator={false}
-              />
+              {recentSearches.length > 0 ?
+                (
+                  <>
+                    <Text style={styles.sectionTitle}>Recent Searches</Text>
+                    <View style={styles.recentSearchContainer}>
+                      {recentSearches.map((search, index) => (
+                        <Text key={index} style={styles.recentSearchText}>
+                          {search}
+                        </Text>
+                      ))}
+                    </View>
+                    <TouchableOpacity
+                      onPress={handleClearRecentSearches}
+                      style={styles.clearButton}
+                    >
+                      <Text style={styles.clearButtonText}>Clear</Text>
+                    </TouchableOpacity>
+                  </>
+                ) :
+                (
+                  <Text style={styles.sectionTitle}>Start typing to search for restaurants or food items...</Text>
+                )
+              }
             </>
           ) : (
             <>
-              {filteredFood.length > 0 && (
-                <>
-                  {/* <Text style={styles.sectionTitle}>Food Results</Text> */}
-                  <FlatList
-                    data={filteredFood}
-                    renderItem={renderFoodItem}
-                    keyExtractor={(item) => item.id}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                  />
-                </>
-              )}
+              <Text style={styles.sectionTitle}>Search Results</Text>
 
-              {filteredRestaurants.length > 0 && (
-                <>
-                  <Text style={styles.sectionTitle}>Restaurant Reccomandation</Text>
-                  <FlatList
-                    data={filteredRestaurants}
-                    renderItem={renderRestaurantItem}
-                    keyExtractor={(item) => item.id}
-                    showsVerticalScrollIndicator={false}
-                  />
-                </>
-              )}
+              <Text style={styles.subTitle}>Menu Items</Text>
+              <FlatList
+                data={filteredFood}
+                renderItem={renderFoodItem}
+                keyExtractor={(item) => item.id}
+                numColumns={1}
+              />
+
+              <Text style={styles.subTitle}>Restaurants</Text>
+              <FlatList
+                data={filteredRestaurants}
+                renderItem={renderRestaurantItem}
+                keyExtractor={(item) => item.id}
+                onEndReached={loadMoreRestaurants}
+                onEndReachedThreshold={0.5}
+              />
             </>
           )}
         </View>
       </ScrollView>
-      <View style={{ display: 'flex' }}>
-        <Footer />
-      </View>
+      <Footer />
     </SafeAreaView>
   );
 };
@@ -519,11 +561,11 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 16 },
   sectionTitle: { fontSize: 16, fontWeight: 'bold', marginTop: 16 },
   sortOptions: { flexDirection: 'column', flexWrap: 'wrap', marginVertical: 8 },
-  cusinesOptions: { flexDirection: 'row', flexWrap: 'wrap', marginVertical: 10,  },
+  cusinesOptions: { flexDirection: 'row', flexWrap: 'wrap', marginVertical: 10, },
   optionButton: { padding: 8, borderWidth: 1, borderColor: '#00D0DD', borderRadius: 20, margin: 4, },
   buttonContainer: { flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 16 },
   cancelButton: { padding: 12, paddingHorizontal: 40, backgroundColor: '#fff', borderRadius: 8 },
-  applyButton: { paddingVertical: 12,paddingHorizontal: 40, backgroundColor: '#00D0DD', borderRadius: 8 },
+  applyButton: { paddingVertical: 12, paddingHorizontal: 40, backgroundColor: '#00D0DD', borderRadius: 8 },
   cancelText: { color: '#00D0DD' },
   applyText: { color: '#fff' },
 });
