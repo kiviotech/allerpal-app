@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, FlatList, Image, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Dimensions, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import foodrestro from '../../assets/foodrestro.png';
@@ -6,6 +6,8 @@ import Restro from "../../assets/Restro.png";
 import Footer from './Footer';
 import { getAllRestaurants } from '../../src/api/repositories/restaurantRepositories';
 import { fetchAllMenuItems } from '../../src/services/menuItemsServices';
+import { MEDIA_BASE_URL } from '../../src/api/apiClient';
+import { useRouter } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
@@ -27,13 +29,15 @@ const Search = () => {
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedSortOption, setSelectedSortOption] = useState(null);
   const [recentViews, setRecentViews] = useState([]);
-
+  const [hasMoreRestaurants, setHasMoreRestaurants] = useState(true);
   const [restaurantPage, setRestaurantPage] = useState(1);
   const [foodPage, setFoodPage] = useState(1);
   const [loadingRestaurants, setLoadingRestaurants] = useState(false);
   const [loadingFood, setLoadingFood] = useState(false);
   const [recentSearches, setRecentSearches] = useState([]);
 
+
+  const router = useRouter()
   useEffect(() => {
     if (!searchTerm) {
       setShowInitial(true);
@@ -46,11 +50,16 @@ const Search = () => {
     fetchRestaurants();
   }, []);
 
-  const fetchRestaurants = async (limit = 3) => {
+  const fetchRestaurants = async (page = 1) => {
+    if (loadingRestaurants || !hasMoreRestaurants) return;
+    setLoadingRestaurants(true);
     try {
-      const response = await getAllRestaurants({ limit });
-      setRestaurants(response.data.data || []);
-      setFilteredRestaurants(response.data.data || []);
+      const response = await getAllRestaurants({ page, limit: 3 });
+      const newRestaurants = response.data.data || [];
+      setRestaurants((prev) => (page === 1 ? newRestaurants : [...prev, ...newRestaurants]));
+      setFilteredRestaurants((prev) => (page === 1 ? newRestaurants : [...prev, ...newRestaurants]));
+      setHasMoreRestaurants(newRestaurants.length > 0);
+      setRestaurantPage(page);
     } catch (error) {
       console.error("Error fetching restaurants:", error);
       setRestaurants([]);
@@ -62,12 +71,7 @@ const Search = () => {
   };
 
   const loadMoreRestaurants = () => {
-    if (!loadingRestaurants) {
-      setLoadingRestaurants(true);
-      fetchRestaurants(restaurantPage + 1);
-      setRestaurantPage((prevPage) => prevPage + 1);
-      setLoadingRestaurants(false);
-    }
+    fetchRestaurants(restaurantPage + 1);
   };
 
   useEffect(() => {
@@ -105,6 +109,24 @@ const Search = () => {
       ? { backgroundColor: '#00D0DD', color: 'white' }
       : {};
   };
+
+//   const debouncedSearch = _.debounce(() => {
+//     if (searchTerm.length >= 3) {
+//         handleSearch();
+//     } else if (searchTerm.length === 0) {
+//         // If search text is cleared, fetch all products
+//         setAllProduct([]); // Clear existing products
+//         setPage(1); // Reset page to 1
+//         setHasMore(true); // Reset hasMore state
+//         getAllProduct(); // Fetch all products
+//     }
+// }, 300); // 300ms debounce delay
+
+// useEffect(() => {
+//     debouncedSearch(); // Call debounced search whenever searchText changes
+//     return debouncedSearch.cancel; // Clean up debounce on unmount
+// }, [searchTerm]);
+
 
   const handleSearch = (text) => {
     setSearchTerm(text);
@@ -160,6 +182,23 @@ const Search = () => {
   };
 
   const handleViewRestaurant = (restaurant) => {
+    console.log('rest', restaurant)
+    const imageUrl =
+    restaurant.image && restaurant.image[0]?.url
+      ? `${MEDIA_BASE_URL}${restaurant.image[0].url}`
+      : Restro;
+
+        router.push({
+          pathname: "pages/RestaurantScreen",
+          params: {
+            id: restaurant.documentId,
+            documentId: restaurant.documentId,
+            name: restaurant.name,
+            rating: restaurant.rating,
+            categories: restaurant.categories,
+            image: imageUrl,
+          },
+        })
     setRecentViews((prevViews) => {
       // Check if restaurant is already in recent views
       const alreadyViewed = prevViews.find((item) => item.id === restaurant.id);
@@ -171,9 +210,7 @@ const Search = () => {
       return [restaurant, ...prevViews].slice(0, 5); // Limit to 5 recent views
     });
   };
-
-
-
+  
   const renderFoodItem = ({ item }) => (
     <View style={styles.card}>
       <Image source={foodrestro} style={styles.image} />
@@ -367,6 +404,8 @@ const Search = () => {
           ) : (
             <>
               <Text style={styles.results}>Search Results</Text>
+              {filteredFood.length > 0 ? 
+              <>
               <Text style={styles.subTitle}>Menu Items</Text>
               <FlatList
                 data={filteredFood}
@@ -376,7 +415,12 @@ const Search = () => {
                 keyExtractor={(item) => item.id}
                 numColumns={1}
               />
+              </>
+              :
+              <></>}
 
+              {filteredRestaurants.length > 0 ? 
+              <>
               <Text style={styles.subTitle}>Restaurants</Text>
               <FlatList
                 data={filteredRestaurants}
@@ -384,7 +428,11 @@ const Search = () => {
                 keyExtractor={(item) => item.id}
                 onEndReached={loadMoreRestaurants}
                 onEndReachedThreshold={0.5}
+                ListFooterComponent={loadingRestaurants && <Text>Loading more restaurants...</Text>}
               />
+              </>
+              : <></>}
+              
             </>
           )}
         </View>
