@@ -26,6 +26,7 @@ const Search = () => {
   const [showInitial, setShowInitial] = useState(true);
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedSortOption, setSelectedSortOption] = useState(null);
+  const [recentViews, setRecentViews] = useState([]);
 
   const [restaurantPage, setRestaurantPage] = useState(1);
   const [foodPage, setFoodPage] = useState(1);
@@ -45,22 +46,27 @@ const Search = () => {
     fetchRestaurants();
   }, []);
 
-  const fetchRestaurants = async (page = 1, limit = 3) => {
+  const fetchRestaurants = async (limit = 3) => {
     try {
-      const response = await getAllRestaurants({ page, limit });
+      const response = await getAllRestaurants({ limit });
       setRestaurants(response.data.data || []);
       setFilteredRestaurants(response.data.data || []);
     } catch (error) {
       console.error("Error fetching restaurants:", error);
       setRestaurants([]);
-      setFilteredRestaurants([]);
+      setFilteredRestaurants((prevRestaurants) => [
+        ...prevRestaurants,
+        ...(response.data.data || []),
+      ]);
     }
   };
 
   const loadMoreRestaurants = () => {
     if (!loadingRestaurants) {
-      setRestaurantPage((prevPage) => prevPage + 1);
+      setLoadingRestaurants(true);
       fetchRestaurants(restaurantPage + 1);
+      setRestaurantPage((prevPage) => prevPage + 1);
+      setLoadingRestaurants(false);
     }
   };
 
@@ -68,9 +74,10 @@ const Search = () => {
     const getMenuItems = async () => {
       try {
         const response = await fetchAllMenuItems();
-        if (response && response.data) {
+        if (response?.data) {
           const menuItems = response.data;
           setMenuItems(menuItems);
+          console.log('first', menuItems)
           setFilteredFood(menuItems);
         } else {
           setMenuItems([]);
@@ -110,48 +117,27 @@ const Search = () => {
 
 
     else {
-      const searchWords = text.toLowerCase().split(' ');
+      const filteredRestaurantsList = restaurants.filter(
+        (restaurant) =>
+          restaurant.location.toLowerCase().includes(text.toLowerCase()) ||
+          restaurant.name.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredRestaurants(filteredRestaurantsList);
 
-      const filtered = restaurants.filter((restaurant) => {
-        const locationWords = restaurant.location.toLowerCase().split(',');
-        const nameWords = restaurant.name.toLowerCase().split(' ');
-        
-        const filteredFood = menuItems.filter((food) => {
-          const foodNameWords = food.item_name.toLowerCase().split(' '); // Split item name into words
-          const categoryWords = food.category?.toLowerCase().split(' ') || []; // Split category if it exists
+      const filteredFoodList = menuItems.filter((food) =>
+        food.item_name.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredFood(filteredFoodList);
 
-        const locationMatch = searchWords.some((searchWord) =>
-          locationWords.includes(searchWord)
-        );
+      const matchedSearches = filteredRestaurantsList
+        .map((restaurant) => restaurant.name || restaurant.location)
+        .filter((value, index, self) => self.indexOf(value) === index); // Ensure uniqueness
 
-        const nameMatch = searchWords.some((searchWord) =>
-          nameWords.includes(searchWord))
-
-        const foodNameMatch = searchWords.some((searchWord) =>
-          foodNameWords.includes(searchWord)
-        );
-  
-        const categoryMatch = searchWords.some((searchWord) =>
-          categoryWords.includes(searchWord)
-        );
-
-        return locationMatch || nameMatch || foodNameMatch || categoryMatch;
-        });
-    
-        setFilteredFood(filteredFood);
-      });
-
-      setFilteredRestaurants(filtered);
-
-      const matchedSearches = filtered
-      .map((restaurant) => restaurant.name || restaurant.location)
-      .filter((value, index, self) => self.indexOf(value) === index); // Ensure uniqueness
-
-    setRecentSearches((prevSearches) => [
-      ...matchedSearches,
-      ...prevSearches,
-    ].slice(0, 3));
-  }
+      setRecentSearches((prevSearches) => [
+        ...matchedSearches,
+        ...prevSearches,
+      ].slice(0, 1));
+    }
   };
 
   const [liked, setLiked] = useState(false);
@@ -164,9 +150,33 @@ const Search = () => {
     setRecentSearches([]); // Clear recent searches
   };
 
+  const handleClearRecentViews = () => {
+    setRecentViews([]); // Clear recent views
+  };
+
+  const handlePopularSearch = (search) => {
+    setSearchTerm(search);
+    handleSearch(search); // Trigger the search with the selected popular search
+  };
+
+  const handleViewRestaurant = (restaurant) => {
+    setRecentViews((prevViews) => {
+      // Check if restaurant is already in recent views
+      const alreadyViewed = prevViews.find((item) => item.id === restaurant.id);
+      if (alreadyViewed) {
+        // Move it to the top of the list
+        return [restaurant, ...prevViews.filter((item) => item.id !== restaurant.id)];
+      }
+      // Add the new restaurant to the top of the list
+      return [restaurant, ...prevViews].slice(0, 5); // Limit to 5 recent views
+    });
+  };
+
+
+
   const renderFoodItem = ({ item }) => (
     <View style={styles.card}>
-      <Image source={item.image} style={styles.image} />
+      <Image source={foodrestro} style={styles.image} />
       <View style={styles.priceContainer}>
         <Text style={styles.priceText}>{item.price}</Text>
         <TouchableOpacity onPress={handleHeartPress} style={[styles.heartContainer, liked && styles.heartContainerLiked]}>
@@ -184,36 +194,39 @@ const Search = () => {
         <Text style={styles.reviewText}>({item.reviews}+)</Text>
       </View>
       <View style={styles.detailsContainer}>
-        <Text style={styles.name}>{item.name}</Text>
+        <Text style={styles.name}>{item.item_name}</Text>
       </View>
     </View>
   );
 
   const renderRestaurantItem = ({ item }) => (
-    <View style={styles.cardContainer}>
-      <View style={styles.card1}>
-        <Image source={item.image} style={styles.image1} />
-        <View style={styles.iconContainer1}>
-          <View style={styles.heart1}>
-            <Ionicons name="heart-outline" size={20} color="white" style={styles.icon1} />
+    <TouchableOpacity onPress={() => handleViewRestaurant(item)}>
+      <View style={styles.cardContainer}>
+        <View style={styles.card1}>
+          <Image source={Restro} style={styles.image1} />
+          <View style={styles.iconContainer1}>
+            <View style={styles.heart1}>
+              <Ionicons name="heart-outline" size={20} color="white" style={styles.icon1} />
+            </View>
+            <View style={styles.heart1}>
+              <Ionicons name="chatbubble-outline" size={20} color="white" style={styles.icon1} />
+            </View>
           </View>
-          <View style={styles.heart1}>
-            <Ionicons name="chatbubble-outline" size={20} color="white" style={styles.icon1} />
+          <View style={styles.ratingContainer1}>
+            <Text style={styles.ratingText1}>{item.rating} ⭐</Text>
+            <Text style={styles.reviewText1}>({item.reviews}+)</Text>
           </View>
-        </View>
-        <View style={styles.ratingContainer1}>
-          <Text style={styles.ratingText1}>{item.rating} ⭐</Text>
-          <Text style={styles.reviewText1}>({item.reviews}+)</Text>
-        </View>
-        <View style={styles.detailsContainer1}>
-          <Text style={styles.name1}>{item.name}</Text>
-          <View style={styles.categories1}>
-            <Text style={{ flex: 1, justifyContent: 'flex-end', marginLeft: 100 }}>{item.location}</Text>
+          <View style={styles.detailsContainer1}>
+            <Text style={styles.name1}>{item.name}</Text>
+            <View style={styles.categories1}>
+              <Text style={styles.loc}>{item.location}</Text>
+            </View>
           </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
+
 
   return (
     <SafeAreaView style={styles.AreaContainer}>
@@ -288,7 +301,36 @@ const Search = () => {
               {recentSearches.length > 0 ?
                 (
                   <>
-                    <Text style={styles.sectionTitle}>Recent Searches</Text>
+
+                    <View>
+                      <Text style={styles.sectionTitle}>Popular Searches</Text>
+                      <FlatList
+                        data={popularSearches}
+                        horizontal={true}
+                        keyExtractor={(item) => item.id}
+                        showsHorizontalScrollIndicator={false}
+                        // style={{ paddingHorizontal: 10 }}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            style={styles.popularSearchCard}
+                            onPress={() => handlePopularSearch(item.name)}
+                          >
+                            <Image source={item.image} style={styles.popularSearchImage} />
+                            <Text>{item.name}</Text>
+                          </TouchableOpacity>
+                        )}
+                      />
+                    </View>
+
+                    <View style={styles.recentHeader}>
+                      <Text style={styles.sectionTitle}>Recent Searches</Text>
+                      <TouchableOpacity
+                        onPress={handleClearRecentSearches}
+                        style={styles.clearButton}
+                      >
+                        <Text style={styles.clearButtonText}>X</Text>
+                      </TouchableOpacity>
+                    </View>
                     <View style={styles.recentSearchContainer}>
                       {recentSearches.map((search, index) => (
                         <Text key={index} style={styles.recentSearchText}>
@@ -296,27 +338,41 @@ const Search = () => {
                         </Text>
                       ))}
                     </View>
-                    <TouchableOpacity
-                      onPress={handleClearRecentSearches}
-                      style={styles.clearButton}
-                    >
-                      <Text style={styles.clearButtonText}>Clear</Text>
-                    </TouchableOpacity>
+
+                    {recentViews.length > 0 && (
+                      <>
+                      <View style={styles.recentHeader}>
+                      <Text style={styles.sectionTitle}>Recently Viewed</Text>
+                      <TouchableOpacity
+                        onPress={handleClearRecentViews}
+                        style={styles.clearButton}
+                      >
+                        <Text style={styles.clearButtonText}>X</Text>
+                      </TouchableOpacity>
+                    </View>
+                        <FlatList
+                          data={recentViews}
+                          keyExtractor={(item) => item.id.toString()}
+                          renderItem={renderRestaurantItem}
+                        />
+                      </>
+                    )}
+
                   </>
-                ) :
-                (
+                ) : (
                   <Text style={styles.sectionTitle}>Start typing to search for restaurants or food items...</Text>
                 )
               }
             </>
           ) : (
             <>
-              <Text style={styles.sectionTitle}>Search Results</Text>
-
+              <Text style={styles.results}>Search Results</Text>
               <Text style={styles.subTitle}>Menu Items</Text>
               <FlatList
                 data={filteredFood}
                 renderItem={renderFoodItem}
+                horizontal={true}
+                showsHorizontalScrollIndicator={false}
                 keyExtractor={(item) => item.id}
                 numColumns={1}
               />
@@ -340,7 +396,7 @@ const Search = () => {
 
 const styles = StyleSheet.create({
   AreaContainer: { flex: 1, padding: 10, width: '100%' },
-  container: { flex: 1, padding: 16, backgroundColor: '#f9f9f9' },
+  container: { flex: 1, padding: 16, backgroundColor: '#f9f9f9', marginBottom: 70 },
   searchContainer: { flexDirection: 'row', alignItems: 'center', padding: 12, marginBottom: 20 },
   searchIcon: { marginRight: 8, },
   searchInput: { flex: 1, borderWidth: 1, borderColor: '#ddd', borderRadius: 20, padding: 10 },
@@ -349,15 +405,26 @@ const styles = StyleSheet.create({
     height: 20,
     // marginLeft: 10,
   },
-  sectionTitle: { fontSize: 18, fontWeight: '600', marginTop: 20, marginBottom: 10 },
+  results: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 20,
+    marginBottom: 10
+  },
   recentSearchContainer: { flexDirection: 'row', gap: 10, marginBottom: 20 },
   searchTag: { paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: '#ddd', borderStyle: 'solid', borderRadius: 20, fontSize: 14, backgroundColor: '#f1f1f1' },
 
   cardContainer: {
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
+  subTitle: {
+    fontSize: 20,
+    fontWeight: 600,
+    marginVertical: 10
+  },
+
   card: {
     backgroundColor: '#fff',
     borderRadius: 9,
@@ -369,11 +436,40 @@ const styles = StyleSheet.create({
     elevation: 3,
     width: width * 0.4,
     marginHorizontal: 8,
-    height: 155
+    height: 155,
+    marginTop: 10,
   },
   image: {
     width: '100%',
     height: 120,  // Reduced height for a shorter card
+  },
+  popularSearchCard: {
+    borderColor: "#00D0DD",
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 10,
+    margin: 10,
+    alignItems: 'center'
+  },
+  recentHeader: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  recentSearchText: {
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginTop: 10
+  },
+  clearButton: {
+    // backgroundColor: 'red',
+    padding: 5,
+
   },
   popularSearchContainer: {
     flexDirection: 'row',
@@ -399,12 +495,6 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25, // For rounded images
     marginBottom: 5,
-  },
-
-  searchTag: {
-    fontSize: 14,
-    color: '#555',
-    textAlign: 'center',
   },
   priceContainer: {
 
@@ -485,6 +575,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
     height: 250,
+    marginTop: 20,
   },
   image1: {
     width: '100%',
@@ -534,6 +625,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginBottom: 10,
+    justifyContent: 'flex-end'
+  },
+  loc: {
+    fontSize: 16,
+
   },
   category1: {
     fontSize: 12,
