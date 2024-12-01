@@ -25,7 +25,7 @@ const Search = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredFood, setFilteredFood] = useState([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
-  const [showInitial, setShowInitial] = useState(true);
+  const [showInitial, setShowInitial] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedSortOption, setSelectedSortOption] = useState(null);
   const [recentViews, setRecentViews] = useState([]);
@@ -38,63 +38,91 @@ const Search = () => {
 
 
   const router = useRouter()
+  // useEffect(() => {
   useEffect(() => {
-    if (!searchTerm) {
-      setShowInitial(true);
-      setFilteredFood([]);
-      setFilteredRestaurants([]);
-    }
-  }, [searchTerm]);
-
-  useEffect(() => {
-    fetchRestaurants();
-  }, []);
-
-  const fetchRestaurants = async (page = 1) => {
-    if (loadingRestaurants || !hasMoreRestaurants) return;
-    setLoadingRestaurants(true);
-    try {
-      const response = await getAllRestaurants({ page, limit: 3 });
-      const newRestaurants = response.data.data || [];
-      setRestaurants((prev) => (page === 1 ? newRestaurants : [...prev, ...newRestaurants]));
-      setFilteredRestaurants((prev) => (page === 1 ? newRestaurants : [...prev, ...newRestaurants]));
-      setHasMoreRestaurants(newRestaurants.length > 0);
-      setRestaurantPage(page);
-    } catch (error) {
-      console.error("Error fetching restaurants:", error);
-      setRestaurants([]);
-      setFilteredRestaurants((prevRestaurants) => [
-        ...prevRestaurants,
-        ...(response.data.data || []),
-      ]);
-    }
-  };
-
-  const loadMoreRestaurants = () => {
-    fetchRestaurants(restaurantPage + 1);
-  };
-
-  useEffect(() => {
-    const getMenuItems = async () => {
+    const fetchInitialData = async () => {
       try {
-        const response = await fetchAllMenuItems();
-        if (response?.data) {
-          const menuItems = response.data;
-          setMenuItems(menuItems);
-          console.log('first', menuItems)
-          setFilteredFood(menuItems);
+        const [menuResponse, restaurantResponse] = await Promise.all([
+          fetchAllMenuItems(),
+          getAllRestaurants({ page: 1, limit: 3 }),
+        ]);
+
+        // Handle Menu Items
+        if (menuResponse?.data) {
+          setMenuItems(menuResponse.data);
+          setFilteredFood(menuResponse.data);
         } else {
           setMenuItems([]);
           setFilteredFood([]);
         }
+
+        // Handle Restaurants
+        const initialRestaurants = restaurantResponse?.data?.data || [];
+        setRestaurants(initialRestaurants);
+        setFilteredRestaurants(initialRestaurants);
+        setHasMoreRestaurants(initialRestaurants.length > 0);
       } catch (error) {
-        console.error("Error fetching menu items:", error);
+        console.error("Error fetching initial data:", error);
         setMenuItems([]);
         setFilteredFood([]);
+        setRestaurants([]);
+        setFilteredRestaurants([]);
       }
     };
-    getMenuItems();
+
+    fetchInitialData();
   }, []);
+
+
+  // Fetch more restaurants when user scrolls
+  const fetchRestaurants = useCallback(
+    async (page) => {
+      if (loadingRestaurants || !hasMoreRestaurants) return;
+
+      setLoadingRestaurants(true);
+      try {
+        const response = await getAllRestaurants({ page, limit: 2 });
+        const newRestaurants = response?.data?.data || [];
+        setRestaurants((prev) => (page === 1 ? newRestaurants : [...prev, ...newRestaurants]));
+        setFilteredRestaurants((prev) =>
+          page === 1 ? newRestaurants : [...prev, ...newRestaurants]
+        );
+        setHasMoreRestaurants(newRestaurants.length > 0); // Stop fetching if no data is returned
+        setRestaurantPage(page);
+      } catch (error) {
+        console.error("Error fetching restaurants:", error);
+      } finally {
+        setLoadingRestaurants(false);
+      }
+    },
+    [loadingRestaurants, hasMoreRestaurants]
+  );
+  // Infinite scroll handler with debounce
+  // Infinite scroll handler
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + document.documentElement.scrollTop >=
+        document.documentElement.offsetHeight - 200
+      ) {
+        fetchRestaurants(restaurantPage + 1); // Fetch next page on scroll
+      }
+    };
+
+    const debounceScroll = debounce(handleScroll, 200);
+
+    window.addEventListener("scroll", debounceScroll);
+    return () => window.removeEventListener("scroll", debounceScroll);
+  }, [restaurantPage, fetchRestaurants]);
+
+  // Debounce function to prevent rapid API calls
+  const debounce = (func, delay) => {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => func(...args), delay);
+    };
+  };
 
   const applyFilters = () => {
     setFilterVisible(false);
@@ -110,56 +138,55 @@ const Search = () => {
       : {};
   };
 
-//   const debouncedSearch = _.debounce(() => {
-//     if (searchTerm.length >= 3) {
-//         handleSearch();
-//     } else if (searchTerm.length === 0) {
-//         // If search text is cleared, fetch all products
-//         setAllProduct([]); // Clear existing products
-//         setPage(1); // Reset page to 1
-//         setHasMore(true); // Reset hasMore state
-//         getAllProduct(); // Fetch all products
-//     }
-// }, 300); // 300ms debounce delay
+  //   const debouncedSearch = _.debounce(() => {
+  //     if (searchTerm.length >= 3) {
+  //         handleSearch();
+  //     } else if (searchTerm.length === 0) {
+  //         // If search text is cleared, fetch all products
+  //         setAllProduct([]); // Clear existing products
+  //         setPage(1); // Reset page to 1
+  //         setHasMore(true); // Reset hasMore state
+  //         getAllProduct(); // Fetch all products
+  //     }
+  // }, 300); // 300ms debounce delay
 
-// useEffect(() => {
-//     debouncedSearch(); // Call debounced search whenever searchText changes
-//     return debouncedSearch.cancel; // Clean up debounce on unmount
-// }, [searchTerm]);
+  // useEffect(() => {
+  //     debouncedSearch(); // Call debounced search whenever searchText changes
+  //     return debouncedSearch.cancel; // Clean up debounce on unmount
+  // }, [searchTerm]);
 
 
   const handleSearch = (text) => {
     setSearchTerm(text);
     setShowInitial(false);
-    if (text.length < 3) {
-      setFilteredRestaurants([]);
-      setFilteredFood([]);
-      return;
-    }
+    // if (text.length < 3) {
+    //   // setFilteredRestaurants([]);
+    //   // setFilteredFood([]);
+    //   return;
+    // }
 
 
-    else {
-      const filteredRestaurantsList = restaurants.filter(
-        (restaurant) =>
-          restaurant.location.toLowerCase().includes(text.toLowerCase()) ||
-          restaurant.name.toLowerCase().includes(text.toLowerCase())
-      );
-      setFilteredRestaurants(filteredRestaurantsList);
+    const filteredRestaurantsList = restaurants.filter(
+      (restaurant) =>
+        restaurant.location.toLowerCase().includes(text.toLowerCase()) ||
+        restaurant.name.toLowerCase().includes(text.toLowerCase())
+    );
+    setFilteredRestaurants(filteredRestaurantsList);
 
-      const filteredFoodList = menuItems.filter((food) =>
-        food.item_name.toLowerCase().includes(text.toLowerCase())
-      );
-      setFilteredFood(filteredFoodList);
+    const filteredFoodList = menuItems.filter((food) =>
+      food.item_name.toLowerCase().includes(text.toLowerCase())
+    );
+    setFilteredFood(filteredFoodList);
 
-      const matchedSearches = filteredRestaurantsList
-        .map((restaurant) => restaurant.name || restaurant.location)
-        .filter((value, index, self) => self.indexOf(value) === index); // Ensure uniqueness
+    const matchedSearches = filteredRestaurantsList
+      .map((restaurant) => restaurant.name || restaurant.location)
+      .filter((value, index, self) => self.indexOf(value) === index); // Ensure uniqueness
 
-      setRecentSearches((prevSearches) => [
-        ...matchedSearches,
-        ...prevSearches,
-      ].slice(0, 1));
-    }
+    setRecentSearches((prevSearches) => [
+      ...matchedSearches,
+      ...prevSearches,
+    ].slice(0, 1));
+
   };
 
   const [liked, setLiked] = useState(false);
@@ -184,21 +211,21 @@ const Search = () => {
   const handleViewRestaurant = (restaurant) => {
     console.log('rest', restaurant)
     const imageUrl =
-    restaurant.image && restaurant.image[0]?.url
-      ? `${MEDIA_BASE_URL}${restaurant.image[0].url}`
-      : Restro;
+      restaurant.image && restaurant.image[0]?.url
+        ? `${MEDIA_BASE_URL}${restaurant.image[0].url}`
+        : Restro;
 
-        router.push({
-          pathname: "pages/RestaurantScreen",
-          params: {
-            id: restaurant.documentId,
-            documentId: restaurant.documentId,
-            name: restaurant.name,
-            rating: restaurant.rating,
-            categories: restaurant.categories,
-            image: imageUrl,
-          },
-        })
+    router.push({
+      pathname: "pages/RestaurantScreen",
+      params: {
+        id: restaurant.documentId,
+        documentId: restaurant.documentId,
+        name: restaurant.name,
+        rating: restaurant.rating,
+        categories: restaurant.categories,
+        image: imageUrl,
+      },
+    })
     setRecentViews((prevViews) => {
       // Check if restaurant is already in recent views
       const alreadyViewed = prevViews.find((item) => item.id === restaurant.id);
@@ -210,7 +237,8 @@ const Search = () => {
       return [restaurant, ...prevViews].slice(0, 5); // Limit to 5 recent views
     });
   };
-  
+
+
   const renderFoodItem = ({ item }) => (
     <View style={styles.card}>
       <Image source={foodrestro} style={styles.image} />
@@ -378,15 +406,15 @@ const Search = () => {
 
                     {recentViews.length > 0 && (
                       <>
-                      <View style={styles.recentHeader}>
-                      <Text style={styles.sectionTitle}>Recently Viewed</Text>
-                      <TouchableOpacity
-                        onPress={handleClearRecentViews}
-                        style={styles.clearButton}
-                      >
-                        <Text style={styles.clearButtonText}>X</Text>
-                      </TouchableOpacity>
-                    </View>
+                        <View style={styles.recentHeader}>
+                          <Text style={styles.sectionTitle}>Recently Viewed</Text>
+                          <TouchableOpacity
+                            onPress={handleClearRecentViews}
+                            style={styles.clearButton}
+                          >
+                            <Text style={styles.clearButtonText}>X</Text>
+                          </TouchableOpacity>
+                        </View>
                         <FlatList
                           data={recentViews}
                           keyExtractor={(item) => item.id.toString()}
@@ -404,35 +432,35 @@ const Search = () => {
           ) : (
             <>
               <Text style={styles.results}>Search Results</Text>
-              {filteredFood.length > 0 ? 
-              <>
-              <Text style={styles.subTitle}>Menu Items</Text>
-              <FlatList
-                data={filteredFood}
-                renderItem={renderFoodItem}
-                horizontal={true}
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(item) => item.id}
-                numColumns={1}
-              />
-              </>
-              :
-              <></>}
+              {filteredFood.length > 0 ?
+                <>
+                  <Text style={styles.subTitle}>Menu Items</Text>
+                  <FlatList
+                    data={filteredFood}
+                    renderItem={renderFoodItem}
+                    horizontal={true}
+                    showsHorizontalScrollIndicator={false}
+                    keyExtractor={(item) => item.id}
+                    numColumns={1}
+                  />
+                </>
+                :
+                <></>}
 
-              {filteredRestaurants.length > 0 ? 
-              <>
-              <Text style={styles.subTitle}>Restaurants</Text>
-              <FlatList
-                data={filteredRestaurants}
-                renderItem={renderRestaurantItem}
-                keyExtractor={(item) => item.id}
-                onEndReached={loadMoreRestaurants}
-                onEndReachedThreshold={0.5}
-                ListFooterComponent={loadingRestaurants && <Text>Loading more restaurants...</Text>}
-              />
-              </>
-              : <></>}
-              
+              {filteredRestaurants.length > 0 ?
+                <>
+                  <Text style={styles.subTitle}>Restaurants</Text>
+                  <FlatList
+                    data={filteredRestaurants}
+                    renderItem={renderRestaurantItem}
+                    keyExtractor={(item) => item.id}
+                    // onEndReached={loadMoreRestaurants}
+                    onEndReachedThreshold={0.5}
+
+                  />
+                </>
+                : <></>}
+
             </>
           )}
         </View>
