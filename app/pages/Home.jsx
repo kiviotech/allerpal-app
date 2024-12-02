@@ -126,20 +126,21 @@ const Home = () => {
   }, [filteredFoodRecommendations]);
 
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    // Filter restaurants based on location or name matching the query
-    const filtered = restaurants.filter((restaurant) =>
-      restaurant.location.toLowerCase().includes(query.toLowerCase()) ||
-      restaurant.name.toLowerCase().includes(query.toLowerCase())
-    );
+  const handleSearch = () => {
+    router.push('./Search')
+    // setSearchQuery(query);
+    // // Filter restaurants based on location or name matching the query
+    // const filtered = restaurants.filter((restaurant) =>
+    //   restaurant.location.toLowerCase().includes(query.toLowerCase()) ||
+    //   restaurant.name.toLowerCase().includes(query.toLowerCase())
+    // );
 
-    setFilteredRestaurants(filtered);
+    // setFilteredRestaurants(filtered);
 
-    const filteredFood = menuItems.filter((food) =>
-      food.item_name.toLowerCase().includes(query.toLowerCase())
-    );
-    setFilteredFoodRecommendations(filteredFood);
+    // const filteredFood = menuItems.filter((food) =>
+    //   food.item_name.toLowerCase().includes(query.toLowerCase())
+    // );
+    // setFilteredFoodRecommendations(filteredFood);
   };
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -154,15 +155,14 @@ const Home = () => {
           <Text style={{ marginLeft: 5 }}>Kalyan Nagar,Bangalore</Text>
         </View>
       </View>
-      <View style={styles.container}>
+      <TouchableOpacity style={styles.container} onPress={handleSearch}>
         <Ionicons name="search" size={24} color="black" />
         <TextInput
           style={styles.input}
           placeholder="Find for Food and Restaurant..."
           value={searchQuery}
-          onChangeText={handleSearch}
         />
-      </View>
+      </TouchableOpacity>
       <ScrollView style={styles.outerContainer}>
         <View>
           <FoodItem />
@@ -199,8 +199,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#fff",
     marginTop: "10%",
-    marginLeft: "10%",
-    width: "70%",
+    margin: "auto",
+    width: "95%",
   },
   input: {
     flex: 1,

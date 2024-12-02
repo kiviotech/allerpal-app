@@ -11,9 +11,13 @@ import { MEDIA_BASE_URL } from "../../src/api/apiClient";
 import useAuthStore from "../../useAuthStore";
 import { fetchUserAllergyById } from "../../src/services/userAllergyServices";
 import useAllergyStore from "../../src/stores/allergyStore";
+import { fetchAllCuisines } from "../../src/services/cuisineServices";
+import { TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
 
 const FoodItem = () => {
-  const [allergens, setAllergens] = useState([]);
+  const router = useRouter();
+  const [cuisines, setCuisines] = useState([]);
   const [loading, setLoading] = useState(true);
   const setSelectedAllergies = useAllergyStore(
     (state) => state.setSelectedAllergies
@@ -32,70 +36,73 @@ const FoodItem = () => {
   }
 
   useEffect(() => {
-    const fetchAllergies = async () => {
+    const fetchCuisines = async () => {
       try {
-        const data = await fetchUserAllergyById(userId);
-        const allergies =
-          data?.data?.map((item) => item.allergies).flat() || [];
-
-        setAllergens(allergies);
-        // Now only storing the names
-        setSelectedAllergies(allergies);
-
-        console.log("Allergy data with images:", data.data);
+        const data = await fetchAllCuisines();
+        setCuisines(data.data)
       } catch (error) {
-        console.log("Error fetching allergies:", error);
+        console.error("Error fetching cuisines:", error);
       } finally {
-        setLoading(false);
+        setLoading(false); // Ensure loading stops regardless of success or failure
       }
     };
+    fetchCuisines();
+  }, []);
 
-    fetchAllergies();
-  }, [userId, setSelectedAllergies]);
+  // const truncateName = (name, maxLength = 10) =>
+  //   name.length > maxLength ? `${name.slice(0, maxLength)}...` : name;
 
   if (loading) {
     return (
-      <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      {allergens.length === 0 ? (
-        <Text style={styles.noDataText}>No allergies found</Text>
-      ) : (
-        <FlatList
-          data={allergens}
-          keyExtractor={(item) => item.id.toString()}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.listContainer}
-          renderItem={({ item }) => {
-            // Construct the full image URL for each allergy
-            const imageUrl = item?.Allergeimage?.[0]?.url
-              ? `${MEDIA_BASE_URL}${item.Allergeimage[0].url}`
+      <FlatList
+        data={cuisines}
+        keyExtractor={(item) => item.id.toString()}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.listContainer}
+        renderItem={({ item }) => {
+          const imageUrl =
+            item?.cuisine_image && item.cuisine_image.length > 0
+              ? `${MEDIA_BASE_URL}${item.cuisine_image[0].url}`
               : null;
 
-            // Truncate the name to a maximum length (e.g., 10 characters)
-            const truncateName = (name, maxLength = 5) => {
-              return name.length > maxLength
-                ? `${name.slice(0, maxLength)}...`
-                : name;
-            };
+          // Truncate the name to a maximum length (e.g., 10 characters)
+          const truncateName = (name, maxLength = 10) => {
+            return name.length > maxLength
+              ? `${name.slice(0, maxLength)}...`
+              : name;
+          };
 
-            return (
+          return (
+            <TouchableOpacity
+            onPress={() => {
+              const truncatedName = truncateName(item.cuisine_type);
+              router.push({
+                pathname: "./Search",
+                params: { searchTerm: truncatedName }, // Pass searchTerm as a parameter
+              });
+            }}
+          >
               <View style={styles.itemContainer}>
                 {imageUrl ? (
                   <Image source={{ uri: imageUrl }} style={styles.image} />
                 ) : (
                   <Text style={styles.noImageText}>No Image</Text>
                 )}
-                <Text style={styles.text}>{truncateName(item.name)}</Text>
+                <Text style={styles.text}>{truncateName(item.cuisine_type)}</Text>
               </View>
-            );
-          }}
-        />
-      )}
+            </TouchableOpacity>
+          );
+        }}
+      />
     </View>
   );
 };

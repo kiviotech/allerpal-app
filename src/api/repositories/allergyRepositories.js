@@ -1,4 +1,3 @@
-// import apiClient from "../apiClient";
 import allergyEndpoints from "../endpoints/allergyEndpoints";
 import apiClient from './../apiClient';
 
