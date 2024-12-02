@@ -8,6 +8,9 @@ import { getAllRestaurants } from '../../src/api/repositories/restaurantReposito
 import { fetchAllMenuItems } from '../../src/services/menuItemsServices';
 import { MEDIA_BASE_URL } from '../../src/api/apiClient';
 import { useRouter } from 'expo-router';
+import { useSearchParams } from 'expo-router';
+import { saveToStorage } from '../../src/utils/storage';
+import { fetchAllCuisines } from '../../src/services/cuisineServices';
 
 const { width } = Dimensions.get('window');
 
@@ -31,70 +34,117 @@ const Search = () => {
   const [recentViews, setRecentViews] = useState([]);
   const [hasMoreRestaurants, setHasMoreRestaurants] = useState(true);
   const [restaurantPage, setRestaurantPage] = useState(1);
-  const [foodPage, setFoodPage] = useState(1);
   const [loadingRestaurants, setLoadingRestaurants] = useState(false);
-  const [loadingFood, setLoadingFood] = useState(false);
   const [recentSearches, setRecentSearches] = useState([]);
-
-
+  const [cuisines, setCuisines] = useState([]);
+  const [filteredCuisines, setFilteredCuisines] = useState([]);
   const router = useRouter()
-  useEffect(() => {
-    if (!searchTerm) {
-      setShowInitial(true);
-      setFilteredFood([]);
-      setFilteredRestaurants([]);
-    }
-  }, [searchTerm]);
+
+  // useEffect(() => {
+  //   if (cuisine_type) {
+  //     handleSearch(cuisine_type); // Automatically search using cuisine_type
+  //   }
+  // }, [cuisine_type]);
+
+  let uniqueCuisines = [];
 
   useEffect(() => {
-    fetchRestaurants();
-  }, []);
-
-  const fetchRestaurants = async (page = 1) => {
-    if (loadingRestaurants || !hasMoreRestaurants) return;
-    setLoadingRestaurants(true);
-    try {
-      const response = await getAllRestaurants({ page, limit: 3 });
-      const newRestaurants = response.data.data || [];
-      setRestaurants((prev) => (page === 1 ? newRestaurants : [...prev, ...newRestaurants]));
-      setFilteredRestaurants((prev) => (page === 1 ? newRestaurants : [...prev, ...newRestaurants]));
-      setHasMoreRestaurants(newRestaurants.length > 0);
-      setRestaurantPage(page);
-    } catch (error) {
-      console.error("Error fetching restaurants:", error);
-      setRestaurants([]);
-      setFilteredRestaurants((prevRestaurants) => [
-        ...prevRestaurants,
-        ...(response.data.data || []),
-      ]);
-    }
-  };
-
-  const loadMoreRestaurants = () => {
-    fetchRestaurants(restaurantPage + 1);
-  };
-
-  useEffect(() => {
-    const getMenuItems = async () => {
+    const fetchInitialData = async () => {
       try {
-        const response = await fetchAllMenuItems();
-        if (response?.data) {
-          const menuItems = response.data;
-          setMenuItems(menuItems);
-          console.log('first', menuItems)
-          setFilteredFood(menuItems);
+        const [menuResponse, restaurantResponse] = await Promise.all([
+          fetchAllMenuItems(),
+          getAllRestaurants({ page: 1, limit: 3 }),
+        ]);
+
+        // Handle Menu Items
+        if (menuResponse?.data) {
+          setMenuItems(menuResponse.data);
+          setFilteredFood(menuResponse.data);
+          setCuisines(menuResponse.data.map(item => item.cuisine))
+
+          uniqueCuisines = [...new Set(cuisines.map((type) => type.cuisine_type))];
+          // console.log('cuiiii', uniqueCuisines)
+          // const initialMenus = menuResponse?.data || [];
         } else {
           setMenuItems([]);
           setFilteredFood([]);
+          setFilteredCuisines([]);
         }
+
+        // Handle Restaurants
+        const initialRestaurants = restaurantResponse?.data?.data || [];
+        setRestaurants(initialRestaurants);
+        setFilteredRestaurants(initialRestaurants);
+        setHasMoreRestaurants(initialRestaurants.length > 0);
       } catch (error) {
-        console.error("Error fetching menu items:", error);
+        console.error("Error fetching initial data:", error);
         setMenuItems([]);
         setFilteredFood([]);
+        setRestaurants([]);
+        setFilteredRestaurants([]);
       }
     };
-    getMenuItems();
+
+    fetchInitialData();
   }, []);
+
+  // Fetch more restaurants when user scrolls
+  const fetchRestaurants = useCallback(
+    async (page) => {
+      if (loadingRestaurants || !hasMoreRestaurants) return;
+
+      setLoadingRestaurants(true);
+      try {
+        const response = await getAllRestaurants({ page, limit: 2 });
+        const newRestaurants = response?.data?.data || [];
+        setRestaurants((prev) => (page === 1 ? newRestaurants : [...prev, ...newRestaurants]));
+        setFilteredRestaurants((prev) =>
+          page === 1 ? newRestaurants : [...prev, ...newRestaurants]
+        );
+        setHasMoreRestaurants(newRestaurants.length > 0); // Stop fetching if no data is returned
+        setRestaurantPage(page);
+      } catch (error) {
+        console.error("Error fetching restaurants:", error);
+      } finally {
+        setLoadingRestaurants(false);
+      }
+    },
+    [loadingRestaurants, hasMoreRestaurants]
+  );
+
+  // useEffect(() => {
+  //   const fetchCuisine = async () => {
+  //     const CuisineResponse = await fetchAllCuisines();
+  //     console.log('resp', CuisineResponse.data)
+  //   }
+  //   fetchCuisine();
+  // }, [])
+  // Infinite scroll handler with debounce
+  // Infinite scroll handler
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + document.documentElement.scrollTop >=
+        document.documentElement.offsetHeight - 200
+      ) {
+        fetchRestaurants(restaurantPage + 1); // Fetch next page on scroll
+      }
+    };
+
+    const debounceScroll = debounce(handleScroll, 200);
+
+    window.addEventListener("scroll", debounceScroll);
+    return () => window.removeEventListener("scroll", debounceScroll);
+  }, [restaurantPage, fetchRestaurants]);
+
+  // Debounce function to prevent rapid API calls
+  const debounce = (func, delay) => {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => func(...args), delay);
+    };
+  };
 
   const applyFilters = () => {
     setFilterVisible(false);
@@ -110,57 +160,54 @@ const Search = () => {
       : {};
   };
 
-//   const debouncedSearch = _.debounce(() => {
-//     if (searchTerm.length >= 3) {
-//         handleSearch();
-//     } else if (searchTerm.length === 0) {
-//         // If search text is cleared, fetch all products
-//         setAllProduct([]); // Clear existing products
-//         setPage(1); // Reset page to 1
-//         setHasMore(true); // Reset hasMore state
-//         getAllProduct(); // Fetch all products
-//     }
-// }, 300); // 300ms debounce delay
-
-// useEffect(() => {
-//     debouncedSearch(); // Call debounced search whenever searchText changes
-//     return debouncedSearch.cancel; // Clean up debounce on unmount
-// }, [searchTerm]);
-
-
   const handleSearch = (text) => {
+    console.log('text', text)
     setSearchTerm(text);
     setShowInitial(false);
     if (text.length < 3) {
       setFilteredRestaurants([]);
       setFilteredFood([]);
+      setFilteredCuisines([]);
       return;
     }
+    const filteredRestaurantsList = restaurants.filter(
+      (restaurant) =>
+        restaurant.location.toLowerCase().includes(text.toLowerCase()) ||
+        restaurant.name.toLowerCase().includes(text.toLowerCase())
+    );
+    setFilteredRestaurants(filteredRestaurantsList);
 
+    const filteredFoodList = menuItems.filter((food) =>
+      food.item_name.toLowerCase().includes(text.toLowerCase())
+    );
+    setFilteredFood(filteredFoodList);
 
-    else {
-      const filteredRestaurantsList = restaurants.filter(
-        (restaurant) =>
-          restaurant.location.toLowerCase().includes(text.toLowerCase()) ||
-          restaurant.name.toLowerCase().includes(text.toLowerCase())
-      );
-      setFilteredRestaurants(filteredRestaurantsList);
+    const filteredCuisinesTypes = menuItems.filter((menuItem) =>
+      menuItem.cuisine.cuisine_type.toLowerCase().includes(text.toLowerCase())
+    );
+    setFilteredFood(filteredCuisinesTypes);
 
-      const filteredFoodList = menuItems.filter((food) =>
-        food.item_name.toLowerCase().includes(text.toLowerCase())
-      );
-      setFilteredFood(filteredFoodList);
+    const matchedSearches = [
+      ...new Set(
+        filteredRestaurantsList
+          .map((restaurant) => restaurant.name || restaurant.location)
+          .concat(filteredFoodList.map((food) => food.item_name))
+      ), // Merge restaurant and food names for recent searches
+    ];
 
-      const matchedSearches = filteredRestaurantsList
-        .map((restaurant) => restaurant.name || restaurant.location)
-        .filter((value, index, self) => self.indexOf(value) === index); // Ensure uniqueness
-
-      setRecentSearches((prevSearches) => [
-        ...matchedSearches,
-        ...prevSearches,
-      ].slice(0, 1));
-    }
+    setRecentSearches((prevSearches) => {
+      const updatedSearches = [...matchedSearches, ...prevSearches.filter((s) => s !== text)];
+      return updatedSearches.slice(0, 3); // Limit to 5
+    });
   };
+
+  useEffect(() => {
+    saveToStorage('recentViews', recentViews);
+  }, [recentViews]);
+
+  useEffect(() => {
+    saveToStorage('recentSearches', recentSearches);
+  }, [recentSearches]);
 
   const [liked, setLiked] = useState(false);
 
@@ -184,33 +231,29 @@ const Search = () => {
   const handleViewRestaurant = (restaurant) => {
     console.log('rest', restaurant)
     const imageUrl =
-    restaurant.image && restaurant.image[0]?.url
-      ? `${MEDIA_BASE_URL}${restaurant.image[0].url}`
-      : Restro;
+      restaurant.image && restaurant.image[0]?.url
+        ? `${MEDIA_BASE_URL}${restaurant.image[0].url}`
+        : Restro;
 
-        router.push({
-          pathname: "pages/RestaurantScreen",
-          params: {
-            id: restaurant.documentId,
-            documentId: restaurant.documentId,
-            name: restaurant.name,
-            rating: restaurant.rating,
-            categories: restaurant.categories,
-            image: imageUrl,
-          },
-        })
+    router.push({
+      pathname: "pages/RestaurantScreen",
+      params: {
+        id: restaurant.documentId,
+        documentId: restaurant.documentId,
+        name: restaurant.name,
+        rating: restaurant.rating,
+        categories: restaurant.categories,
+        image: imageUrl,
+      },
+    })
     setRecentViews((prevViews) => {
-      // Check if restaurant is already in recent views
-      const alreadyViewed = prevViews.find((item) => item.id === restaurant.id);
-      if (alreadyViewed) {
-        // Move it to the top of the list
-        return [restaurant, ...prevViews.filter((item) => item.id !== restaurant.id)];
-      }
-      // Add the new restaurant to the top of the list
-      return [restaurant, ...prevViews].slice(0, 5); // Limit to 5 recent views
+      const updatedViews = prevViews.filter((item) => item.id !== restaurant.id);
+      const newViews = [{ ...restaurant, image: imageUrl }, ...updatedViews];
+      return newViews.slice(0, 5); // Limit to 5
     });
   };
-  
+
+
   const renderFoodItem = ({ item }) => (
     <View style={styles.card}>
       <Image source={foodrestro} style={styles.image} />
@@ -335,37 +378,85 @@ const Search = () => {
           {showInitial ? (
 
             <>
+              <View>
+                <View>
+                  <Text style={styles.sectionTitle}>Popular Searches</Text>
+                  <FlatList
+                    data={popularSearches}
+                    horizontal={true}
+                    keyExtractor={(item) => item.id}
+                    showsHorizontalScrollIndicator={false}
+                    // style={{ paddingHorizontal: 10 }}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={styles.popularSearchCard}
+                        onPress={() => handlePopularSearch(item.name)}
+                      >
+                        <Image source={item.image} style={styles.popularSearchImage} />
+                        <Text>{item.name}</Text>
+                      </TouchableOpacity>
+                    )}
+                  />
+                </View>
+                <View>
+                  <View style={styles.recentHeader}>
+                    <Text style={styles.sectionTitle}>Recent Searches</Text>
+                    <TouchableOpacity
+                      onPress={handleClearRecentSearches}
+                      style={styles.clearButton}
+                    >
+                      <Text>X</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.recentSearchContainer}>
+                    {recentSearches.map((search, index) => (
+                      <Text key={index} style={styles.recentSearchText}>
+                        {search}
+                      </Text>
+                    ))}
+                  </View>
+                </View>
+                <View>
+                  <>
+                    <Text style={styles.subTitle}>Menu Items</Text>
+                    <FlatList
+                      data={filteredFood}
+                      renderItem={renderFoodItem}
+                      horizontal={true}
+                      showsHorizontalScrollIndicator={false}
+                      keyExtractor={(item) => item.id}
+                      numColumns={1}
+                    />
+                  </>
+                </View>
+              </View>
+              <View>
+                <>
+                  <Text style={styles.subTitle}>Restaurants</Text>
+                  <FlatList
+                    data={filteredRestaurants}
+                    renderItem={renderRestaurantItem}
+                    keyExtractor={(item) => item.id}
+                    // onEndReached={loadMoreRestaurants}
+                    onEndReachedThreshold={0.5}
+
+                  />
+                </>
+              </View>
+
+            </>
+          ) : (
+            <>
               {recentSearches.length > 0 ?
                 (
                   <>
-
-                    <View>
-                      <Text style={styles.sectionTitle}>Popular Searches</Text>
-                      <FlatList
-                        data={popularSearches}
-                        horizontal={true}
-                        keyExtractor={(item) => item.id}
-                        showsHorizontalScrollIndicator={false}
-                        // style={{ paddingHorizontal: 10 }}
-                        renderItem={({ item }) => (
-                          <TouchableOpacity
-                            style={styles.popularSearchCard}
-                            onPress={() => handlePopularSearch(item.name)}
-                          >
-                            <Image source={item.image} style={styles.popularSearchImage} />
-                            <Text>{item.name}</Text>
-                          </TouchableOpacity>
-                        )}
-                      />
-                    </View>
-
                     <View style={styles.recentHeader}>
                       <Text style={styles.sectionTitle}>Recent Searches</Text>
                       <TouchableOpacity
                         onPress={handleClearRecentSearches}
                         style={styles.clearButton}
                       >
-                        <Text style={styles.clearButtonText}>X</Text>
+                        <Text>X</Text>
                       </TouchableOpacity>
                     </View>
                     <View style={styles.recentSearchContainer}>
@@ -378,15 +469,15 @@ const Search = () => {
 
                     {recentViews.length > 0 && (
                       <>
-                      <View style={styles.recentHeader}>
-                      <Text style={styles.sectionTitle}>Recently Viewed</Text>
-                      <TouchableOpacity
-                        onPress={handleClearRecentViews}
-                        style={styles.clearButton}
-                      >
-                        <Text style={styles.clearButtonText}>X</Text>
-                      </TouchableOpacity>
-                    </View>
+                        <View style={styles.recentHeader}>
+                          <Text style={styles.sectionTitle}>Recently Viewed</Text>
+                          <TouchableOpacity
+                            onPress={handleClearRecentViews}
+                            style={styles.clearButton}
+                          >
+                            <Text style={styles.clearButtonText}>X</Text>
+                          </TouchableOpacity>
+                        </View>
                         <FlatList
                           data={recentViews}
                           keyExtractor={(item) => item.id.toString()}
@@ -400,39 +491,36 @@ const Search = () => {
                   <Text style={styles.sectionTitle}>Start typing to search for restaurants or food items...</Text>
                 )
               }
-            </>
-          ) : (
-            <>
               <Text style={styles.results}>Search Results</Text>
-              {filteredFood.length > 0 ? 
-              <>
-              <Text style={styles.subTitle}>Menu Items</Text>
-              <FlatList
-                data={filteredFood}
-                renderItem={renderFoodItem}
-                horizontal={true}
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(item) => item.id}
-                numColumns={1}
-              />
-              </>
-              :
-              <></>}
+              {filteredFood.length > 0 ?
+                <>
+                  <Text style={styles.subTitle}>Menu Items</Text>
+                  <FlatList
+                    data={filteredFood}
+                    renderItem={renderFoodItem}
+                    horizontal={true}
+                    showsHorizontalScrollIndicator={false}
+                    keyExtractor={(item) => item.id}
+                    numColumns={1}
+                  />
+                </>
+                :
+                <></>}
 
-              {filteredRestaurants.length > 0 ? 
-              <>
-              <Text style={styles.subTitle}>Restaurants</Text>
-              <FlatList
-                data={filteredRestaurants}
-                renderItem={renderRestaurantItem}
-                keyExtractor={(item) => item.id}
-                onEndReached={loadMoreRestaurants}
-                onEndReachedThreshold={0.5}
-                ListFooterComponent={loadingRestaurants && <Text>Loading more restaurants...</Text>}
-              />
-              </>
-              : <></>}
-              
+              {filteredRestaurants.length > 0 ?
+                <>
+                  <Text style={styles.subTitle}>Restaurants</Text>
+                  <FlatList
+                    data={filteredRestaurants}
+                    renderItem={renderRestaurantItem}
+                    keyExtractor={(item) => item.id}
+                    // onEndReached={loadMoreRestaurants}
+                    onEndReachedThreshold={0.5}
+
+                  />
+                </>
+                : <></>}
+
             </>
           )}
         </View>

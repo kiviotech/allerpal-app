@@ -23,7 +23,7 @@
     "expo-blur": "~13.0.2",
     "expo-image-picker": "~15.0.7",
     "expo-location": "~17.0.1",
-    "expo-router": "^3.5.23",
+    "expo-router": "^3.5.24",
     "expo-status-bar": "~1.12.1",
     "metro-config": "^0.81.0",
     "react": "18.2.0",
