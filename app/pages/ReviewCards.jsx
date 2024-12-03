@@ -208,51 +208,56 @@ const ReviewCards = ({ restaurantId }) => {
 
   return (
     <SafeAreaView style={styles.AreaContainer}>
+      {reviews.length > 0 ?
       <View style={styles.Container}>
-        <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-          {reviews.map((item, index) => (
-            <View key={index} style={styles.card}>
-              {/* Header Section */}
-              <View style={styles.header}>
-                <View style={styles.profileContainer}>
-                  <Image
-                    source={{
-                      uri: "https://img.freepik.com/free-vector/man-profile-account-picture_24908-81754.jpg",
-                    }}
-                    style={styles.profileImage}
-                  />
-                  <View style={styles.ratingBadge}>
-                    <Text style={styles.ratingText}>{item.rating}</Text>
-                    <MaterialIcons name="star" size={15} color="yellow" />
-                  </View>
-                </View>
-                <View style={styles.headerText}>
-                  <Text style={styles.name}>
-                    {item?.profile?.name || "Anonymous"}
-                  </Text>
-                  <Text style={styles.date}>
-                    {new Date(item.createdAt).toLocaleDateString()}
-                  </Text>
+      <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+        {reviews?.map((item, index) => (
+          <View key={index} style={styles.card}>
+            {/* Header Section */}
+            <View style={styles.header}>
+              <View style={styles.profileContainer}>
+                <Image
+                  source={{
+                    uri: "https://img.freepik.com/free-vector/man-profile-account-picture_24908-81754.jpg",
+                  }}
+                  style={styles.profileImage}
+                />
+                <View style={styles.ratingBadge}>
+                  <Text style={styles.ratingText}>{item.rating}</Text>
+                  <MaterialIcons name="star" size={15} color="yellow" />
                 </View>
               </View>
-
-              {/* Image Section */}
-              <View style={styles.imageCarousel}>
-                {item.Image && item.Image.length > 0 && (
-                  <Image
-                    source={{ uri: `${MEDIA_BASE_URL}${item.Image[0].url}` }}
-                    style={styles.Image}
-                  />
-                )}
+              <View style={styles.headerText}>
+                <Text style={styles.name}>
+                  {item?.profile?.name || "Anonymous"}
+                </Text>
+                <Text style={styles.date}>
+                  {new Date(item.createdAt).toLocaleDateString()}
+                </Text>
               </View>
-
-              <Text style={styles.review}>
-                {item.comment || "No comment provided."}
-              </Text>
             </View>
-          ))}
-        </ScrollView>
-      </View>
+
+            {/* Image Section */}
+            <View style={styles.imageCarousel}>
+              {item.Image && item.Image.length > 0 && (
+                <Image
+                  source={{ uri: `${MEDIA_BASE_URL}${item.Image[0].url}` }}
+                  style={styles.Image}
+                />
+              )}
+            </View>
+
+            <Text style={styles.review}>
+              {item.comment || "No comment provided."}
+            </Text>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+    :
+    <>
+    <Text style={styles.review}>No review yet , be the first one to review</Text>
+    </>}
     </SafeAreaView>
   );
 };
@@ -261,6 +266,7 @@ const styles = StyleSheet.create({
   AreaContainer: {
     flex: 1,
     padding: 10,
+    paddingBottom: 80,
     marginTop: 20,
     backgroundColor: "#F9F9F9",
     width: "100%",
@@ -269,10 +275,9 @@ const styles = StyleSheet.create({
   Container: {
     backgroundColor: "#F9F9F9",
     display: "flex",
-    flexDirection: "row",
-    borderRadius: "50%",
+    justifyContent: 'center',
     width: "100%",
-    // gap:20
+    gap:20
   },
   card: {
     backgroundColor: "#ffffff",
@@ -281,7 +286,7 @@ const styles = StyleSheet.create({
     width: Dimensions.get("window").width * 0.8,
     marginHorizontal: 10,
     height: 450,
-    transform: [{ rotateY: "15deg" }, { rotateX: "5deg" }], // Slight rotation for 3D effect
+    // transform: [{ rotateY: "15deg" }, { rotateX: "5deg" }], // Slight rotation for 3D effect
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.1,

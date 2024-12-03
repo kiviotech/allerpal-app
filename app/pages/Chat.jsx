@@ -12,6 +12,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRouter } from "expo-router";
 
+// const SESSION_TIMEOUT = 2 * 60 * 1000; // 2 minutes in milliseconds
+
 const ChatScreen = () => {
   const router = useRouter();
   const navigation = useNavigation();
@@ -19,18 +21,27 @@ const ChatScreen = () => {
     { text: "Hi! How can I help you today?", sender: "bot" },
   ]);
   const [userInput, setUserInput] = useState("");
+  const [isInputDisabled, setIsInputDisabled] = useState(false); // State to control input field
   const flatListRef = useRef(null); // Ref for the FlatList
 
   const handleSendMessage = () => {
     if (userInput.trim()) {
       addMessage(userInput, "user");
       setUserInput("");
-      setTimeout(() => generateAndAddResponse(), 300);
+      setTimeout(() => generateAndAddResponse(userInput.toLowerCase()), 300);
     }
   };
 
-  const generateAndAddResponse = () => {
-    const botResponse = "Thank you for chatting with us. We will inform the restaurant and get back to you after 24 hours.";
+  const generateAndAddResponse = (userMessage) => {
+    if (["hi", "hello", "hey"].includes(userMessage)) {
+      botResponse = "Hello! How can I assist you today?";
+    } else if (userMessage.includes("restaurant")) {
+      botResponse =
+        "Thank you for chatting with us. We will inform the restaurant and get back to you after 24 hours.";
+        setIsInputDisabled(true)
+    } else {
+      botResponse = "Ask me about any restaurant"
+    }
     addMessage(botResponse, "bot");
   };
 
@@ -45,7 +56,7 @@ const ChatScreen = () => {
       {/* Header with Back Arrow and Title */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.push("/pages/Home")}
+          onPress={() => router.back()}
           style={styles.backButton}
         >
           <Ionicons name="arrow-back" size={24} color="black" />
@@ -90,8 +101,11 @@ const ChatScreen = () => {
             value={userInput}
             onChangeText={setUserInput}
             placeholder="Type a message..."
+            editable={!isInputDisabled} // Disable input when isInputDisabled is true
           />
-          <Button title="Send" onPress={handleSendMessage} />
+          <Button title="Send" onPress={handleSendMessage} 
+            disabled={isInputDisabled} // Disable button when isInputDisabled is true
+          />
         </View>
       </View>
     </SafeAreaView>
