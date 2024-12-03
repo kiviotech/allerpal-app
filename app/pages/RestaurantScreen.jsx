@@ -102,7 +102,7 @@ export default function () {
         <View style={styles.container}>
           {/* Header Icons */}
           <View style={styles.headerIcons}>
-            <TouchableOpacity onPress={() => router.push("./Home")}>
+            <TouchableOpacity onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={24} color="#333" />
             </TouchableOpacity>
             <TouchableOpacity>
@@ -235,10 +235,10 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   image: {
-    width: "90%",
-    height: 200,
+    width: "85%",
+    height: 180,
     borderRadius: 10,
-    left: 18,
+    margin: 'auto',
   },
   detailsContainer: {
     padding: 16,

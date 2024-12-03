@@ -132,7 +132,21 @@ const RestaurantCard = ({ restaurant, onPress }) => {
           </View>
 
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button}>
+            <TouchableOpacity style={styles.button}
+            onPress={() =>
+              router.push({
+                pathname: "pages/RestaurantScreen",
+                params: {
+                  id: restaurant.documentId,
+                  documentId: restaurant.documentId,
+                  name: restaurant.name,
+                  rating: restaurant.rating,
+                  categories: restaurant.categories,
+                  image: imageUrl,
+                },
+              })
+            }
+            >
               <Text style={styles.buttonText}>View details</Text>
             </TouchableOpacity>
           </View>

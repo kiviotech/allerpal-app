@@ -936,7 +936,7 @@ const Search = () => {
       if (searchText && !empty) {
         url += `&filters[name][$contains]=${searchText}`;
       }
-
+      
       const response = await apiClient.get(url);
       const newRestaurants = response?.data?.data || [];
 

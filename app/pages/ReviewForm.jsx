@@ -98,6 +98,17 @@ const ReviewForm = () => {
   };
 
   const handleSubmit = async () => {
+    if (!formData.title.trim()) {
+      Alert.alert("Validation Error", "Please enter the title of the review.");
+      return;
+    }
+    if (!formData.description.trim()) {
+      Alert.alert(
+        "Validation Error",
+        "Please enter a description for the review."
+      );
+      return;
+    }
     const reviewData = {
       title: formData.title,
       comment: formData.description,
@@ -132,7 +143,7 @@ const ReviewForm = () => {
         setImage(null);
         setImageIds([]);
         // router.push("./RestaurantScreen");
-        navigation.goBack();
+        router.back();
       } else {
         throw new Error("Failed to submit review");
       }
@@ -153,7 +164,7 @@ const ReviewForm = () => {
       <View style={styles.ArrowContainer}>
         <TouchableOpacity
           style={styles.backArrow}
-          onPress={() => navigation.goBack()}
+          onPress={() => router.back()}
         >
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
