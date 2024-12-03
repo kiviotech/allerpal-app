@@ -326,7 +326,7 @@ const FoodRecommendations = ({ filteredFoodRecommendations }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Food recommendations for you</Text>
+      <Text style={styles.title}>Dish recommendations for you</Text>
       {menuItems.length === 0 ? (
         <Text style={styles.noItemsText}>
           No suitable items found based on your allergies
