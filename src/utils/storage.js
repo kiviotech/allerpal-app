@@ -34,7 +34,7 @@ export const saveToStorage = async (key, value) => {
 export const getFromStorage = async (key) => {
   try {
     const value = await AsyncStorage.getItem(key);
-    return value ? JSON.parse(value) : null;
+    return value ? JSON.parse(value) : [];
   } catch (error) {
     console.error("Error retrieving data from AsyncStorage:", error);
   }
@@ -70,45 +70,4 @@ export const saveRecentView = async (viewItem) => {
 // Function to get recent views
 export const getRecentViews = async () => {
   return getFromStorage('recentViews');
-};
-
-// Function to save chat messages
-export const saveChatMessages = async (messages) => {
-  try {
-    await saveToStorage('chatMessages', messages);
-  } catch (error) {
-    console.error("Error saving chat messages:", error);
-  }
-};
-
-// Function to get chat messages
-export const getChatMessages = async () => {
-  return getFromStorage('chatMessages');
-};
-
-// Function to save session end time
-export const saveChatSessionEnd = async (sessionEnd) => {
-  try {
-    await saveToStorage('chatSessionEnd', sessionEnd);
-  } catch (error) {
-    console.error("Error saving chat session end:", error);
-  }
-};
-
-// Function to get session end time
-export const getChatSessionEnd = async () => {
-  return getFromStorage('chatSessionEnd');
-};
-
-// Function to initialize chat session
-export const initializeChatSession = async () => {
-  const sessionEnd = Date.now() + 2 * 60 * 1000; // 2 minutes from now
-  await saveChatSessionEnd(sessionEnd);
-  await saveChatMessages([{ text: "Hi! How can I help you today?", sender: "bot" }]);
-};
-
-// Function to check if session is active
-export const isChatSessionActive = async () => {
-  const sessionEnd = await getChatSessionEnd();
-  return sessionEnd && Date.now() <= sessionEnd;
 };

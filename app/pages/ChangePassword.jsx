@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
+import Icon from "react-native-vector-icons/Ionicons"; // Use Ionicons for consistency
 import useAuthStore from "../../useAuthStore"; // Corrected import path
 import apiClient from "../../src/api/apiClient";
 
@@ -14,6 +14,7 @@ const ChangePassword = () => {
     const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] = useState(false);
     const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
     const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
     const [validation, setValidation] = useState({
         minLength: false,
@@ -24,6 +25,19 @@ const ChangePassword = () => {
 
     const handlePasswordChange = async () => {
         // Validate passwords
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            setErrorMessage("All fields are required.");
+            return;
+        }
+        if (currentPassword !== user.password) { // Check if current password matches the stored user password
+            setErrorMessage("Current password is incorrect.");
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            setErrorMessage("New password and confirmation do not match.");
+            return;
+        }
+
         if (
             newPassword === confirmPassword &&
             validation.minLength &&
@@ -85,6 +99,7 @@ const ChangePassword = () => {
             </View>
 
             <View style={styles.mainContainer}>
+            {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
                 {/* Current Password Input */}
                 <View style={{ marginTop: 20 }}>
                     <Text style={styles.label}>Current Password</Text>
@@ -97,10 +112,14 @@ const ChangePassword = () => {
                             onChangeText={setCurrentPassword}
                         />
                         <TouchableOpacity
-                            style={styles.eyeIcon}
                             onPress={() => setIsCurrentPasswordVisible(!isCurrentPasswordVisible)}
+                            style={styles.eyeIcon}
                         >
-                            <Text>{isCurrentPasswordVisible ? "" : "👁️"}</Text>
+                            <Icon
+                                name={isCurrentPasswordVisible ? "eye-slash" : "eye"}
+                                size={20}
+                                color="#B3B3B3"
+                            />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -120,7 +139,11 @@ const ChangePassword = () => {
                             style={styles.eyeIcon}
                             onPress={() => setIsNewPasswordVisible(!isNewPasswordVisible)}
                         >
-                            <Text>{isNewPasswordVisible ? "" : "👁️"}</Text>
+                            <Icon
+                                name={isNewPasswordVisible ? "eye-slash" : "eye"}
+                                size={20}
+                                color="#B3B3B3"
+                            />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -140,7 +163,11 @@ const ChangePassword = () => {
                             style={styles.eyeIcon}
                             onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
                         >
-                            <Text>{isConfirmPasswordVisible ? "" : "👁️"}</Text>
+                            <Icon
+                                name={isConfirmPasswordVisible ? "eye-slash" : "eye"}
+                                size={20}
+                                color="#B3B3B3"
+                            />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -173,7 +200,8 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
     },
     mainContainer: {
-        marginTop: 10
+        flex: 1,
+        justifyContent: "center",
     },
     label: {
         fontSize: 14,

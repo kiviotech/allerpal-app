@@ -27,7 +27,8 @@ const Profile = () => {
     (state) => state.setSelectedAllergies
   );
 
-  const userId = useAuthStore((state) => state.user?.id);
+  const user = useAuthStore((state) => state.user);
+  const userId = user?.id;
 
   useEffect(() => {
     const fetchAllergies = async () => {
@@ -73,7 +74,7 @@ const Profile = () => {
         <TextInput
           style={styles.input}
           placeholder="Full name"
-          defaultValue="Arlene Mccoy"
+          defaultValue={user.username}
         />
 
         <Text style={styles.label}>E-mail</Text>
@@ -81,7 +82,7 @@ const Profile = () => {
           style={styles.input}
           placeholder="Email"
           keyboardType="email-address"
-          defaultValue="noname@roreply.com"
+          defaultValue={user.email}
           editable={false} // Disable editing for email if needed
         />
 

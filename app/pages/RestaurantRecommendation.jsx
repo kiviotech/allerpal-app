@@ -32,9 +32,11 @@ const RestaurantCard = ({ restaurant, onPress }) => {
     }
 
     try {
-      const updatedFavorites = isFavorite
-        ? restaurant.favourites.filter((id) => id !== user.id)
-        : [...(restaurant.favourites || []), user.id];
+      const currentFavorites = restaurant.favourites || [];
+
+    const updatedFavorites = isFavorite
+      ? currentFavorites.filter((id) => id !== user.id)
+      : [...currentFavorites, user.id];
 
       const cleanedImage = restaurant.image?.map((img) => ({
         id: img.id,
@@ -101,7 +103,9 @@ const RestaurantCard = ({ restaurant, onPress }) => {
             </TouchableOpacity>
           </View>
           <View style={styles.heart}>
-            <TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => router.push("pages/Chat")}
+              >
               <Ionicons
                 name="chatbubble-outline"
                 size={20}
@@ -224,7 +228,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
     elevation: 5,
-    minHeight: 230,
+    height: 255,
   },
   image: {
     width: "100%",
@@ -269,6 +273,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 4,
+    // overflow: 'hidden'
   },
   categories: {
     flexDirection: "row",

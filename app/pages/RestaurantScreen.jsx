@@ -19,13 +19,17 @@ import ReviewCards from "./ReviewCards";
 import { useLocalSearchParams } from "expo-router";
 import { fetchMenuByRestaurantId } from "../../src/services/menuServices";
 import * as Location from 'expo-location';
+import useAuthStore from "../../useAuthStore";
+import restaurantURL from '../../assets/restaurant.png' 
+
 
 export default function () {
   const router = useRouter();
+  const { user } = useAuthStore();
   const [menuData, setMenuData] = useState([]);
   const [isAllergenOn, setIsAllergenOn] = React.useState(false);
   const [type, setType] = useState("normal");
-
+  const [isFavorite, setIsFavorite] = useState(false);
   const scrollViewRef = useRef(null); // Added ref for ScrollView
 
   const toggleAllergen = (value) => {
@@ -33,7 +37,7 @@ export default function () {
     setType(value ? "allergen" : "normal"); // Set type based on switch
   };
 
-  const { id, name, rating, categories, image, documentId } =
+  const { id, name, rating, categories, image, documentId, favourites } =
     useLocalSearchParams();
 
   useEffect(() => {
@@ -42,7 +46,53 @@ export default function () {
       setMenuData(response.data);
     };
     fetchMenus();
-  }, []);
+    if (favourites && user) {
+      setIsFavorite(favourites.includes(user.id));
+    }
+  }, [favourites, id, user]);
+
+  const handleFavoritePress = async () => {
+    if (!user) {
+      // Redirect to login if user is not authenticated
+      router.push("/pages/Login");
+      return;
+    }
+    try {
+      // Toggle favorite status
+      const updatedFavorites = isFavorite
+        ? favourites.filter((id) => id !== user.id) // Remove user from favorites
+        : [...favourites, user.id]; // Add user to favorites
+
+      // Update the restaurant's favorites in the backend
+      const cleanedImage = image?.map((img) => ({
+        id: img.id,
+        name: img.name,
+        alternativeText: img.alternativeText,
+        url: img.url,
+      }));
+      const payload = {
+        data: {
+          name,
+          favourites: updatedFavorites,
+          rating,
+          image: cleanedImage,
+        },
+      };
+
+      // Update restaurant details with the new favorites list
+      Object.keys(payload.data).forEach((key) => {
+        if (payload.data[key] === undefined || payload.data[key] === null) {
+          delete payload.data[key];
+        }
+      });
+
+      await updateRestaurantDetails(documentId, payload);
+      setIsFavorite(!isFavorite); // Toggle the favorite state on the UI
+    } catch (error) {
+      console.error("Error updating favorites:", error);
+    }
+  };
+
 
   const filteredMenuItems = menuData.filter((item) => item.type === type);
 
@@ -105,13 +155,20 @@ export default function () {
             <TouchableOpacity onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={24} color="#333" />
             </TouchableOpacity>
-            <TouchableOpacity>
-              <FontAwesome name="heart" size={24} color="#1e90ff" />
-            </TouchableOpacity>
+          {/* <View style={styles.heart}> */}
+            {/* <TouchableOpacity onPress={handleFavoritePress}>
+            <Ionicons
+                name={isFavorite ? "heart" : "heart-outline"}
+                size={20}
+                color={isFavorite ? "red" : "white"}
+                // style={styles.icon}
+              />
+            </TouchableOpacity> */}
+            {/* </View> */}
           </View>
 
           {/* Image Section */}
-          <Image source={{ uri: image }} style={styles.image} />
+          <Image source={{ uri: image ? image : restaurantURL }} style={styles.image} />
 
           {/* Restaurant Details */}
           <View style={styles.detailsContainer}>
@@ -132,7 +189,7 @@ export default function () {
             <View style={styles.ratingRow}>
               <FontAwesome name="star" size={16} color="#FFD700" />
               <Text style={styles.ratingText}>{rating} </Text>
-              <Text style={styles.reviewText}>(30+)</Text>
+              {/* <Text style={styles.reviewText}>(30+)</Text> */}
               <TouchableOpacity onPress={scrollToReviews}> {/* onPress now calls scrollToReviews */}
                 <Text style={styles.reviewLink}>See Reviews</Text>
               </TouchableOpacity>
@@ -198,7 +255,7 @@ export default function () {
       </View>
     </SafeAreaView>
   );
-}
+};
 
 
 const styles = StyleSheet.create({
@@ -311,5 +368,14 @@ const styles = StyleSheet.create({
   allergenText: {
     fontSize: 16,
     color: "#000000",
+  },
+  heart: {
+    width: 30,
+    height: 30,
+    borderRadius: "50%",
+    flexDirection: "row",
+    backgroundColor: "#00aced",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
