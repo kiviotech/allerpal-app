@@ -20,7 +20,7 @@ import { BASE_URL } from "../../src/api/apiClient";
 const ReviewForm = () => {
   const { id } = useLocalSearchParams();
   const { documentId } = useAuthStore();
-  console.log("documentId", documentId);
+  // console.log("documentId", documentId);
   const navigation = useNavigation();
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -177,7 +177,10 @@ const ReviewForm = () => {
         placeholder="Enter name of title"
         placeholderTextColor="#a0a0a0"
         value={formData.title}
-        onChangeText={(value) => handleInputChange("title", value)}
+        onChangeText={(value) => {
+          const textOnly = value.replace(/[^a-zA-Z\s]/g, '');
+          handleInputChange("title", textOnly);
+        }}
       />
 
       <Text style={styles.label}>Review Description</Text>
@@ -186,8 +189,11 @@ const ReviewForm = () => {
         placeholder="Enter experience about food and visit here"
         placeholderTextColor="#a0a0a0"
         value={formData.description}
-        onChangeText={(value) => handleInputChange("description", value)}
         multiline
+        onChangeText={(value) => {
+          const textOnly = value.replace(/[^a-zA-Z\s]/g, '');
+          handleInputChange("title", textOnly);
+        }}
       />
 
       <View style={styles.row}>
@@ -247,7 +253,10 @@ const ReviewForm = () => {
             placeholder="Type your allergens here"
             placeholderTextColor="#a0a0a0"
             value={formData.allergens}
-            onChangeText={(value) => handleInputChange("allergens", value)}
+            onChangeText={(value) => {
+              const textOnly = value.replace(/[^a-zA-Z\s]/g, '');
+              handleInputChange("description", textOnly);
+            }}
           />
         </>
       )}

@@ -25,6 +25,8 @@ const SignUp = ({ navigation }) => {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 
   const isValidEmail = (email) => {
@@ -74,7 +76,17 @@ const SignUp = ({ navigation }) => {
       router.push("../pages/AccountSetup");
     } catch (error) {
       console.error("Signup error:", error);
-      setErrors({ general: "Signup failed. Please try again later." });
+      // if (error.response && error.response.data) {
+      const backendMessage = error.response.data.error.message;
+
+      setErrors((prevErrors) => {
+        const updatedErrors = { ...prevErrors };
+        if (backendMessage.includes("Email or Username are already taken")) {
+          updatedErrors.general = "Email or Username are already taken.";
+        }
+        return updatedErrors;
+      });
+      // }
     } finally {
       setLoading(false);
     }
@@ -95,6 +107,8 @@ const SignUp = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <Text style={styles.title}>Sign Up</Text>
+
+        {errors.general && <Text style={styles.errorText}>{errors.general}</Text>}
 
         {/* Input Fields with Labels and Error Messages */}
         <View style={styles.inputContainer}>
@@ -126,14 +140,26 @@ const SignUp = ({ navigation }) => {
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            placeholderTextColor={"#B3B3B3"}
-            secureTextEntry
-            value={formData.password}
-            onChangeText={(value) => handleInputChange("password", value)}
-          />
+          <View style={styles.input}>
+            <TextInput
+              placeholder="Enter your password"
+              placeholderTextColor={"#B3B3B3"}
+              secureTextEntry={!showPassword} // Toggle secureTextEntry based on showPassword
+              value={formData.password}
+              style={styles.inputField}
+              onChangeText={(value) => handleInputChange("password", value)}
+            />
+            <TouchableOpacity
+              onPress={() => setShowPassword((prev) => !prev)}
+              style={styles.eyeIcon}
+            >
+              <Icon
+                name={showPassword ? "eye-slash" : "eye"}
+                size={20}
+                color="#B3B3B3"
+              />
+            </TouchableOpacity>
+          </View>
           {errors.password && (
             <Text style={styles.errorText}>{errors.password}</Text>
           )}
@@ -141,16 +167,28 @@ const SignUp = ({ navigation }) => {
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Confirm Password</Text>
+          <View style={styles.input}>
           <TextInput
-            style={styles.input}
+            style={styles.inputField}
             placeholder="Re-enter your password"
             placeholderTextColor={"#B3B3B3"}
-            secureTextEntry
+            secureTextEntry={!showConfirmPassword}
             value={formData.confirmPassword}
             onChangeText={(value) =>
               handleInputChange("confirmPassword", value)
             }
           />
+          <TouchableOpacity
+              onPress={() => setShowConfirmPassword((prev) => !prev)}
+              style={styles.eyeIcon}
+            >
+              <Icon
+                name={showConfirmPassword ? "eye-slash" : "eye"}
+                size={20}
+                color="#B3B3B3"
+              />
+            </TouchableOpacity>
+            </View>
           {errors.confirmPassword && (
             <Text style={styles.errorText}>{errors.confirmPassword}</Text>
           )}
@@ -227,6 +265,13 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: "3%",
     fontSize: width < 360 ? 14 : 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  inputField: {
+    width: "90%", // Full width input
+    outlineStyle: "none", // Removes focus outline
   },
   signUpButton: {
     backgroundColor: "#00D0DD",

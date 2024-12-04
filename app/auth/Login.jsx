@@ -25,6 +25,7 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigation();
 
   const handleInputChange = (field, value) => {
@@ -106,14 +107,26 @@ const Login = () => {
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Password</Text>
+          <View style={styles.input}>
           <TextInput
-            style={styles.input}
+            style={styles.inputField}
             placeholder="Enter your password"
             placeholderTextColor={"#B3B3B3"}
-            secureTextEntry
+            secureTextEntry={!showPassword} 
             value={formData.password}
             onChangeText={(value) => handleInputChange("password", value)}
           />
+          <TouchableOpacity
+              onPress={() => setShowPassword((prev) => !prev)}
+              style={styles.eyeIcon}
+            >
+              <Icon
+                name={showPassword ? "eye-slash" : "eye"}
+                size={20}
+                color="#B3B3B3"
+              />
+            </TouchableOpacity>
+            </View>
           {errors.password && (
             <Text style={styles.errorText}>{errors.password}</Text>
           )}
@@ -207,12 +220,19 @@ const styles = StyleSheet.create({
     width: "80%",
   },
   input: {
-    width: "80%",
+    width: "80%", // Full width input
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 5,
+    borderRadius: 15,
     padding: "3%",
     fontSize: width < 360 ? 14 : 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  inputField: {
+    width: "90%", // Full width input
+    outlineStyle: "none", // Removes focus outline
   },
   signUpButton: {
     backgroundColor: "#00D0DD",

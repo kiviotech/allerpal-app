@@ -79,7 +79,7 @@ const ResetPassword = () => {
           autoCorrect={false}
         />
 
-        {errors ? <Text style={styles.error}>{errors}</Text> : null}
+        {errors ? <Text style={styles.errorText}>{errors}</Text> : null}
 
         {successMessage ? (
           <Text style={styles.successMessage}>{successMessage}</Text>
@@ -146,6 +146,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 5,
+    alignSelf: "flex-start",
+    marginLeft: "10%",
   },
 });
 
