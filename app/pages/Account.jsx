@@ -182,6 +182,7 @@ import Footer from "./Footer";
 import useAuthStore from "../../useAuthStore";
 import { deleteToken } from "../../src/utils/storage";
 import useAllergyStore from "../../src/stores/allergyStore";
+import { Alert } from 'react-native';
 
 const Account = () => {
   const router = useRouter();
@@ -204,10 +205,27 @@ const Account = () => {
 
   // Handle sign out
   const handleSignOut = () => {
-    router.push("auth/Login");
-    logout();
-    clearAllergies();
-    deleteToken();
+    Alert.alert(
+      "Confirm Logout",
+      "Are you sure you want to log out?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Logout cancelled"),
+          style: "cancel"
+        },
+        {
+          text: "OK",
+          onPress: () => {
+            router.push("auth/Login");
+            logout();
+            clearAllergies();
+            deleteToken();
+          }
+        }
+      ],
+      { cancelable: false }
+    );
   };
 
   return (

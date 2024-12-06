@@ -1,8 +1,8 @@
 import apiClient from "../apiClient";
 import restaurantEndpoints from "../endpoints/restaurantEndpoints";
 
-export const getAllRestaurants = (id) =>
-  apiClient.get(restaurantEndpoints.getAllRestaurants.replace("${id}", id));
+export const getAllRestaurants = () =>
+  apiClient.get(restaurantEndpoints.getAllRestaurants());
 
 export const getRestaurantById = (id) =>
   apiClient.get(restaurantEndpoints.getRestaurantById(id));

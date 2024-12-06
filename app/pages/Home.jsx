@@ -83,13 +83,14 @@ const Home = () => {
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
-        const response = await getAllRestaurants();
+        const response = await axios.get('http://localhost:1337/api/restaurants?populate=*');
+        console.log('gggg', response.data.data)
         setRestaurants(response.data.data || []); // Access nested data directly
-        setFilteredRestaurants(response.data.data || []); // Set all restaurants initially
+        // setFilteredRestaurants(response.data.data || []); // Set all restaurants initially
       } catch (error) {
         console.error("Error fetching restaurants:", error);
         setRestaurants([]); // Fallback to an empty array on error
-        setFilteredRestaurants([]); // Also fallback for filtered list
+        // setFilteredRestaurants([]); // Also fallback for filtered list
       }
     };
 
@@ -120,7 +121,7 @@ const Home = () => {
     getMenuItems();
   }, []);
 
-  // Debugging filtered recommendations
+  // // Debugging filtered recommendations
   useEffect(() => {
     console.log("FilteredFoodRecommendations updated:", filteredFoodRecommendations);
   }, [filteredFoodRecommendations]);
@@ -171,7 +172,7 @@ const Home = () => {
           <FoodRecommendations filteredFoodRecommendations={filteredFoodRecommendations} />
         </View>
         <View style={styles.Restro}>
-          <RestaurantRecommendation filteredRestaurants={filteredRestaurants} />
+          <RestaurantRecommendation restaurants={restaurants} />
         </View>
         <View>
           <Favourites />

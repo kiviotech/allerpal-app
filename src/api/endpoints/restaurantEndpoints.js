@@ -1,4 +1,5 @@
 const restaurantEndpoints = {
+  // getRestaurants: "/restaurants?populate=*",
   getAllRestaurants: "/restaurants?populate=image",
   getRestaurantById: (id) => `/restaurants/${id}?populate=*`,
   createRestaurant: "/restaurants",

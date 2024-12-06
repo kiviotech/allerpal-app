@@ -248,7 +248,11 @@ const FoodCard = ({ item, onPress }) => {
         </Text>
       </View>
       <View style={styles.detailsContainer}>
-        <Text style={styles.name}>{item.item_name}</Text>
+        <Text style={styles.name}>
+          {item.item_name.length > 15
+            ? `${item.item_name.substring(0, 15)}...`
+            : item.item_name}
+        </Text>
       </View>
     </TouchableOpacity>
   );
