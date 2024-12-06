@@ -22,8 +22,10 @@ const RestaurantCard = ({ restaurant, onPress }) => {
   const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
   const [isFavorite, setIsFavorite] = useState(
-    restaurant.favourites?.includes(user?.id)
-  );
+    // restaurant.favourites?.includes(user?.id)
+   restaurant.favourites.some(fav => fav.id === user?.id)
+);
+
 
   const handleFavoritePress = async () => {
     if (!isAuthenticated) {
@@ -34,9 +36,9 @@ const RestaurantCard = ({ restaurant, onPress }) => {
     try {
       const currentFavorites = restaurant.favourites || [];
 
-    const updatedFavorites = isFavorite
-      ? currentFavorites.filter((id) => id !== user.id)
-      : [...currentFavorites, user.id];
+      const updatedFavorites = isFavorite
+        ? currentFavorites.filter((id) => id !== user.id)
+        : [...currentFavorites, user.id];
 
       const cleanedImage = restaurant.image?.map((img) => ({
         id: img.id,
@@ -44,7 +46,7 @@ const RestaurantCard = ({ restaurant, onPress }) => {
         alternativeText: img.alternativeText,
         url: img.url,
       }));
-      
+
       const payload = {
         data: {
           name: restaurant.name,
@@ -67,28 +69,35 @@ const RestaurantCard = ({ restaurant, onPress }) => {
     }
   };
 
+  
+  const goToRestaurantScreen = () => {
+    router.push({
+      pathname: "pages/RestaurantScreen",
+      params: {
+        id: restaurant.documentId,
+        documentId: restaurant.documentId,
+        name: restaurant.name,
+        rating: restaurant.rating,
+        categories: restaurant.categories,
+        location: restaurant.location,
+        image: imageUrl,
+        isFavorite,
+        ...(Array.isArray(restaurant.favourites) && restaurant.favourites.length > 0
+          ? { favourites: restaurant.favourites }
+          : {}),
+      },
+    })
+  };
+
   // Construct the full image URL or use a fallback image
+  // console.log('img', restaurant.image)
   const imageUrl =
     restaurant.image && restaurant.image[0]?.url
       ? `${MEDIA_BASE_URL}${restaurant.image[0].url}`
       : Restro;
 
   return (
-    <TouchableOpacity
-      onPress={() =>
-        router.push({
-          pathname: "pages/RestaurantScreen",
-          params: {
-            id: restaurant.documentId,
-            documentId: restaurant.documentId,
-            name: restaurant.name,
-            rating: restaurant.rating,
-            categories: restaurant.categories,
-            image: imageUrl,
-          },
-        })
-      }
-    >
+    <TouchableOpacity onPress={goToRestaurantScreen}>
       <View style={styles.card}>
         <Image source={{ uri: imageUrl }} style={styles.image} />
         <View style={styles.iconContainer}>
@@ -103,9 +112,9 @@ const RestaurantCard = ({ restaurant, onPress }) => {
             </TouchableOpacity>
           </View>
           <View style={styles.heart}>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => router.push("pages/Chat")}
-              >
+            >
               <Ionicons
                 name="chatbubble-outline"
                 size={20}
@@ -118,12 +127,16 @@ const RestaurantCard = ({ restaurant, onPress }) => {
 
         <View style={styles.ratingContainer}>
           <Text style={styles.ratingText}>{restaurant.rating} ⭐</Text>
-          <Text style={styles.reviewText}>({restaurant.reviews}+)</Text>
+          {/* <Text style={styles.reviewText}>({restaurant.reviews}+)</Text> */}
         </View>
 
         <View style={styles.detailsContainer}>
           <Text style={styles.name}>{restaurant.name}</Text>
-          <Text >{restaurant.location}</Text>
+          <Text >
+          {restaurant.location.length > 20
+            ? `${restaurant.location.substring(0, 20)}...`
+            : restaurant.location}
+            </Text>
 
           {/* Check if categories is an array before mapping */}
           <View style={styles.categories}>
@@ -136,21 +149,7 @@ const RestaurantCard = ({ restaurant, onPress }) => {
           </View>
 
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button}
-            onPress={() =>
-              router.push({
-                pathname: "pages/RestaurantScreen",
-                params: {
-                  id: restaurant.documentId,
-                  documentId: restaurant.documentId,
-                  name: restaurant.name,
-                  rating: restaurant.rating,
-                  categories: restaurant.categories,
-                  image: imageUrl,
-                },
-              })
-            }
-            >
+            <TouchableOpacity style={styles.button} onPress={goToRestaurantScreen}>
               <Text style={styles.buttonText}>View details</Text>
             </TouchableOpacity>
           </View>
@@ -160,28 +159,14 @@ const RestaurantCard = ({ restaurant, onPress }) => {
   );
 };
 
-const RestaurantRecommendation = ({ filteredRestaurants }) => {
-  const [restaurants, setRestaurants] = useState([]);
-
-  // useEffect(() => {
-  //   // const fetchRestaurants = async () => {
-  //   //   try {
-  //   //     const response = await getAllRestaurants();
-  //   //     setRestaurants(response.data.data || []); // Access nested data directly
-  //   //   } catch (error) {
-  //   //     // console.error("Error fetching restaurants:", error);
-  //   //     setRestaurants([]); // Fallback to an empty array on error
-  //   //   }
-  //   // };
-
-  //   // fetchRestaurants();
-  //   setRestaurants(filteredRestaurants)
-  // }, []);
+const RestaurantRecommendation = ({ restaurants }) => {
+  const [restaurantData, setRestaurantData] = useState([]);
+  // console.log(restaurants)
 
   useEffect(() => {
     // Update the list of restaurants whenever filteredRestaurants changes
-    setRestaurants(filteredRestaurants);
-  }, [filteredRestaurants]); // dependency array ensures this runs on updates to filteredRestaurants
+    setRestaurantData(restaurants);
+  }, [restaurants]); // dependency array ensures this runs on updates to filteredRestaurants
 
 
   return (
@@ -192,8 +177,8 @@ const RestaurantRecommendation = ({ filteredRestaurants }) => {
         showsHorizontalScrollIndicator={false}
         style={styles.scrollContainer}
       >
-        {Array.isArray(restaurants) &&
-          restaurants.map((restaurant) => (
+        {Array.isArray(restaurantData) &&
+          restaurantData.map((restaurant) => (
             // console.log(restaurant)
             <RestaurantCard key={restaurant.id} restaurant={restaurant} />
           ))}

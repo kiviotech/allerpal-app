@@ -33,6 +33,7 @@ const RestaurantCard = ({ restaurant, onRefresh }) => {
     restaurant?.favourites?.includes(user?.id) || false
   );
 
+  console.log('is', restaurant)
   const handleFavoritePress = async () => {
     if (!isAuthenticated) {
       router.push("/pages/Login");
@@ -101,15 +102,18 @@ const RestaurantCard = ({ restaurant, onRefresh }) => {
         <View style={styles.heart}>
           <TouchableOpacity onPress={handleFavoritePress}>
             <Ionicons
-              name={isFavorite ? "heart" : "heart-outline"}
+              name="heart"
               size={20}
-              color="white"
+              color='red'
+              // color={isFavorite ? "red" : "white"}
               style={styles.icon}
             />
           </TouchableOpacity>
         </View>
         <View style={styles.heart}>
-          <TouchableOpacity>
+          <TouchableOpacity
+              onPress={() => router.push("pages/Chat")}
+          >
             <Ionicons
               name="chatbubble-outline"
               size={20}

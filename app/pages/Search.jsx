@@ -6,6 +6,7 @@ import Restro from "../../assets/Restro.png";
 import Footer from './Footer';
 import apiClient, { MEDIA_BASE_URL } from '../../src/api/apiClient';
 import { useRouter } from 'expo-router';
+import useAuthStore from '../../useAuthStore';
 
 
 const { width } = Dimensions.get('window');
@@ -20,9 +21,9 @@ const popularSearches = [
 
 const Search = () => {
   const router = useRouter()
-  const [filteredFood, setFilteredFood] = useState([]);
-  const [filteredRestaurants, setFilteredRestaurants] = useState([]);
-  const [showInitial, setShowInitial] = useState(false);
+  // const [filteredFood, setFilteredFood] = useState([]);
+  // const [filteredRestaurants, setFilteredRestaurants] = useState([]);
+  // const [showInitial, setShowInitial] = useState(false);
   const [recentViews, setRecentViews] = useState([]);
   const [foodPage, setFoodPage] = useState(1);
   const [loadingFood, setLoadingFood] = useState(false);
@@ -115,6 +116,7 @@ const Search = () => {
       const response = await apiClient.get(url);
       const newRestaurants = response?.data?.data || [];
       console.log("Fetched new restaurants:", newRestaurants);
+      const isFavorite = newRestaurants?.favourites?.includes(user?.id); // Check if the current user has favorited this restaurant
 
       // Update the restaurants state with new API data
       if (newRestaurants && newRestaurants.length > 0) {
@@ -238,12 +240,13 @@ const Search = () => {
 
   const [likedItems, setLikedItems] = useState({});
 
-  const handleHeartPress = (id) => {
-    setLikedItems((prevLikedItems) => ({
-      ...prevLikedItems,
-      [id]: !prevLikedItems[id], // Toggle the liked status for this item
-    }));
-  };
+  // const handleHeartPress = (id) => {
+  //   setIsFavorite(!isFavorite)
+  //   // setLikedItems((prevLikedItems) => ({
+  //   //   ...prevLikedItems,
+  //   //   [id]: !prevLikedItems[id], // Toggle the liked status for this item
+  //   // }));
+  // };
 
   const handleClearRecentSearches = () => {
     setRecentSearches([]); // Clear recent searches
@@ -288,13 +291,55 @@ const Search = () => {
     });
   };
 
+  // const handleFavoritePress = async () => {
+  //   if (!isAuthenticated) {
+  //     router.push("/pages/Login");
+  //     return;
+  //   }
+
+  //   // try {
+  //   //   const currentFavorites = restaurant.favourites || [];
+
+  //   //   const updatedFavorites = isFavorite
+  //   //     ? currentFavorites.filter((id) => id !== user.id)
+  //   //     : [...currentFavorites, user.id];
+
+  //   //   const cleanedImage = restaurant.image?.map((img) => ({
+  //   //     id: img.id,
+  //   //     name: img.name,
+  //   //     alternativeText: img.alternativeText,
+  //   //     url: img.url,
+  //   //   }));
+
+  //   //   const payload = {
+  //   //     data: {
+  //   //       name: restaurant.name,
+  //   //       favourites: updatedFavorites,
+  //   //       rating: restaurant.rating,
+  //   //       image: cleanedImage,
+  //   //     },
+  //   //   };
+
+  //   //   Object.keys(payload.data).forEach((key) => {
+  //   //     if (payload.data[key] === undefined || payload.data[key] === null) {
+  //   //       delete payload.data[key];
+  //   //     }
+  //   //   });
+
+  //   //   await updateRestaurantDetails(restaurant.documentId, payload);
+  //   //   setIsFavorite(!isFavorite);
+  //   // } catch (error) {
+  //   //   console.error("Error updating favorites:", error);
+  //   // }
+  // };
+
 
   const renderFoodItem = ({ item }) => (
     <View style={styles.card}>
       <Image source={foodrestro} style={styles.image} />
       <View style={styles.priceContainer}>
         <Text style={styles.priceText}>{item.price}</Text>
-        <TouchableOpacity onPress={() => handleHeartPress(item.id)}  style={[
+        {/* <TouchableOpacity onPress={() => handleHeartPress(item.id)}  style={[
             styles.heartContainer,
             likedItems[item.id] && styles.heartContainerLiked,
           ]}>
@@ -304,7 +349,7 @@ const Search = () => {
             color='white'
             style={styles.heartIcon}
           />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       <View style={styles.ratingContainer}>
@@ -312,7 +357,11 @@ const Search = () => {
         <Text style={styles.reviewText}>({item.reviews}+)</Text>
       </View>
       <View style={styles.detailsContainer}>
-        <Text style={styles.name}>{item.item_name}</Text>
+        <Text style={styles.name}>
+        {item.item_name.length > 15
+            ? `${item.item_name.substring(0, 15)}...`
+            : item.item_name}
+          </Text>
       </View>
     </View>
   );
@@ -323,12 +372,18 @@ const Search = () => {
         <View style={styles.card1}>
           <Image source={Restro} style={styles.image1} />
           {/* <View style={styles.iconContainer1}>
-            <View style={styles.heart1}>
-              <Ionicons name="heart-outline" size={20} color="white" style={styles.icon1} />
-            </View>
-            <View style={styles.heart1}>
+            <TouchableOpacity style={styles.heart1} onPress={handleFavoritePress}>
+              <Ionicons 
+              name={isFavorite ? "heart" : "heart-outline"}
+              size={20}
+              color={isFavorite ? "red" : "white"}
+              style={styles.icon1} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.heart1}
+              onPress={() => router.push("pages/Chat")}
+            >
               <Ionicons name="chatbubble-outline" size={20} color="white" style={styles.icon1} />
-            </View>
+            </TouchableOpacity>
           </View> */}
           <View style={styles.ratingContainer1}>
             <Text style={styles.ratingText1}>{item.rating} ⭐</Text>

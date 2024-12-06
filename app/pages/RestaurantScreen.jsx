@@ -20,7 +20,7 @@ import { useLocalSearchParams } from "expo-router";
 import { fetchMenuByRestaurantId } from "../../src/services/menuServices";
 import * as Location from 'expo-location';
 import useAuthStore from "../../useAuthStore";
-import restaurantURL from '../../assets/restaurant.png' 
+import restaurantURL from '../../assets/restaurant.png'
 
 
 export default function () {
@@ -37,19 +37,24 @@ export default function () {
     setType(value ? "allergen" : "normal"); // Set type based on switch
   };
 
-  const { id, name, rating, categories, image, documentId, favourites } =
-    useLocalSearchParams();
+  const { id, name, rating, categories, image, documentId, location, isFavourite, favourites } =
+  useLocalSearchParams();
+
 
   useEffect(() => {
     const fetchMenus = async () => {
-      const response = await fetchMenuByRestaurantId(id);
-      setMenuData(response.data);
+      try {
+        const response = await fetchMenuByRestaurantId(id);
+        if (response?.data) {
+          setMenuData(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching menus:", error);
+      }
     };
+  
     fetchMenus();
-    if (favourites && user) {
-      setIsFavorite(favourites.includes(user.id));
-    }
-  }, [favourites, id, user]);
+  }, [id]);
 
   const handleFavoritePress = async () => {
     if (!user) {
@@ -57,42 +62,57 @@ export default function () {
       router.push("/pages/Login");
       return;
     }
-    try {
-      // Toggle favorite status
-      const updatedFavorites = isFavorite
-        ? favourites.filter((id) => id !== user.id) // Remove user from favorites
-        : [...favourites, user.id]; // Add user to favorites
+    setIsFavorite(!isFavorite)
 
-      // Update the restaurant's favorites in the backend
-      const cleanedImage = image?.map((img) => ({
-        id: img.id,
-        name: img.name,
-        alternativeText: img.alternativeText,
-        url: img.url,
-      }));
-      const payload = {
-        data: {
-          name,
-          favourites: updatedFavorites,
-          rating,
-          image: cleanedImage,
-        },
-      };
-
-      // Update restaurant details with the new favorites list
-      Object.keys(payload.data).forEach((key) => {
-        if (payload.data[key] === undefined || payload.data[key] === null) {
-          delete payload.data[key];
-        }
-      });
-
-      await updateRestaurantDetails(documentId, payload);
-      setIsFavorite(!isFavorite); // Toggle the favorite state on the UI
-    } catch (error) {
-      console.error("Error updating favorites:", error);
-    }
+  
+    // try {
+    //   // Initialize favourites array if not present
+    //   const currentFavorites = restaurant.favourites || [];
+  
+    //   // Toggle favorite status
+    //   const updatedFavorites = isFavourite
+    //     ? currentFavorites.filter((favId) => favId !== user.id) // Remove user from favorites
+    //     : [...currentFavorites, user.id]; // Add user to favorites
+  
+    //   // Prepare image data for payload
+    //   const cleanedImage = image
+    //     ? [
+    //         {
+    //           id: image.id,
+    //           name: image.name,
+    //           alternativeText: image.alternativeText,
+    //           url: image.url,
+    //         },
+    //       ]
+    //     : [];
+  
+    //   // Construct payload
+    //   const payload = {
+    //     data: {
+    //       name,
+    //       favourites: updatedFavorites,
+    //       rating,
+    //       image: cleanedImage,
+    //     },
+    //   };
+  
+    //   // Remove undefined or null fields from payload
+    //   Object.keys(payload.data).forEach((key) => {
+    //     if (payload.data[key] === undefined || payload.data[key] === null) {
+    //       delete payload.data[key];
+    //     }
+    //   });
+  
+    //   // Update restaurant details in the backend
+    //   await updateRestaurantDetails(documentId, payload);
+  
+    //   // Update local state
+    //   setIsFavorite(!isFavourite);
+    // } catch (error) {
+    //   console.error("Error updating favorites:", error);
+    // }
   };
-
+  
 
   const filteredMenuItems = menuData.filter((item) => item.type === type);
 
@@ -155,16 +175,16 @@ export default function () {
             <TouchableOpacity onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={24} color="#333" />
             </TouchableOpacity>
-          {/* <View style={styles.heart}> */}
-            {/* <TouchableOpacity onPress={handleFavoritePress}>
-            <Ionicons
-                name={isFavorite ? "heart" : "heart-outline"}
-                size={20}
-                color={isFavorite ? "red" : "white"}
+            <View style={styles.heart}>
+              <TouchableOpacity onPress={handleFavoritePress}>
+                <Ionicons
+                  name={isFavorite ? "heart" : "heart-outline"}
+                  size={20}
+                  color={isFavorite ? "red" : "white"}
                 // style={styles.icon}
-              />
-            </TouchableOpacity> */}
-            {/* </View> */}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Image Section */}
@@ -178,7 +198,7 @@ export default function () {
               <View style={styles.iconRow}>
                 <TouchableOpacity style={styles.iconButton} onPress={callResto}>
                   <FontAwesome name="phone" size={20} color="#ff6347" />
-                </TouchableOpacity>              
+                </TouchableOpacity>
                 <TouchableOpacity style={[styles.iconButton, styles.mapIcon]} onPress={openLocation}>
                   <FontAwesome name="map-marker" size={20} color="#ff6347" />
                 </TouchableOpacity>
@@ -206,8 +226,8 @@ export default function () {
 
             {/* Distance and Address */}
             <Text style={styles.addressText}>
-              <FontAwesome name="walking" size={14} color="#ff6347" /> 30 mins
-              (1 km) . 5 Tottenham Ln
+              <FontAwesome name="walking" size={14} color="#ff6347" /> 
+              {location}
             </Text>
 
             {/* Contact Button */}
