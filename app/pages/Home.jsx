@@ -98,7 +98,6 @@ const Home = () => {
     const fetchRestaurants = async () => {
       try {
         const response = await axios.get('http://localhost:1337/api/restaurants?populate=*');
-        // console.log('gggg', response.data.data)
         setRestaurants(response.data.data || []); // Access nested data directly
         // setFilteredRestaurants(response.data.data || []); // Set all restaurants initially
       } catch (error) {

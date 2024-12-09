@@ -205,28 +205,11 @@ const Account = () => {
 
   // Handle sign out
   const handleSignOut = () => {
-    Alert.alert(
-      "Confirm Logout",
-      "Are you sure you want to log out?",
-      [
-        {
-          text: "Cancel",
-          onPress: () => console.log("Logout cancelled"),
-          style: "cancel"
-        },
-        {
-          text: "OK",
-          onPress: () => {
-            router.push("auth/Login");
-            logout();
-            clearAllergies();
-            deleteToken();
-          }
-        }
-      ],
-      { cancelable: false }
-    );
-  };
+    router.push("auth/Login");
+      logout();
+      clearAllergies();
+      deleteToken();
+    }
 
   return (
     <SafeAreaView style={styles.safeArea}>
