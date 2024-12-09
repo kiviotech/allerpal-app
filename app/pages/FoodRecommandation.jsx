@@ -205,6 +205,7 @@ import { fetchAllMenuItems } from "../../src/services/menuItemsServices";
 import useAllergyStore from "../../src/stores/allergyStore";
 import { MEDIA_BASE_URL } from "../../src/api/apiClient";
 import { useRouter } from "expo-router";
+import restaurantImg from '../../assets/restaurant.png'
 
 const { width } = Dimensions.get("window");
 
@@ -291,7 +292,7 @@ const FoodRecommendations = ({ filteredFoodRecommendations }) => {
             name: restaurant.name,
             rating: restaurant.rating,
             categories: restaurant.categories,
-            image: imageUrl,
+            image: restaurantImg,
           },
         });
       } else {

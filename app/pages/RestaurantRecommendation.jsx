@@ -15,17 +15,71 @@ import { getAllRestaurants } from "../../src/api/repositories/restaurantReposito
 import { MEDIA_BASE_URL } from "../../src/api/apiClient";
 import { updateRestaurantDetails } from "../../src/services/restaurantServices";
 import useAuthStore from "../../useAuthStore";
+import axios from 'axios';
 
 const { width } = Dimensions.get("window");
 
 const RestaurantCard = ({ restaurant, onPress }) => {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, latitude, longitude } = useAuthStore();
+  const userLocation = useAuthStore((state) => state.location); // Getting the user's location from Zustand
   const [isFavorite, setIsFavorite] = useState(
     // restaurant.favourites?.includes(user?.id)
-   restaurant.favourites.some(fav => fav.id === user?.id)
-);
+    restaurant.favourites.some(fav => fav.id === user?.id)
+  );
+  const [distance, setDistance] = useState(null); // State to hold the calculated distance
 
+ // Hardcoded coordinates for the restaurant (replace with actual data in real scenarios)
+ const hardcodedCoordinates = {
+  latitude: 51.479342,
+  longitude: -0.298706,
+};
+
+  // Function to fetch coordinates using a geocoding service (like Google Geocoding API)
+// const getCoordinatesFromAddress = async (address) => {
+  // const API_KEY = 'AIzaSyDFQTSshpxEzndpEMEIDi_8f7OUGyh-Hs8';
+  // const response = await axios.get(
+  //   `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${API_KEY}`
+  // );
+
+  // const location = response.data.results[0]?.geometry?.location;
+  // if (location) {
+  //   return {
+  //     latitude: location.lat,
+  //     longitude: location.lng,
+  //   };
+  // } 
+//   else {
+//     return null; // Return null if geocoding fails
+//   }
+// };
+
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const toRad = (value) => (value * Math.PI) / 180;
+    const R = 6371; // Earth's radius in km
+
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+  };
+
+  useEffect(() => {
+    // Ensure that the user and restaurant locations are available before calculating distance
+    if (latitude && longitude) {
+      const dist = calculateDistance(
+        latitude,
+        longitude,
+        hardcodedCoordinates.latitude,
+        hardcodedCoordinates.longitude
+      );
+      setDistance(dist.toFixed(2)); // Round the distance to 2 decimal places
+    }
+  }, [latitude, longitude, restaurant.location]); 
 
   const handleFavoritePress = async () => {
     if (!isAuthenticated) {
@@ -69,7 +123,7 @@ const RestaurantCard = ({ restaurant, onPress }) => {
     }
   };
 
-  
+
   const goToRestaurantScreen = () => {
     router.push({
       pathname: "pages/RestaurantScreen",
@@ -90,73 +144,70 @@ const RestaurantCard = ({ restaurant, onPress }) => {
   };
 
   // Construct the full image URL or use a fallback image
-  // console.log('img', restaurant.image)
   const imageUrl =
-    restaurant.image && restaurant.image[0]?.url
+    (restaurant.image && restaurant.image[0]?.url)
       ? `${MEDIA_BASE_URL}${restaurant.image[0].url}`
       : Restro;
 
-  return (
-    <TouchableOpacity onPress={goToRestaurantScreen}>
-      <View style={styles.card}>
-        <Image source={{ uri: imageUrl }} style={styles.image} />
-        <View style={styles.iconContainer}>
-          <View style={styles.heart}>
-            <TouchableOpacity onPress={handleFavoritePress}>
-              <Ionicons
-                name={isFavorite ? "heart" : "heart-outline"}
-                size={20}
-                color={isFavorite ? "red" : "white"}
-                style={styles.icon}
-              />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.heart}>
-            <TouchableOpacity
-              onPress={() => router.push("pages/Chat")}
-            >
-              <Ionicons
-                name="chatbubble-outline"
-                size={20}
-                color="white"
-                style={styles.icon}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.ratingContainer}>
-          <Text style={styles.ratingText}>{restaurant.rating} ⭐</Text>
-          {/* <Text style={styles.reviewText}>({restaurant.reviews}+)</Text> */}
-        </View>
-
-        <View style={styles.detailsContainer}>
-          <Text style={styles.name}>{restaurant.name}</Text>
-          <Text >
-          {restaurant.location.length > 20
-            ? `${restaurant.location.substring(0, 20)}...`
-            : restaurant.location}
-            </Text>
-
-          {/* Check if categories is an array before mapping */}
-          <View style={styles.categories}>
-            {Array.isArray(restaurant.categories) &&
-              restaurant.categories.map((category, index) => (
-                <Text key={index} style={styles.category}>
-                  {category}
+      return (
+        <TouchableOpacity onPress={goToRestaurantScreen}>
+          <View style={styles.card}>
+            <Image source={{ uri: imageUrl }} style={styles.image} />
+            <View style={styles.iconContainer}>
+              <TouchableOpacity onPress={handleFavoritePress}>
+                <Ionicons
+                  name={isFavorite ? "heart" : "heart-outline"}
+                  size={20}
+                  color={isFavorite ? "red" : "white"}
+                  style={styles.icon}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push("pages/Chat")}>
+                <Ionicons
+                  name="chatbubble-outline"
+                  size={20}
+                  color="white"
+                  style={styles.icon}
+                />
+              </TouchableOpacity>
+            </View>
+    
+            <View style={styles.ratingContainer}>
+              <Text style={styles.ratingText}>{restaurant.rating} ⭐</Text>
+            </View>
+    
+            <View style={styles.detailsContainer}>
+              <Text style={styles.name}>{restaurant.name}</Text>
+              <Text style={styles.location}>
+                {restaurant.location?.length > 20
+                  ? `${restaurant.location?.substring(0, 20)}...`
+                  : restaurant.location}
+              </Text>
+    
+              {distance && (
+                <Text style={styles.distanceText}>
+                  {distance} km away
                 </Text>
-              ))}
+              )}
+    
+              <View style={styles.categories}>
+                {Array.isArray(restaurant.categories) &&
+                  restaurant.categories.map((category, index) => (
+                    <Text key={index} style={styles.category}>
+                      {category}
+                    </Text>
+                  ))}
+              </View>
+    
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.button} onPress={goToRestaurantScreen}>
+                  <Text style={styles.buttonText}>View details</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button} onPress={goToRestaurantScreen}>
-              <Text style={styles.buttonText}>View details</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+        </TouchableOpacity>
+      );
 };
 
 const RestaurantRecommendation = ({ restaurants }) => {
@@ -213,7 +264,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
     elevation: 5,
-    height: 255,
+    height: 275,
   },
   image: {
     width: "100%",
