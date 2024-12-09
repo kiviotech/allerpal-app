@@ -226,7 +226,7 @@ const FoodCard = ({ item, onPress }) => {
         style={styles.image}
       />
       <View style={styles.priceContainer}>
-        <Text style={styles.priceText}>${item.price}</Text>
+        <Text style={styles.priceText}>£{item.price}</Text>
         <TouchableOpacity
           onPress={handleHeartPress}
           style={[styles.heartContainer, liked && styles.heartContainerLiked]}

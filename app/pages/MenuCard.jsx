@@ -35,7 +35,7 @@ const MenuCard = ({ menuItems }) => {
                 <View style={styles.titleRow}>
                   {/* Display item name and price */}
                   <Text style={styles.title}>{item.item_name}</Text>
-                  <Text style={styles.price}>${item.price || "N/A"}</Text>
+                  <Text style={styles.price}>£{item.price || "N/A"}</Text>
                 </View>
 
                 {/* Display allergens or other item info if available */}

@@ -338,7 +338,7 @@ const Search = () => {
     <View style={styles.card}>
       <Image source={foodrestro} style={styles.image} />
       <View style={styles.priceContainer}>
-        <Text style={styles.priceText}>{item.price}</Text>
+        <Text style={styles.priceText}>£{item.price}</Text>
         {/* <TouchableOpacity onPress={() => handleHeartPress(item.id)}  style={[
             styles.heartContainer,
             likedItems[item.id] && styles.heartContainerLiked,
