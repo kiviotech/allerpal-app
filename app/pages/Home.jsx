@@ -29,14 +29,28 @@ const Home = () => {
   const router = useRouter();
   const [allergens, setAllergens] = useState({});
   const { width, height } = Dimensions.get("window");
-  const [location, setLocation] = useState(null);
-  const [address, setAddress] = useState(null);
+  const { setLocation } = useAuthStore(); // Access setLocation from Zustand  const [address, setAddress] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
   const [restaurants, setRestaurants] = useState([]);
 
   const [menuItems, setMenuItems] = useState([]);
   const [filteredFoodRecommendations, setFilteredFoodRecommendations] = useState([]);
+
+  // Static location values
+   // Static location values
+   useEffect(() => {
+    // Static location data
+    const latitude = 51.5074; // Example: London latitude
+    const longitude = -0.1278; // Example: London longitude
+    const location = "Westminster, London SW1A 1AA, United Kingdom";
+
+    // Store the static location in Zustand
+    setLocation(latitude, longitude, location); 
+    console.log("Static location stored in Zustand:", {location });
+
+  }, [setLocation]);
+
   // useEffect(() => {
   //   const getLocation = async () => {
   //     try {
@@ -56,7 +70,7 @@ const Home = () => {
 
   //       // Use Google Places API to get address from coordinates
   //       const { latitude, longitude } = currentLocation.coords;
-  //       const apiKey = "YOUR_GOOGLE_MAPS_API_KEY"; // Replace with your Google Maps API key
+  //       const apiKey = "AIzaSyDFQTSshpxEzndpEMEIDi_8f7OUGyh-Hs8"; // Replace with your Google Maps API key
 
   //       const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1000&key=${apiKey}`;
 
@@ -84,7 +98,7 @@ const Home = () => {
     const fetchRestaurants = async () => {
       try {
         const response = await axios.get('http://localhost:1337/api/restaurants?populate=*');
-        console.log('gggg', response.data.data)
+        // console.log('gggg', response.data.data)
         setRestaurants(response.data.data || []); // Access nested data directly
         // setFilteredRestaurants(response.data.data || []); // Set all restaurants initially
       } catch (error) {
@@ -153,7 +167,7 @@ const Home = () => {
           >
             <Ionicons name="location-outline" size={24} color="blue" />
           </TouchableOpacity>
-          <Text style={{ marginLeft: 5 }}>Kalyan Nagar,Bangalore</Text>
+          <Text style={{ marginLeft: 5 }}>London, United Kingdom</Text>
         </View>
       </View>
       <TouchableOpacity style={styles.container} onPress={handleSearch}>

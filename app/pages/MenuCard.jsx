@@ -25,9 +25,9 @@ const MenuCard = ({ menuItems }) => {
                   <Text style={styles.star}>★</Text>
                   <Text style={styles.ratingCount}>(25+)</Text>
                 </View>
-                <TouchableOpacity style={styles.favoriteButton}>
+                {/* <TouchableOpacity style={styles.favoriteButton}>
                   <Text style={styles.heartIcon}>💙</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
 
               {/* Details Section */}
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   cardContainer: {
-    // flexDirection: 'column',
+    flexDirection: 'row',
     padding: 10,
     borderRadius: 15,
     backgroundColor: "#fff",
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   },
   detailsContainer: {
     flex: 1,
-    justifyContent: "center",
+    // justifyContent: "center",
   },
   titleRow: {
     flexDirection: "row",
@@ -140,9 +140,9 @@ const styles = StyleSheet.create({
     right: 5,
   },
   allergens: {
-    fontSize: 9,
+    fontSize: 14,
     color: "grey",
-    marginTop: 5,
+    marginTop: 15,
   },
   orderedBefore: {
     fontSize: 14,

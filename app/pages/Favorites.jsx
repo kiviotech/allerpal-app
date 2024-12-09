@@ -33,7 +33,7 @@ const RestaurantCard = ({ restaurant, onRefresh }) => {
     restaurant?.favourites?.includes(user?.id) || false
   );
 
-  console.log('is', restaurant)
+  // console.log('is', restaurant)
   const handleFavoritePress = async () => {
     if (!isAuthenticated) {
       router.push("/pages/Login");
@@ -125,9 +125,9 @@ const RestaurantCard = ({ restaurant, onRefresh }) => {
       </View>
       <View style={styles.ratingContainer}>
         <Text style={styles.ratingText}>{restaurant?.rating || 0} ⭐</Text>
-        <Text style={styles.reviewText}>
+        {/* <Text style={styles.reviewText}>
           ({restaurant?.reviews?.length || 0}+)
-        </Text>
+        </Text> */}
       </View>
       <View style={styles.detailsContainer}>
         <Text style={styles.name}>

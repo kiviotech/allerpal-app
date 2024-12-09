@@ -25,6 +25,7 @@
     "expo-location": "~17.0.1",
     "expo-router": "^3.5.24",
     "expo-status-bar": "~1.12.1",
+    "geolib": "^3.3.4",
     "metro-config": "^0.81.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",

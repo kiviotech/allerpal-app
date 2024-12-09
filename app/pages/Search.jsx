@@ -38,9 +38,44 @@ const Search = () => {
   const [selectedSortOption, setSelectedSortOption] = useState(null);
   const [hasMoreMenuItems, setHasMoreMenuItems] = useState(true); // Tracks if more data is available
   const [restaurantPageMenuItem, setRestaurantPageMenuItem] = useState(1);
-
+  const { user, isAuthenticated, latitude, longitude } = useAuthStore();
   const [error, setError] = useState(null);
   const [ErrorMenuItem, setErrorMenuItem] = useState(null);
+  const [distance, setDistance] = useState(null); // State to hold the calculated distance
+
+  const hardcodedCoordinates = {
+    latitude: 51.479342,
+    longitude: -0.298706,
+  };
+
+
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const toRad = (value) => (value * Math.PI) / 180;
+    const R = 6371; // Earth's radius in km
+
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+  };
+
+  useEffect(() => {
+    // Ensure that the user and restaurant locations are available before calculating distance
+    if (latitude && longitude) {
+      const dist = calculateDistance(
+        latitude,
+        longitude,
+        hardcodedCoordinates.latitude,
+        hardcodedCoordinates.longitude
+      );
+      setDistance(dist.toFixed(2)); // Round the distance to 2 decimal places
+    }
+  }, [latitude, longitude]); 
+
   // Handle load more for restaurants (pagination)
   const handleLoadMore = () => {
     if (hasMoreRestaurants && !loadingRestaurants && searchTerm == "") {
@@ -264,7 +299,7 @@ const Search = () => {
   const handleViewRestaurant = (restaurant) => {
     console.log('rest', restaurant)
     const imageUrl =
-      restaurant.image && restaurant.image[0]?.url
+      (restaurant.image && restaurant.image[0]?.url)
         ? `${MEDIA_BASE_URL}${restaurant.image[0].url}`
         : Restro;
 
@@ -393,6 +428,8 @@ const Search = () => {
             <Text style={styles.name1}>{item.name}</Text>
             <View style={styles.categories1}>
               <Text style={styles.loc}>{item.location}</Text>
+              {/* Add distance if needed */}
+              {distance && <Text style={styles.distanceText}>{distance} km away</Text>}
             </View>
           </View>
         </View>
@@ -588,7 +625,7 @@ const styles = StyleSheet.create({
   AreaContainer: { flex: 1 },
   scrollContent: {
     paddingLeft: 16, // Add padding around the content
-    marginBottom: 50
+    marginBottom: 50,
   },
   searchContainer: { flexDirection: 'row', alignItems: 'center', padding: 12, marginBottom: 20 },
   searchIcon: { marginRight: 8, },
@@ -768,10 +805,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
     elevation: 5,
-    height: 250,
+    height: 270,
     marginTop: 10,
     marginLeft: 15,
-    marginRight: 15
+    marginRight: 15,
   },
 
   image1: {
@@ -819,14 +856,13 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   categories1: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     flexWrap: 'wrap',
     marginBottom: 10,
     justifyContent: 'flex-end'
   },
   loc: {
     fontSize: 16,
-
   },
   category1: {
     fontSize: 12,
