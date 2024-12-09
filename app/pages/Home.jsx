@@ -20,7 +20,7 @@ import useAuthStore from "../../useAuthStore";
 import { useRouter, useStore } from "expo-router";
 import { fetchLocation } from "../../src/services/locationService";
 import * as Location from 'expo-location';
-import apiClient from "../../src/api/apiClient";
+import apiClient, { BASE_URL } from "../../src/api/apiClient";
 import axios from "axios";
 import { getAllRestaurants } from "../../src/api/repositories/restaurantRepositories";
 import { fetchAllMenuItems } from "../../src/services/menuItemsServices";
@@ -97,7 +97,7 @@ const Home = () => {
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
-        const response = await axios.get('http://localhost:1337/api/restaurants?populate=*');
+        const response = await axios.get(`${BASE_URL}/restaurants?populate=*`);
         setRestaurants(response.data.data || []); // Access nested data directly
         // setFilteredRestaurants(response.data.data || []); // Set all restaurants initially
       } catch (error) {
