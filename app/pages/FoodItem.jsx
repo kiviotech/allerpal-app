@@ -9,8 +9,6 @@ import {
 } from "react-native";
 import { MEDIA_BASE_URL } from "../../src/api/apiClient";
 import useAuthStore from "../../useAuthStore";
-import { fetchUserAllergyById } from "../../src/services/userAllergyServices";
-import useAllergyStore from "../../src/stores/allergyStore";
 import { fetchAllCuisines } from "../../src/services/cuisineServices";
 import { TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
@@ -19,10 +17,6 @@ const FoodItem = () => {
   const router = useRouter();
   const [cuisines, setCuisines] = useState([]);
   const [loading, setLoading] = useState(true);
-  const setSelectedAllergies = useAllergyStore(
-    (state) => state.setSelectedAllergies
-  );
-
   let userId;
 
   try {
@@ -39,6 +33,7 @@ const FoodItem = () => {
     const fetchCuisines = async () => {
       try {
         const data = await fetchAllCuisines();
+        // console.log('cuisines', data.data)
         setCuisines(data.data)
       } catch (error) {
         console.error("Error fetching cuisines:", error);

@@ -5,8 +5,9 @@ import foodrestro from '../../assets/foodrestro.png';
 import Restro from "../../assets/Restro.png";
 import Footer from './Footer';
 import apiClient, { MEDIA_BASE_URL } from '../../src/api/apiClient';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import useAuthStore from '../../useAuthStore';
+import { calculateDistanceFromUser } from '../../src/utils/distanceUtils';
 
 
 const { width } = Dimensions.get('window');
@@ -21,15 +22,13 @@ const popularSearches = [
 
 const Search = () => {
   const router = useRouter()
-  // const [filteredFood, setFilteredFood] = useState([]);
-  // const [filteredRestaurants, setFilteredRestaurants] = useState([]);
-  // const [showInitial, setShowInitial] = useState(false);
+  const { searchTerm: initialSearchTerm } = useLocalSearchParams();
   const [recentViews, setRecentViews] = useState([]);
   const [foodPage, setFoodPage] = useState(1);
   const [loadingFood, setLoadingFood] = useState(false);
   const [recentSearches, setRecentSearches] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialSearchTerm || "");
   const [restaurants, setRestaurants] = useState([]); // Stores the list of restaurants
   const [restaurantPage, setRestaurantPage] = useState(1); // Tracks current page
   const [hasMoreRestaurants, setHasMoreRestaurants] = useState(true); // Tracks if more data is available
@@ -43,38 +42,56 @@ const Search = () => {
   const [ErrorMenuItem, setErrorMenuItem] = useState(null);
   const [distance, setDistance] = useState(null); // State to hold the calculated distance
 
-  const hardcodedCoordinates = {
-    latitude: 51.479342,
-    longitude: -0.298706,
-  };
+  // const hardcodedCoordinates = {
+  //   latitude: 51.479342,
+  //   longitude: -0.298706,
+  // };
+  //   // Function to fetch coordinates using a geocoding service (like Google Geocoding API)
+  //   // const getCoordinatesFromAddress = async (address) => {
+  //   // const API_KEY = 'AIzaSyDFQTSshpxEzndpEMEIDi_8f7OUGyh-Hs8';
+  //   // const response = await axios.get(
+  //   //   `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${API_KEY}`
+  //   // );
 
+  //   // const location = response.data.results[0]?.geometry?.location;
+  //   // if (location) {
+  //   //   return {
+  //   //     latitude: location.lat,
+  //   //     longitude: location.lng,
+  //   //   };
+  //   // } 
+  //   //   else {
+  //   //     return null; // Return null if geocoding fails
+  //   //   }
+  //   // };
 
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const toRad = (value) => (value * Math.PI) / 180;
-    const R = 6371; // Earth's radius in km
+  //   const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  //     const toRad = (value) => (value * Math.PI) / 180;
+  //     const R = 6371; // Earth's radius in km
 
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distance in km
-  };
+  //     const dLat = toRad(lat2 - lat1);
+  //     const dLon = toRad(lon2 - lon1);
+  //     const a =
+  //       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+  //       Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+  //       Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  //     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  //     return R * c; // Distance in km
+  //   };
 
-  useEffect(() => {
-    // Ensure that the user and restaurant locations are available before calculating distance
-    if (latitude && longitude) {
-      const dist = calculateDistance(
-        latitude,
-        longitude,
-        hardcodedCoordinates.latitude,
-        hardcodedCoordinates.longitude
-      );
-      setDistance(dist.toFixed(2)); // Round the distance to 2 decimal places
-    }
-  }, [latitude, longitude]); 
+  //   useEffect(() => {
+  //   // Ensure that the user and restaurant locations are available before calculating distance
+  //   if (latitude && longitude) {
+  //     const dist = calculateDistance(
+  //       latitude,
+  //       longitude,
+  //       hardcodedCoordinates.latitude,
+  //       hardcodedCoordinates.longitude
+  //     );
+  //     setDistance(dist.toFixed(2)); // Round the distance to 2 decimal places
+  //   }
+  // }, [latitude, longitude]);
+
 
   // Handle load more for restaurants (pagination)
   const handleLoadMore = () => {
@@ -85,9 +102,6 @@ const Search = () => {
 
   // Fetch menu items API
   const fetchMenuItem = async (newPage = 1, cuisine) => {
-    // if (loadingFood || !hasMoreMenuItems) return; // Prevent unnecessary calls
-    // setLoadingFood(true);
-
     try {
       let url = `/menu-items?pagination[page]=${newPage}&pagination[pageSize]=50&populate=*`;
       if (cuisine) {
@@ -150,7 +164,6 @@ const Search = () => {
       // Fetch data from the API
       const response = await apiClient.get(url);
       const newRestaurants = response?.data?.data || [];
-      console.log("Fetched new restaurants:", newRestaurants);
       const isFavorite = newRestaurants?.favourites?.includes(user?.id); // Check if the current user has favorited this restaurant
 
       // Update the restaurants state with new API data
@@ -221,9 +234,6 @@ const Search = () => {
       // Update state
       setRestaurants(restaurantResults);
       setMenuItems(menuItemResults);
-
-      console.log('Restaurants:', restaurantResults);
-      console.log('All Results:', menuItemResults);
       setErrorMenuItem(null);
     } catch (err) {
       console.error('Error fetching results:', err);
@@ -232,8 +242,6 @@ const Search = () => {
       setLoadingRestaurants(false);
     }
   };
-
-
 
   const handleSearch = debounce((text) => {
     if (text.length > 3) {
@@ -272,17 +280,6 @@ const Search = () => {
       : {};
   };
 
-
-  const [likedItems, setLikedItems] = useState({});
-
-  // const handleHeartPress = (id) => {
-  //   setIsFavorite(!isFavorite)
-  //   // setLikedItems((prevLikedItems) => ({
-  //   //   ...prevLikedItems,
-  //   //   [id]: !prevLikedItems[id], // Toggle the liked status for this item
-  //   // }));
-  // };
-
   const handleClearRecentSearches = () => {
     setRecentSearches([]); // Clear recent searches
     fetchResults(); // Default fetch for restaurants
@@ -297,7 +294,6 @@ const Search = () => {
   };
 
   const handleViewRestaurant = (restaurant) => {
-    console.log('rest', restaurant)
     const imageUrl =
       (restaurant.image && restaurant.image[0]?.url)
         ? `${MEDIA_BASE_URL}${restaurant.image[0].url}`
@@ -306,12 +302,8 @@ const Search = () => {
     router.push({
       pathname: "pages/RestaurantScreen",
       params: {
-        id: restaurant.documentId,
+        id: restaurant.id,
         documentId: restaurant.documentId,
-        name: restaurant.name,
-        rating: restaurant.rating,
-        categories: restaurant.categories,
-        image: imageUrl,
       },
     })
     setRecentViews((prevViews) => {
@@ -326,117 +318,130 @@ const Search = () => {
     });
   };
 
-  // const handleFavoritePress = async () => {
-  //   if (!isAuthenticated) {
-  //     router.push("/pages/Login");
-  //     return;
-  //   }
-
-  //   // try {
-  //   //   const currentFavorites = restaurant.favourites || [];
-
-  //   //   const updatedFavorites = isFavorite
-  //   //     ? currentFavorites.filter((id) => id !== user.id)
-  //   //     : [...currentFavorites, user.id];
-
-  //   //   const cleanedImage = restaurant.image?.map((img) => ({
-  //   //     id: img.id,
-  //   //     name: img.name,
-  //   //     alternativeText: img.alternativeText,
-  //   //     url: img.url,
-  //   //   }));
-
-  //   //   const payload = {
-  //   //     data: {
-  //   //       name: restaurant.name,
-  //   //       favourites: updatedFavorites,
-  //   //       rating: restaurant.rating,
-  //   //       image: cleanedImage,
-  //   //     },
-  //   //   };
-
-  //   //   Object.keys(payload.data).forEach((key) => {
-  //   //     if (payload.data[key] === undefined || payload.data[key] === null) {
-  //   //       delete payload.data[key];
-  //   //     }
-  //   //   });
-
-  //   //   await updateRestaurantDetails(restaurant.documentId, payload);
-  //   //   setIsFavorite(!isFavorite);
-  //   // } catch (error) {
-  //   //   console.error("Error updating favorites:", error);
-  //   // }
-  // };
-
-
   const renderFoodItem = ({ item }) => (
     <View style={styles.card}>
       <Image source={foodrestro} style={styles.image} />
-      <View style={styles.priceContainer}>
-        <Text style={styles.priceText}>{item.price}</Text>
-        {/* <TouchableOpacity onPress={() => handleHeartPress(item.id)}  style={[
-            styles.heartContainer,
-            likedItems[item.id] && styles.heartContainerLiked,
-          ]}>
-          <Ionicons
-            name={likedItems[item.id] ? 'heart' : 'heart-outline'}
-            size={18}
-            color='white'
-            style={styles.heartIcon}
-          />
-        </TouchableOpacity> */}
-      </View>
-
       <View style={styles.ratingContainer}>
-        <Text style={styles.ratingText}>{item.rating} ⭐</Text>
-        <Text style={styles.reviewText}>({item.reviews}+)</Text>
+        <Text style={styles.ratingText}>
+          {item.is_vegetarian ? "🥬" : "🍖"}
+        </Text>
+        <Text style={styles.reviewText}>
+          {item.is_available ? "Available" : "Unavailable"}
+        </Text>
+        {/* <Text style={styles.ratingText}>{item.rating} ⭐</Text>
+        <Text style={styles.reviewText}>({item.reviews}+)</Text> */}
       </View>
       <View style={styles.detailsContainer}>
         <Text style={styles.name}>
-        {item.item_name.length > 15
+          {item.item_name.length > 15
             ? `${item.item_name.substring(0, 15)}...`
             : item.item_name}
-          </Text>
+        </Text>
       </View>
     </View>
   );
 
-  const renderRestaurantItem = ({ item }) => (
-    <TouchableOpacity onPress={() => handleViewRestaurant(item)}>
-      <View style={styles.cardContainer}>
-        <View style={styles.card1}>
-          <Image source={Restro} style={styles.image1} />
-          {/* <View style={styles.iconContainer1}>
-            <TouchableOpacity style={styles.heart1} onPress={handleFavoritePress}>
-              <Ionicons 
-              name={isFavorite ? "heart" : "heart-outline"}
-              size={20}
-              color={isFavorite ? "red" : "white"}
-              style={styles.icon1} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.heart1}
-              onPress={() => router.push("pages/Chat")}
-            >
-              <Ionicons name="chatbubble-outline" size={20} color="white" style={styles.icon1} />
-            </TouchableOpacity>
-          </View> */}
-          <View style={styles.ratingContainer1}>
-            <Text style={styles.ratingText1}>{item.rating} ⭐</Text>
-            <Text style={styles.reviewText1}>({item.reviews}+)</Text>
-          </View>
-          <View style={styles.detailsContainer1}>
-            <Text style={styles.name1}>{item.name}</Text>
-            <View style={styles.categories1}>
-              <Text style={styles.loc}>{item.location}</Text>
-              {/* Add distance if needed */}
-              {distance && <Text style={styles.distanceText}>{distance} km away</Text>}
+  // const renderRestaurantItem = ({ item }) => {
+
+  //   useEffect(() => {
+  //     const fetchDistanceToRestaurant = async () => {
+  //       if (latitude && longitude && item.location) {
+  //         const dist = await calculateDistanceFromUser(
+  //           { latitude, longitude },
+  //           item.location
+  //         );
+  //         if (dist) setDistance(dist); // Round distance to 2 decimal places
+  //       }
+  //     };
+  //     fetchDistanceToRestaurant();
+  //   }, [latitude, longitude, item.location]);
+
+  //   return (
+  //     <TouchableOpacity onPress={() => handleViewRestaurant(item)}>
+  //       <View style={styles.cardContainer}>
+  //         <View style={styles.card1}>
+  //           <Image source={Restro} style={styles.image1} />
+  //           {/* <View style={styles.iconContainer1}>
+  //           <TouchableOpacity style={styles.heart1} onPress={handleFavoritePress}>
+  //             <Ionicons 
+  //             name={isFavorite ? "heart" : "heart-outline"}
+  //             size={20}
+  //             color={isFavorite ? "red" : "white"}
+  //             style={styles.icon1} />
+  //           </TouchableOpacity>
+  //           <TouchableOpacity style={styles.heart1}
+  //             onPress={() => router.push("pages/Chat")}
+  //           >
+  //             <Ionicons name="chatbubble-outline" size={20} color="white" style={styles.icon1} />
+  //           </TouchableOpacity>
+  //         </View> */}
+  //           <View style={styles.ratingContainer1}>
+  //             <Text style={styles.ratingText1}>{item?.rating} ⭐</Text>
+  //             <Text style={styles.reviewText1}>({item?.reviews}+)</Text>
+  //           </View>
+  //           <View style={styles.detailsContainer1}>
+  //             <Text style={styles.name1}>
+  //               {item.name.length > 30
+  //                 ? `${item.name.substring(0, 30)}...`
+  //                 : item.name}
+  //             </Text>
+  //             <View style={styles.categories1}>
+  //               <Text style={styles.loc}>{item.location}</Text>
+  //               {distance && <Text style={styles.distanceText}>{distance} km away</Text>}
+  //             </View>
+  //           </View>
+  //         </View>
+  //       </View>
+  //     </TouchableOpacity>
+  //   );
+  // }
+
+  const RestaurantCard = ({ item, latitude, longitude }) => {
+    const [distance, setDistance] = useState(null);
+
+    useEffect(() => {
+      const fetchDistanceToRestaurant = async () => {
+        if (latitude && longitude && item.location) {
+          const dist = await calculateDistanceFromUser(item.location); // Uses the utility function
+          if (dist) setDistance(dist); // Distance is automatically rounded in the utility function
+        }
+      };
+      fetchDistanceToRestaurant();
+    }, [latitude, longitude, item.location]);
+
+    const goToRestaurantScreen = () => {
+      router.push({
+        pathname: "pages/RestaurantScreen",
+        params: {
+          id: item.documentId,
+          documentId: item.documentId,
+        },
+      })
+    };
+
+    return (
+      <TouchableOpacity onPress={goToRestaurantScreen}>
+        <View style={styles.cardContainer}>
+          <View style={styles.card1}>
+            <Image source={Restro} style={styles.image1} />
+            <View style={styles.ratingContainer1}>
+              <Text style={styles.ratingText1}>{item?.rating} ⭐</Text>
+              <Text style={styles.reviewText1}>({item?.reviews}+)</Text>
+            </View>
+            <View style={styles.detailsContainer1}>
+              <Text style={styles.name1}>
+                {item.name.length > 30 ? `${item.name.substring(0, 30)}...` : item.name}
+              </Text>
+              <View style={styles.categories1}>
+                <Text style={styles.loc}>{item.location}</Text>
+                {distance && <Text style={styles.distanceText}>{distance} km away</Text>}
+              </View>
             </View>
           </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
-
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.AreaContainer}>
@@ -542,7 +547,14 @@ const Search = () => {
           <Text style={[styles.subTitle, { marginTop: 15 }]}>Restaurants</Text>
           <FlatList
             data={restaurants}
-            renderItem={renderRestaurantItem}
+            renderItem={({ item }) => (
+              <RestaurantCard
+                item={item}
+                latitude={latitude}
+                longitude={longitude}
+                handleViewRestaurant={handleViewRestaurant}
+              />
+            )}
             horizontal={false}
             numColumns={1}
             showsHorizontalScrollIndicator={false} // Horizontal scrolling is not needed for vertical lists
@@ -555,7 +567,6 @@ const Search = () => {
               ) : null
             }
           />
-
         </>
       )}
 
@@ -633,7 +644,6 @@ const styles = StyleSheet.create({
   filterImage: {
     width: 20,
     height: 20,
-    // marginLeft: 10,
   },
   results: {
     fontSize: 18,
@@ -748,17 +758,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10
   },
   ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    position: 'absolute',
-
-    top: 108,
+    flexDirection: "row",
+    alignItems: "center",
+    position: "absolute",
+    top: 95,
     left: 6,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 12,
-    borderColor: 'gray'
+    borderColor: "gray",
   },
   ratingText: {
     fontSize: 12,
@@ -856,13 +865,19 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   categories1: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     flexWrap: 'wrap',
     marginBottom: 10,
-    justifyContent: 'flex-end'
+    justifyContent: 'space-between'
   },
   loc: {
     fontSize: 16,
+    width: '65%',
+    display: 'flex',
+    flexWrap: 'wrap'
+  },
+  distanceText: {
+    textAlign: 'right'
   },
   category1: {
     fontSize: 12,

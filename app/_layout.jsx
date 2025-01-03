@@ -1,14 +1,34 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, useNavigationState } from "@react-navigation/native";
 import { ToastProvider } from "./ToastContext";
+import useAuthStore from "../useAuthStore";
 
 SplashScreen.preventAutoHideAsync();
 
 const Layout = () => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  useEffect(() => {
+    SplashScreen.hideAsync();
+  }, []);
+
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      onStateChange={(state) => {
+        // Get the current route name
+        const currentRoute = state.routes[state.index]?.name;
+
+        // If the user is not authenticated and tries to access the Account page, redirect them
+        if (!isAuthenticated && currentRoute === "pages/Account") {
+          const navigation = state.routes[0].params?.navigation;
+          if (navigation) {
+            navigation.replace("auth/Login");
+          }
+        }
+      }}
+    >
       <ToastProvider>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
@@ -22,6 +42,8 @@ const Layout = () => {
           <Stack.Screen name="pages/Home" />
           <Stack.Screen name="pages/Search" />
           <Stack.Screen name="pages/Community" />
+          <Stack.Screen name="pages/Blog" />
+          <Stack.Screen name="pages/BlogDetails" />
           <Stack.Screen name="pages/Chat" />
           <Stack.Screen name="pages/Account" />
           <Stack.Screen name="pages/Profile" />

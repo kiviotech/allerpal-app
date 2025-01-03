@@ -6,6 +6,7 @@ import {
   createProfileAllergy,
   updateProfileAllergy,
   deleteProfileAllergy,
+  getProfileAllergyByProfileId,
 } from "./../api/repositories/profileAllergiesRepositories";
 
 // Fetch all profile allergies
@@ -23,6 +24,17 @@ export const fetchAllProfileAllergies = async () => {
 export const fetchProfileAllergyById = async (id) => {
   try {
     const response = await getProfileAllergyById(id);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching profile allergy with ID ${id}:`, error);
+    throw error;
+  }
+};
+
+// Fetch a specific profile allergy by profile ID
+export const fetchProfileAllergyByProfileId = async (id) => {
+  try {
+    const response = await getProfileAllergyByProfileId(id);
     return response.data;
   } catch (error) {
     console.error(`Error fetching profile allergy with ID ${id}:`, error);

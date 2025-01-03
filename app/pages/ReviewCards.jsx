@@ -198,61 +198,61 @@ import {
 import axios from "axios";
 import { MaterialIcons } from "@expo/vector-icons";
 
-const GOOGLE_API_KEY = "AIzaSyDFQTSshpxEzndpEMEIDi_8f7OUGyh-Hs8"; // Replace with your actual Google API Key
-const PLACE_ID_API = "https://maps.googleapis.com/maps/api/place/findplacefromtext/json";
-const PLACE_DETAILS_API = "https://maps.googleapis.com/maps/api/place/details/json";
-const PROXY_URL = "https://cors-anywhere.herokuapp.com/";
+// const GOOGLE_API_KEY = "AIzaSyDFQTSshpxEzndpEMEIDi_8f7OUGyh-Hs8"; // Replace with your actual Google API Key
+// const PLACE_ID_API = "https://maps.googleapis.com/maps/api/place/findplacefromtext/json";
+// const PLACE_DETAILS_API = "https://maps.googleapis.com/maps/api/place/details/json";
+// const PROXY_URL = "https://cors-anywhere.herokuapp.com/";
 
-const ReviewCards = ({ restaurantName }) => {
+const ReviewCards = ({ restaurantId }) => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchGoogleReviews = async () => {
-      try {
-        // Step 1: Get Place ID
-        const placeIdResponse = await axios.get(PROXY_URL + PLACE_ID_API, {
-            params: {
-            input: restaurantName,
-            inputtype: "textquery",
-            fields: "place_id",
-            key: GOOGLE_API_KEY,
-          },
-        });
+  // useEffect(() => {
+  //   const fetchGoogleReviews = async () => {
+  //     try {
+  //       // Step 1: Get Place ID
+  //       const placeIdResponse = await axios.get(PROXY_URL + PLACE_ID_API, {
+  //           params: {
+  //           input: restaurantName,
+  //           inputtype: "textquery",
+  //           fields: "place_id",
+  //           key: GOOGLE_API_KEY,
+  //         },
+  //       });
 
-        const placeId = placeIdResponse.data.candidates[0]?.place_id;
-        if (!placeId) {
-          throw new Error("Place ID not found.");
-        }
+  //       const placeId = placeIdResponse.data.candidates[0]?.place_id;
+  //       if (!placeId) {
+  //         throw new Error("Place ID not found.");
+  //       }
 
-        // Step 2: Fetch Reviews
-        const detailsResponse = await axios.get(PROXY_URL + PLACE_DETAILS_API, {
-          params: {
-            place_id: placeId,
-            fields: "name,rating,reviews",
-            key: GOOGLE_API_KEY,
-          },
-        });
+  //       // Step 2: Fetch Reviews
+  //       const detailsResponse = await axios.get(PROXY_URL + PLACE_DETAILS_API, {
+  //         params: {
+  //           place_id: placeId,
+  //           fields: "name,rating,reviews",
+  //           key: GOOGLE_API_KEY,
+  //         },
+  //       });
 
-        const fetchedReviews = detailsResponse.data.result.reviews || [];
-        setReviews(fetchedReviews);
-      } catch (error) {
-        console.error("Error fetching reviews:", error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       const fetchedReviews = detailsResponse.data.result.reviews || [];
+  //       setReviews(fetchedReviews);
+  //     } catch (error) {
+  //       console.error("Error fetching reviews:", error.message);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchGoogleReviews();
-  }, [restaurantName]);
+  //   fetchGoogleReviews();
+  // }, [restaurantName]);
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.AreaContainer}>
-        <Text style={styles.loadingText}>Loading reviews...</Text>
-      </SafeAreaView>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <SafeAreaView style={styles.AreaContainer}>
+  //       <Text style={styles.loadingText}>Loading reviews...</Text>
+  //     </SafeAreaView>
+  //   );
+  // }
 
   return (
     <SafeAreaView style={styles.AreaContainer}>
@@ -308,6 +308,6 @@ const styles = StyleSheet.create({
   headerText: { flex: 1 },
   name: { fontSize: 16, fontWeight: "bold" },
   date: { fontSize: 12, color: "#666" },
-  review: { fontSize: 14, color: "#333", marginTop: 10 },
+  review: { fontSize: 16, marginTop: 10, padding: 10 },
   loadingText: { textAlign: "center", marginTop: 20, fontSize: 16 },
 });

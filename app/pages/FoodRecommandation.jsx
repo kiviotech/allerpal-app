@@ -1,193 +1,3 @@
-// import React, { useEffect, useState } from "react";
-// import {
-//   View,
-//   Text,
-//   Image,
-//   StyleSheet,
-//   Dimensions,
-//   TouchableOpacity,
-//   FlatList,
-// } from "react-native";
-// import foodrestro from "../../assets/foodrestro.png";
-// import { Ionicons } from "@expo/vector-icons";
-// import { fetchAllMenuItems } from "../../src/services/menuItemsServices";
-// const { width } = Dimensions.get("window");
-
-// const FoodCard = ({ item }) => {
-//   const [liked, setLiked] = useState(false);
-
-//   const handleHeartPress = () => {
-//     setLiked(!liked);
-//   };
-
-//   return (
-//     <View style={styles.card}>
-//       <Image
-//         source={item.image?.[0]?.url ? { uri: item.image[0].url } : foodrestro}
-//         style={styles.image}
-//       />
-//       <View style={styles.priceContainer}>
-//         <Text style={styles.priceText}>${item.price}</Text>
-//         <TouchableOpacity
-//           onPress={handleHeartPress}
-//           style={[styles.heartContainer, liked && styles.heartContainerLiked]}
-//         >
-//           <Ionicons
-//             name={liked ? "heart" : "heart-outline"}
-//             size={18}
-//             color="white"
-//             style={styles.heartIcon}
-//           />
-//         </TouchableOpacity>
-//       </View>
-
-//       <View style={styles.ratingContainer}>
-//         <Text style={styles.ratingText}>
-//           {item.is_vegetarian ? "🥬" : "🍖"}
-//         </Text>
-//         <Text style={styles.reviewText}>
-//           {item.is_available ? "Available" : "Unavailable"}
-//         </Text>
-//       </View>
-//       <View style={styles.detailsContainer}>
-//         <Text style={styles.name}>{item.item_name}</Text>
-//       </View>
-//     </View>
-//   );
-// };
-
-// const FoodRecommendations = () => {
-//   const [menuItems, setMenuItems] = useState([]);
-
-//   useEffect(() => {
-//     const getMenuItems = async () => {
-//       try {
-//         const response = await fetchAllMenuItems();
-//         setMenuItems(response.data);
-//         console.log("menuItems", response.data);
-//       } catch (error) {
-//         console.error("Error fetching menu items:", error);
-//       }
-//     };
-
-//     getMenuItems();
-//   }, []);
-
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.title}>Food recommendations for you</Text>
-//       <FlatList
-//         data={menuItems}
-//         renderItem={({ item }) => <FoodCard item={item} />}
-//         keyExtractor={(item) => item.documentId}
-//         horizontal
-//         showsHorizontalScrollIndicator={false}
-//         contentContainerStyle={{ paddingHorizontal: 8 }}
-//       />
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     paddingTop: 20,
-//     backgroundColor: "#f5f5f5",
-//     width: "100%",
-//   },
-//   title: {
-//     fontSize: 18,
-//     fontWeight: "bold",
-//     paddingHorizontal: 16,
-//     marginBottom: 10,
-//   },
-//   card: {
-//     backgroundColor: "#fff",
-//     borderRadius: 9,
-//     overflow: "hidden",
-//     shadowColor: "#000",
-//     shadowOpacity: 0.1,
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowRadius: 4,
-//     elevation: 3,
-//     width: width * 0.4,
-//     marginHorizontal: 8,
-//     height: 170,
-//   },
-//   image: {
-//     width: "100%",
-//     height: 120, // Reduced height for a shorter card
-//   },
-//   priceContainer: {
-//     position: "absolute",
-//     top: 6,
-//     left: 6,
-//     flexDirection: "row",
-//     alignItems: "center",
-//     justifyContent: "space-between",
-//     width: "100%",
-//     paddingHorizontal: 8,
-//   },
-//   priceText: {
-//     fontSize: 15,
-//     fontWeight: "bold",
-//     color: "#000",
-//     backgroundColor: "white",
-//     borderRadius: 5,
-//     paddingHorizontal: 10,
-//   },
-//   ratingContainer: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     position: "absolute",
-
-//     top: 108,
-//     left: 6,
-//     backgroundColor: "white",
-//     paddingHorizontal: 6,
-//     paddingVertical: 2,
-//     borderRadius: 12,
-//     borderColor: "gray",
-//   },
-//   ratingText: {
-//     fontSize: 12,
-//     fontWeight: "bold",
-//   },
-//   reviewText: {
-//     fontSize: 10,
-//     marginLeft: 2,
-//     color: "#777",
-//   },
-//   detailsContainer: {
-//     padding: 8,
-//     alignItems: "center",
-//   },
-//   name: {
-//     fontSize: 14,
-//     fontWeight: "bold",
-//     marginBottom: 4,
-//     marginTop: 10,
-//   },
-//   heartContainer: {
-//     width: 25,
-//     height: 25,
-//     borderRadius: 12,
-//     backgroundColor: "rgba(255, 255, 255, 0.5)", // Transparent background
-//     justifyContent: "center",
-//     alignItems: "center",
-//     marginLeft: 8,
-//   },
-//   heartIcon: {
-//     marginLeft: 3,
-//   },
-//   heartContainerLiked: {
-//     backgroundColor: "#00aced", // Change to blue when liked
-//   },
-// });
-
-// export default FoodRecommendations;
-
-
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -201,19 +11,70 @@ import {
 } from "react-native";
 import foodrestro from "../../assets/foodrestro.png";
 import { Ionicons } from "@expo/vector-icons";
-import { fetchAllMenuItems } from "../../src/services/menuItemsServices";
+import { fetchAllMenuItems, fetchMenuItemBySubcuisine } from "../../src/services/menuItemsServices";
 import useAllergyStore from "../../src/stores/allergyStore";
 import { MEDIA_BASE_URL } from "../../src/api/apiClient";
 import { useRouter } from "expo-router";
 import restaurantImg from '../../assets/restaurant.png'
+import { fetchMenuByMenuItemId } from "../../src/services/menuServices";
+import useAuthStore from "../../useAuthStore";
+import { fetchProfileById } from "../../src/services/profileServices";
+import { fetchProfileAllergyByProfileId } from "../../src/services/profileAllergiesServices";
+import { createNewFavourite, fetchFavouritesByUserId, updateFavouriteData } from "../../src/services/favouriteServices";
+// import { fetchAllMenuItems } from "../../src/services/menuItemsServices"
 
 const { width } = Dimensions.get("window");
 
 const FoodCard = ({ item, onPress }) => {
-  const [liked, setLiked] = useState(false);
+  const { user } = useAuthStore();
+  const [isFavorite, setIsFavorite] = useState(false);
 
-  const handleHeartPress = () => {
-    setLiked(!liked);
+  const handleFavoritePress = async () => {
+    if (!user) {
+      // Redirect to login if user is not authenticated
+      router.push("/pages/Login");
+      return;
+    }
+    try {
+      const response = await fetchFavouritesByUserId(user.id);
+      const favoriteData = response?.data?.[0]; // Get the existing favorite entry, if available
+
+      if (!favoriteData) {
+        // Create new favorite entry
+        const newFavorite = {
+          user: { id: user.id }, // Associate the user
+          menu_items: [
+            {
+              id: item.id
+            },
+          ],
+        };
+        await createNewFavourite({ data: newFavorite });
+        console.log('Favourites created successfully!')
+      } else {
+        // Update existing favorite 
+        // Extract IDs from the existing favorite restaurants
+      const existingMenuItemsIds = favoriteData.menu_items.map((fav) => fav.id);        
+        const updatedRestaurants = isFavorite
+        ? existingMenuItemsIds.filter((id) => id !== item.id) // Remove the current restaurant if it's already a favorite
+        : [...existingMenuItemsIds, item.id]; // Add the current restaurant ID if not already a favorite
+
+        const updatePayload = {
+          data: {
+            menu_items: updatedRestaurants,
+          },
+        };
+
+        await updateFavouriteData(favoriteData.documentId, updatePayload);
+        console.log('Favourites updated successfully!')
+      }
+
+      // Toggle the favorite state
+      setIsFavorite((prev) => !prev);
+      global.EventEmitter.emit("favoritesUpdated");
+    } catch (error) {
+      console.error("Error updating favorites:", error);
+    }
   };
 
   return (
@@ -227,16 +88,15 @@ const FoodCard = ({ item, onPress }) => {
         style={styles.image}
       />
       <View style={styles.priceContainer}>
-        <Text style={styles.priceText}>${item.price}</Text>
         <TouchableOpacity
-          onPress={handleHeartPress}
-          style={[styles.heartContainer, liked && styles.heartContainerLiked]}
+          onPress={handleFavoritePress}
+          style={[styles.heartContainer, isFavorite && styles.heartContainerLiked]}
         >
           <Ionicons
-            name={liked ? "heart" : "heart-outline"}
+            name={isFavorite ? "heart" : "heart-outline"}
             size={18}
             color="white"
-            style={styles.heartIcon}
+            // style={styles.heartIcon}
           />
         </TouchableOpacity>
       </View>
@@ -250,8 +110,8 @@ const FoodCard = ({ item, onPress }) => {
       </View>
       <View style={styles.detailsContainer}>
         <Text style={styles.name}>
-          {item.item_name.length > 15
-            ? `${item.item_name.substring(0, 15)}...`
+          {item.item_name.length > 18
+            ? `${item.item_name.substring(0, 18)}...`
             : item.item_name}
         </Text>
       </View>
@@ -259,40 +119,28 @@ const FoodCard = ({ item, onPress }) => {
   );
 };
 
-const FoodRecommendations = ({ filteredFoodRecommendations }) => {
+const FoodRecommendations = ({isAllergenOn}) => {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const selectedAllergies = useAllergyStore((state) => state.selectedAllergies);
+  const [filteredFoodRecommendations, setFilteredFoodRecommendations] = useState([]);
+  const [profileAllergies, setProfileAllergies] = useState([]);
+  const profileId = useAuthStore((state) => state.profileId);
   const router = useRouter();
 
   const onFoodCardPress = async (menuItemId) => {
     console.log("Selected Menu Item ID:", menuItemId);
-
     try {
       // Fetch restaurants for the selected menu item
-      const response = await fetch(
-        `${MEDIA_BASE_URL}/api/menus?filters[menu_items][id][$eq]=${menuItemId}&populate=*`
-      );
-      const data = await response.json();
-      console.log("Associated Restaurants:", data);
-      const restaurant = data?.data?.[0]?.restaurant; // Adjust according to your API response structure
-      console.log(restaurant);
-      // Navigate to another screen or update the state to display the restaurants
-      const imageUrl =
-        restaurant.image && restaurant.image[0]?.url
-          ? `${MEDIA_BASE_URL}${restaurant.image[0].url}`
-          : "";
+      const response = await fetchMenuByMenuItemId(menuItemId)
+      const restaurant = response.data?.[0]?.restaurant; // Adjust according to your API response structure
+      
       if (restaurant) {
         // Navigate to the RestaurantScreen and pass the restaurantId
         router.push({
           pathname: "/pages/RestaurantScreen",
           params: {
-            id: restaurant.documentId,
+            id: restaurant.id,
             documentId: restaurant.documentId,
-            name: restaurant.name,
-            rating: restaurant.rating,
-            categories: restaurant.categories,
-            image: restaurantImg,
           },
         });
       } else {
@@ -304,22 +152,49 @@ const FoodRecommendations = ({ filteredFoodRecommendations }) => {
   };
 
   useEffect(() => {
-    if (filteredFoodRecommendations) {
-      const filteredItems = filteredFoodRecommendations.filter((item) => {
-        const description = item.description?.toLowerCase() || "";
-        return !selectedAllergies.some((allergy) =>
-          description.includes(allergy.toLowerCase())
-        );
-      });
+    let selectedAllergies = [];
+    const getAllergiesOfUser = async () => {
+      try {
+        const response = await fetchProfileAllergyByProfileId(profileId)
+        const profileAllergy = response.data[0].allergies
+        selectedAllergies = profileAllergy.map((allergy) => allergy.name.toLowerCase());
+      } catch (error) {
+        console.warn("Error fetching profile allergies");
+      }
+    };
 
-      setLoading(false);
-      setMenuItems(filteredItems); // Update menu items after filtering
-    } else {
-      console.log("No food found");
-      setLoading(false);
-      setMenuItems([]); // Fallback to empty if no food recommendations
-    }
-  }, [filteredFoodRecommendations, selectedAllergies]); // Add filteredFoodRecommendations to dependency
+    const getMenuItems = async () => {
+      try {
+        const response = await fetchMenuItemBySubcuisine('Mains');
+        if (response && response.data) {
+          const menuItems = response.data;
+          setMenuItems(menuItems);
+
+          // Filter based on allergies after fetching the data
+          const filteredItems = menuItems.filter((item) => {
+            const description = item.description?.toLowerCase() || ""; // Get description as lowercase
+            return !selectedAllergies.some((allergy) =>
+              description.includes(allergy.toLowerCase()) // Check if allergy is in the description
+            );
+          });
+          setFilteredFoodRecommendations(filteredItems); // Update filtered items after applying allergy filters
+          setLoading(false); // Once the filtering is done, stop loading
+        } else {
+          console.warn("API response format invalid or empty");
+          setMenuItems([]);
+          setFilteredFoodRecommendations([]);
+          setLoading(false); // Stop loading if API response is invalid
+        }
+      } catch (error) {
+        console.error("Error fetching menu items:", error);
+        setMenuItems([]); // Fallback
+        setFilteredFoodRecommendations([]); // Fallback
+        setLoading(false); // Stop loading in case of error
+      }
+    };
+    getAllergiesOfUser();
+    getMenuItems();
+  }, []);
 
   if (loading) {
     return (
@@ -332,24 +207,37 @@ const FoodRecommendations = ({ filteredFoodRecommendations }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Dish recommendations for you</Text>
-      {menuItems.length === 0 ? (
-        <Text style={styles.noItemsText}>
-          No suitable items found based on your allergies
-        </Text>
-      ) : (
-        <FlatList
-          data={menuItems}
-          renderItem={({ item }) => (
-            <FoodCard item={item} onPress={onFoodCardPress} />
-          )}
-          keyExtractor={(item) => item.documentId}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 8 }}
-        />
-      )}
+      <FlatList
+        data={
+          isAllergenOn
+            ? menuItems.length > 0
+              ? menuItems
+              : []
+            : filteredFoodRecommendations.length > 0
+            ? filteredFoodRecommendations
+            : []
+        }
+        renderItem={({ item }) => (
+          <FoodCard item={item} onPress={onFoodCardPress} />
+        )}
+        keyExtractor={(item) => item.documentId}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 8 }}
+        ListEmptyComponent={
+          isAllergenOn ? (
+            <Text style={styles.noItemsText}>No items available</Text>
+          ) : (
+            <Text style={styles.noItemsText}>
+              No suitable items found based on your allergies
+            </Text>
+          )
+        }
+      />
     </View>
   );
+  
+  
 };
 
 const styles = StyleSheet.create({
@@ -387,21 +275,19 @@ const styles = StyleSheet.create({
     elevation: 3,
     width: width * 0.4,
     marginHorizontal: 8,
-    height: 170,
+    maxHeight: 180,
+    minHeight: 180,
   },
   image: {
     width: "100%",
     height: 120,
   },
   priceContainer: {
-    position: "absolute",
-    top: 6,
-    left: 6,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
-    paddingHorizontal: 8,
+    flex: 1,
+    alignItems: 'flex-end',
+    position: 'fixed',
+    width: "40%",
+    padding: 5,
   },
   priceText: {
     fontSize: 15,
@@ -415,7 +301,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     position: "absolute",
-    top: 108,
+    top: 95,
     left: 6,
     backgroundColor: "white",
     paddingHorizontal: 6,
@@ -449,10 +335,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.5)",
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 8,
-  },
-  heartIcon: {
-    marginLeft: 3,
   },
   heartContainerLiked: {
     backgroundColor: "#00aced",

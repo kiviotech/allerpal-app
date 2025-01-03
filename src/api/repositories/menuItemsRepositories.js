@@ -7,6 +7,9 @@ export const getAllMenuItems = () =>
 export const getMenuItemById = (id) =>
   apiClient.get(menuItemsEndpoints.getMenuItemById(id));
 
+export const getMenuItemBySubcuisine = (data) =>
+  apiClient.get(menuItemsEndpoints.getMenuItemBySubcuisine(data));
+
 export const createMenuItem = (data) =>
   apiClient.post(menuItemsEndpoints.createMenuItem, data);
 

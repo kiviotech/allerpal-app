@@ -77,7 +77,7 @@ const Login = () => {
     } catch (error) {
       const errorMessage =
         error.response?.data?.message ||
-        "Login failed. Please check your credentials.";
+        "Something went wrong. Please try again later.";
       setErrors({ general: errorMessage });
       console.error("Login error:", error);
 
@@ -89,8 +89,10 @@ const Login = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+      <View style={styles.contentContainer}>
         <Text style={styles.title}>Login</Text>
+
+        {errors.general && <Text style={styles.errorText}>{errors.general}</Text>}
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Email</Text>
@@ -108,15 +110,15 @@ const Login = () => {
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Password</Text>
           <View style={styles.input}>
-          <TextInput
-            style={styles.inputField}
-            placeholder="Enter your password"
-            placeholderTextColor={"#B3B3B3"}
-            secureTextEntry={!showPassword} 
-            value={formData.password}
-            onChangeText={(value) => handleInputChange("password", value)}
-          />
-          <TouchableOpacity
+            <TextInput
+              style={styles.inputField}
+              placeholder="Enter your password"
+              placeholderTextColor={"#B3B3B3"}
+              secureTextEntry={!showPassword}
+              value={formData.password}
+              onChangeText={(value) => handleInputChange("password", value)}
+            />
+            <TouchableOpacity
               onPress={() => setShowPassword((prev) => !prev)}
               style={styles.eyeIcon}
             >
@@ -126,7 +128,7 @@ const Login = () => {
                 color="#B3B3B3"
               />
             </TouchableOpacity>
-            </View>
+          </View>
           {errors.password && (
             <Text style={styles.errorText}>{errors.password}</Text>
           )}
@@ -151,23 +153,7 @@ const Login = () => {
             SignUp
           </Text>
         </Text>
-
-        {/* Social Buttons with Icons */}
-        {/* <View style={styles.socialButtons}>
-          <TouchableOpacity style={styles.socialButton}>
-            <View style={styles.iconContainer}>
-              <Icon name="facebook" size={30} color="blue" />
-            </View>
-            <Text style={styles.socialButtonText}>Facebook</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.socialButton}>
-            <View style={styles.iconContainer}>
-              <Icon name="google" size={30} color="#DB4437" />
-            </View>
-            <Text style={styles.socialButtonText}>Google</Text>
-          </TouchableOpacity>
-        </View> */}
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -176,14 +162,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    alignItems: "center",
     padding: "5%",
     width: "100%",
   },
   contentContainer: {
-    flexGrow: 1,
+    flex: 1,
+    width: '100%',
     justifyContent: "center",
     alignItems: "center",
     paddingBottom: "10%",
+    maxWidth: 500,
   },
   title: {
     fontSize: width < 360 ? 26 : 35,
@@ -255,31 +244,6 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     color: "#00D0DD",
-  },
-  socialButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: "5%",
-    width: "100%",
-  },
-  socialButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    borderRadius: 5,
-    padding: "3%",
-    justifyContent: "center",
-    marginHorizontal: "2.5%",
-  },
-  socialButtonText: {
-    color: "#007bff",
-    marginLeft: 5,
-  },
-  iconContainer: {
-    borderRadius: "50%",
-    padding: 5,
-    justifyContent: "center",
-    alignItems: "center",
   },
   forgotPasswordContainer: {
     width: "80%",

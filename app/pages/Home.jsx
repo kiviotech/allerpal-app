@@ -7,6 +7,7 @@ import {
   Dimensions,
   TouchableOpacity,
   Alert,
+  Switch,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import FoodItem from "./FoodItem";
@@ -20,142 +21,51 @@ import useAuthStore from "../../useAuthStore";
 import { useRouter, useStore } from "expo-router";
 import { fetchLocation } from "../../src/services/locationService";
 import * as Location from 'expo-location';
-import apiClient, { BASE_URL } from "../../src/api/apiClient";
-import axios from "axios";
-import { getAllRestaurants } from "../../src/api/repositories/restaurantRepositories";
-import { fetchAllMenuItems } from "../../src/services/menuItemsServices";
+import { fetchUserById } from "../../src/services/userServices";
 
 const Home = () => {
   const router = useRouter();
-  const [allergens, setAllergens] = useState({});
   const { width, height } = Dimensions.get("window");
   const { setLocation } = useAuthStore(); // Access setLocation from Zustand  const [address, setAddress] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredRestaurants, setFilteredRestaurants] = useState([]);
-  const [restaurants, setRestaurants] = useState([]);
-
+  const userId = useAuthStore((state) => state.user?.id);
   const [menuItems, setMenuItems] = useState([]);
   const [filteredFoodRecommendations, setFilteredFoodRecommendations] = useState([]);
+  const [isAllergenOn, setIsAllergenOn] = useState(false);
+
+  useEffect(() => {
+    if (!userId) {
+      router.replace("auth/Login");
+      return;
+    }
+    const getProfileIdbyUserId = async () => {
+      const response = await fetchUserById(userId);
+      const profileId = response?.profiles[0]?.id
+      useAuthStore.getState().setProfileId(profileId);
+    }
+    getProfileIdbyUserId();
+  }, [userId])
 
   // Static location values
-   // Static location values
-   useEffect(() => {
+  // Static location values
+  useEffect(() => {
     // Static location data
     const latitude = 51.5074; // Example: London latitude
     const longitude = -0.1278; // Example: London longitude
     const location = "Westminster, London SW1A 1AA, United Kingdom";
 
     // Store the static location in Zustand
-    setLocation(latitude, longitude, location); 
-    console.log("Static location stored in Zustand:", {location });
-
+    setLocation(latitude, longitude, location);
   }, [setLocation]);
-
-  // useEffect(() => {
-  //   const getLocation = async () => {
-  //     try {
-  //       // Request location permissions
-  //       const { status } = await Location.requestForegroundPermissionsAsync();
-  //       if (status !== "granted") {
-  //         Alert.alert("Permission Denied", "Location access is required.");
-  //         return;
-  //       }
-
-  //       // Get current location
-  //       const currentLocation = await Location.getCurrentPositionAsync({
-  //         accuracy: Location.Accuracy.High,
-  //       });
-
-  //       console.log("Current Location Coordinates:", currentLocation.coords);
-
-  //       // Use Google Places API to get address from coordinates
-  //       const { latitude, longitude } = currentLocation.coords;
-  //       const apiKey = "AIzaSyDFQTSshpxEzndpEMEIDi_8f7OUGyh-Hs8"; // Replace with your Google Maps API key
-
-  //       const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1000&key=${apiKey}`;
-
-  //       const response = await axios.get(url);
-  //       const results = response.data.results;
-
-  //       if (results.length > 0) {
-  //         const address = results[0].vicinity || "Address not found";
-  //         console.log("Address from Google Places API:", address);
-  //         Alert.alert("Address", address);
-  //       } else {
-  //         Alert.alert("Address", "Address not found");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching location:", error);
-  //       Alert.alert("Error", "Unable to fetch location or address.");
-  //     }
-  //   };
-
-  //   // Call the function on component mount
-  //   getLocation();
-  // }, []);
-
-  useEffect(() => {
-    const fetchRestaurants = async () => {
-      try {
-        const response = await axios.get(`${BASE_URL}/restaurants?populate=*`);
-        setRestaurants(response.data.data || []); // Access nested data directly
-        // setFilteredRestaurants(response.data.data || []); // Set all restaurants initially
-      } catch (error) {
-        console.error("Error fetching restaurants:", error);
-        setRestaurants([]); // Fallback to an empty array on error
-        // setFilteredRestaurants([]); // Also fallback for filtered list
-      }
-    };
-
-    fetchRestaurants();
-  }, []);
-
-  useEffect(() => {
-    const getMenuItems = async () => {
-      try {
-        const response = await fetchAllMenuItems(); // API call function
-        if (response && response.data) {
-          console.log("Food recommended response:", response.data);
-          const menuItems = response.data; // Validate API response
-          setMenuItems(menuItems); // Set menu items
-          setFilteredFoodRecommendations(menuItems); // Initialize filtered items
-        } else {
-          console.warn("API response format invalid or empty");
-          setMenuItems([]);
-          setFilteredFoodRecommendations([]);
-        }
-      } catch (error) {
-        console.error("Error fetching menu items:", error);
-        setMenuItems([]); // Fallback
-        setFilteredFoodRecommendations([]); // Fallback
-      }
-    };
-
-    getMenuItems();
-  }, []);
-
-  // // Debugging filtered recommendations
-  useEffect(() => {
-    console.log("FilteredFoodRecommendations updated:", filteredFoodRecommendations);
-  }, [filteredFoodRecommendations]);
-
 
   const handleSearch = () => {
     router.push('./Search')
-    // setSearchQuery(query);
-    // // Filter restaurants based on location or name matching the query
-    // const filtered = restaurants.filter((restaurant) =>
-    //   restaurant.location.toLowerCase().includes(query.toLowerCase()) ||
-    //   restaurant.name.toLowerCase().includes(query.toLowerCase())
-    // );
-
-    // setFilteredRestaurants(filtered);
-
-    // const filteredFood = menuItems.filter((food) =>
-    //   food.item_name.toLowerCase().includes(query.toLowerCase())
-    // );
-    // setFilteredFoodRecommendations(filteredFood);
   };
+
+  const toggleAllergen = () => {
+    setIsAllergenOn((prevState) => !prevState);
+  };
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.TextContainer}>
@@ -169,25 +79,36 @@ const Home = () => {
           <Text style={{ marginLeft: 5 }}>London, United Kingdom</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.container} onPress={handleSearch}>
-        <Ionicons name="search" size={24} color="black" />
-        <TextInput
-          style={styles.input}
-          placeholder="Find for Food and Restaurant..."
-          value={searchQuery}
+      <View style={styles.innerContainer}>
+        <TouchableOpacity style={styles.container} onPress={handleSearch}>
+          <Ionicons name="search" size={24} color="black" />
+          <TextInput
+            style={styles.input}
+            placeholder="Restaurant, dishes, cuisines..."
+            value={searchQuery}
+          />
+        </TouchableOpacity>
+       <View style={styles.containContainer}>
+         <Text style={styles.input}>May Contain Allergen</Text>
+        <Switch
+          value={isAllergenOn}
+          onValueChange={toggleAllergen}
+          thumbColor={isAllergenOn ? "#ff6347" : "#f4f3f4"}
+          trackColor={{ false: "#767577", true: "#ffdbc1" }}
         />
-      </TouchableOpacity>
+       </View>
+      </View>
       <ScrollView style={styles.outerContainer}>
         <View>
           <FoodItem />
         </View>
         <View style={styles.FoodRestro}>
-          <FoodRecommendations filteredFoodRecommendations={filteredFoodRecommendations} />
+          <FoodRecommendations isAllergenOn={isAllergenOn} />
         </View>
         <View style={styles.Restro}>
-          <RestaurantRecommendation restaurants={restaurants} />
+          <RestaurantRecommendation />
         </View>
-        <View>
+        <View style={{marginBottom: 20}}>
           <Favourites />
         </View>
       </ScrollView>
@@ -204,6 +125,11 @@ const styles = StyleSheet.create({
     height: "66%",
     marginTop: 20,
   },
+  innerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: "10%",
+  },
   container: {
     flexDirection: "row",
     alignItems: "center",
@@ -212,16 +138,21 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 20,
     backgroundColor: "#fff",
-    marginTop: "10%",
     margin: "auto",
-    width: "95%",
+    width: "70%",
+  },
+  containContainer: {
+    flexDirection: "row",
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: "center",
+    paddingVertical: 10,
+    width: '30%',
   },
   input: {
     flex: 1,
     marginLeft: 10,
-    fontSize: 13,
-    // width:100,
-    // height:40
+    fontSize: 14,
   },
   TextContainer: {
     display: "flex",
