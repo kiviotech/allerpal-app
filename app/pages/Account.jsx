@@ -15,43 +15,45 @@ import Footer from "./Footer";
 import useAuthStore from "../../useAuthStore";
 import { deleteToken } from "../../src/utils/storage";
 import useAllergyStore from "../../src/stores/allergyStore";
-import { Alert } from 'react-native';
 import { logout } from "../../src/utils/auth";
 
 const Account = () => {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore(); 
-  
+  const { isAuthenticated } = useAuthStore();
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace("auth/Login");
     }
   }, [isAuthenticated]);
 
-  // const logout = useAuthStore((state) => state.logout);
   const clearAllergies = useAllergyStore((state) => state.clearAllergies);
   const [isNotificationsEnabled, setNotificationsEnabled] =
     React.useState(false);
-  const [isModalVisible, setModalVisible] = useState(false); // Added state for modal visibility
-  const [modalMessage, setModalMessage] = useState(""); // Added state for modal message
+  const [isModalVisible, setModalVisible] = useState(false); // Combined modal state
+  const [modalContent, setModalContent] = useState({
+    message: "",
+    isSignOut: false,
+  }); // State to handle modal content dynamically
 
   // Toggle notifications switch
   const toggleSwitch = () =>
     setNotificationsEnabled((previousState) => !previousState);
 
-  // Handle modal visibility and message
-  const showUnavailableMessage = (message) => {
-    setModalMessage(message);
+  // Show modal with dynamic content
+  const showModal = (message, isSignOut = false) => {
+    setModalContent({ message, isSignOut });
     setModalVisible(true);
   };
 
   // Handle sign out
   const handleSignOut = () => {
+    setModalVisible(false);
     router.push("auth/Login");
-      logout();
-      clearAllergies();
-      deleteToken();
-    }
+    logout();
+    clearAllergies();
+    deleteToken();
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -82,7 +84,11 @@ const Account = () => {
           {/* My Bookings */}
           <TouchableOpacity
             style={styles.option}
-            onPress={() => showUnavailableMessage("My Bookings")}
+            onPress={() =>
+              showModal(
+                "The My Bookings page is currently unavailable."
+              )
+            }
           >
             <Icon name="calendar-outline" size={24} color="#00CFFF" />
             <Text style={styles.optionText}>My Bookings</Text>
@@ -98,7 +104,9 @@ const Account = () => {
               thumbColor={isNotificationsEnabled ? "#ffffff" : "#f4f3f4"}
               ios_backgroundColor="#3e3e3e"
               onValueChange={() =>
-                showUnavailableMessage("Notifications Settings")
+                showModal(
+                  "Notifications settings are currently unavailable."
+                )
               }
               value={isNotificationsEnabled}
             />
@@ -107,7 +115,11 @@ const Account = () => {
           {/* Language */}
           <TouchableOpacity
             style={styles.option}
-            onPress={() => showUnavailableMessage("Language Settings")}
+            onPress={() =>
+              showModal(
+                "Language settings are currently unavailable."
+              )
+            }
           >
             <Icon name="language-outline" size={24} color="#00CFFF" />
             <Text style={styles.optionText}>Language</Text>
@@ -117,7 +129,11 @@ const Account = () => {
           {/* Theme */}
           <TouchableOpacity
             style={styles.option}
-            onPress={() => showUnavailableMessage("Theme Settings")}
+            onPress={() =>
+              showModal(
+                "Theme settings are currently unavailable."
+              )
+            }
           >
             <Icon name="color-palette-outline" size={24} color="#00CFFF" />
             <Text style={styles.optionText}>Theme</Text>
@@ -127,7 +143,11 @@ const Account = () => {
           {/* Legal & Policies */}
           <TouchableOpacity
             style={styles.option}
-            onPress={() => showUnavailableMessage("Legal & Policies")}
+            onPress={() =>
+              showModal(
+                "The Legal & Policies page is currently unavailable."
+              )
+            }
           >
             <Icon name="document-text-outline" size={24} color="#00CFFF" />
             <Text style={styles.optionText}>Legal & Policies</Text>
@@ -137,13 +157,18 @@ const Account = () => {
           {/* Sign Out Button */}
           <TouchableOpacity
             style={styles.signOutButton}
-            onPress={handleSignOut}
+            onPress={() =>
+              showModal(
+                "Are you sure you want to sign out?",
+                true // Pass `isSignOut` as true
+              )
+            }
           >
             <Text style={styles.signOutText}>Sign Out</Text>
           </TouchableOpacity>
         </ScrollView>
 
-        {/* Modal for Unavailable Pages */}
+        {/* Unified Modal */}
         <Modal
           animationType="slide"
           transparent={true}
@@ -152,15 +177,26 @@ const Account = () => {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalText}>
-                {modalMessage} Page is Currently Unavailable
-              </Text>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.closeButtonText}>Close</Text>
-              </TouchableOpacity>
+              <Text style={styles.modalTitle}>{modalContent.title}</Text>
+              <Text style={styles.modalText}>{modalContent.message}</Text>
+              <View style={styles.buttonContainer}>
+                {modalContent.isSignOut && (
+                  <TouchableOpacity
+                    style={styles.signOutButton}
+                    onPress={handleSignOut}
+                  >
+                    <Text style={styles.signOutText}>Confirm</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={styles.closeButtonText}>
+                    {modalContent.isSignOut ? "Cancel" : "Close"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -198,7 +234,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 15,
-    marginBottom: 15,
+    marginBottom: 30,
     backgroundColor: "#fff",
     borderRadius: 10,
     shadowColor: "#000",
@@ -206,7 +242,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 3,
-    marginTop: 10,
   },
   optionText: {
     flex: 1,
@@ -215,8 +250,9 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   signOutButton: {
-    marginTop: 20,
-    paddingVertical: 15,
+    // marginTop: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 5,
     alignItems: "center",
     borderRadius: 10,
     shadowColor: "#00CFFF",
@@ -248,6 +284,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: "center",
     marginBottom: 20,
+  },
+  buttonContainer: {
+    width: 'auto',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 50,
   },
   closeButton: {
     paddingVertical: 10,
