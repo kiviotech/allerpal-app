@@ -136,7 +136,6 @@ export default function () {
       fetchDistanceToRestaurant();
     }, [latitude, longitude, restaurantData.location]);
 
-
   const filteredMenuItems = menuData.filter((item) => item.type === type);
 
   const callResto = (contact_number) => {
@@ -215,7 +214,6 @@ export default function () {
                   name={isFavorite ? "heart" : "heart-outline"}
                   size={20}
                   color={isFavorite ? "white" : "white"}
-                // style={styles.icon}
                 />
               </TouchableOpacity>
             </View>
@@ -305,7 +303,7 @@ export default function () {
 
         {/* Review Section */}
         <View style={styles.Review}>
-          <ReviewsSection restaurantId={documentId} />
+          <ReviewsSection restaurantId={documentId} id={id} />
         </View>
         <View>
           <ReviewCards restaurantId={documentId} />

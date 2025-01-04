@@ -5,12 +5,13 @@ import {
   updateRestaurant,
   deleteRestaurant,
   getFavoriteRestaurants,
+  getRestaurants,
 } from "../api/repositories/restaurantRepositories";
 
 // Fetch all restaurants
 export const fetchAllRestaurants = async () => {
   try {
-    const response = await getAllRestaurants();
+    const response = await getRestaurants();
     return response.data; // Return fetched restaurants
   } catch (error) {
     console.error("Error fetching all restaurants:", error);

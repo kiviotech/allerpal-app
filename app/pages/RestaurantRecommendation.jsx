@@ -11,14 +11,14 @@ import {
 import Restro from "../../assets/Restro.png";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { getAllRestaurants } from "../../src/api/repositories/restaurantRepositories";
 import { BASE_URL, MEDIA_BASE_URL } from "../../src/api/apiClient";
-import { updateRestaurantDetails } from "../../src/services/restaurantServices";
+import { fetchAllRestaurants, updateRestaurantDetails } from "../../src/services/restaurantServices";
 import useAuthStore from "../../useAuthStore";
 import axios from 'axios';
 import { createNewFavourite, fetchFavouritesByUserId, updateFavouriteData } from "../../src/services/favouriteServices";
 import { calculateDistanceFromUser } from "../../src/utils/distanceUtils";
 import Favourites from "./Favorites";
+import { getRestaurants } from "../../src/api/repositories/restaurantRepositories";
 
 const { width } = Dimensions.get("window");
 
@@ -241,8 +241,8 @@ const RestaurantRecommendation = () => {
   useEffect(() => {
     const collectRestaurants = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/restaurants?populate=*`);
-        setRestaurantData(response.data.data);
+        const response = await fetchAllRestaurants();
+        setRestaurantData(response.data);
       }
       catch (error) {
         console.error("Error fetching restaurants:", error);

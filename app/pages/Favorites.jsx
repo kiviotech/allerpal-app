@@ -68,6 +68,17 @@ const RestaurantCard = ({ restaurant, onRefresh }) => {
     }
   };
 
+  const goToRestaurantScreen = () => {
+    router.push({
+      pathname: "pages/RestaurantScreen",
+      params: {
+        id: restaurant.id,
+        documentId: restaurant.documentId,
+        isFavoriteItem: isFavorite,
+      },
+    })
+  };
+
   const imageUrl =
     (restaurant.image && restaurant.image[0]?.url)
       ? `${MEDIA_BASE_URL}${restaurant.image[0].url}`
@@ -78,54 +89,56 @@ const RestaurantCard = ({ restaurant, onRefresh }) => {
   }
 
   return (
-    <View style={styles.card}>
-      <Image
-        source={{uri: imageUrl}
-          // restaurant?.image?.[0]?.url
-          //   ? { uri: `${MEDIA_BASE_URL}${restaurant.image[0].url}` }
-          //   : Restro
-        }
-        style={styles.image}
-        resizeMode="cover"
-      />
-      <View style={styles.iconContainer}>
-        <View style={styles.heart}>
-          <TouchableOpacity onPress={handleFavoritePress}>
-            <Ionicons
-              name="heart"
-              size={20}
-              color='white'
-              style={styles.icon}
-            />
-          </TouchableOpacity>
+    <TouchableOpacity onPress={goToRestaurantScreen}>
+      <View style={styles.card}>
+        <Image
+          source={{ uri: imageUrl }
+            // restaurant?.image?.[0]?.url
+            //   ? { uri: `${MEDIA_BASE_URL}${restaurant.image[0].url}` }
+            //   : Restro
+          }
+          style={styles.image}
+          resizeMode="cover"
+        />
+        <View style={styles.iconContainer}>
+          <View style={styles.heart}>
+            <TouchableOpacity onPress={handleFavoritePress}>
+              <Ionicons
+                name="heart"
+                size={20}
+                color='white'
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.heart}>
+            <TouchableOpacity
+              onPress={() => router.push("pages/Chat")}
+            >
+              <Ionicons
+                name="chatbubble-outline"
+                size={20}
+                color="white"
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={styles.heart}>
-          <TouchableOpacity
-            onPress={() => router.push("pages/Chat")}
-          >
-            <Ionicons
-              name="chatbubble-outline"
-              size={20}
-              color="white"
-              style={styles.icon}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-      <View style={styles.ratingContainer}>
-        <Text style={styles.ratingText}>{restaurant?.rating || 0} ⭐</Text>
-        {/* <Text style={styles.reviewText}>
+        <View style={styles.ratingContainer}>
+          <Text style={styles.ratingText}>{restaurant?.rating || 0} ⭐</Text>
+          {/* <Text style={styles.reviewText}>
           ({restaurant?.reviews?.length || 0}+)
         </Text> */}
+        </View>
+        <View style={styles.detailsContainer}>
+          <Text style={styles.name}>
+            {restaurant.name?.length > 20
+              ? `${restaurant.name?.substring(0, 20)}...`
+              : restaurant.name}
+          </Text>
+        </View>
       </View>
-      <View style={styles.detailsContainer}>
-        <Text style={styles.name}>
-          {restaurant.name?.length > 20
-            ? `${restaurant.name?.substring(0, 20)}...`
-            : restaurant.name}
-        </Text>
-      </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -159,7 +172,7 @@ const Favourites = () => {
       setLoading(false);
     }
   }, [user]);
-  
+
   // Listen for favorite updates
   useEffect(() => {
     const handleFavoritesUpdate = () => {
@@ -209,7 +222,7 @@ const Favourites = () => {
             <RestaurantCard
               key={restaurant?.id || Math.random().toString()}
               restaurant={restaurant}
-              onRefresh={fetchFavorites}
+            // onRefresh={fetchFavorites}
             />
           ))}
         </ScrollView>

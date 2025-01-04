@@ -1,20 +1,26 @@
 import apiClient from "../apiClient";
 import restaurantEndpoints from "../endpoints/restaurantEndpoints";
 
-export const getAllRestaurants = () =>
-  apiClient.get(restaurantEndpoints.getAllRestaurants());
+export const getRestaurants = async () => {
+  return await apiClient.get(restaurantEndpoints.getRestaurants);
+};
 
-export const getRestaurantById = (id) =>
-  apiClient.get(restaurantEndpoints.getRestaurantById(id));
+export const getRestaurantById = async (id) => {
+  return await apiClient.get(restaurantEndpoints.getRestaurantById(id));
+};
 
-export const createRestaurant = (data) =>
-  apiClient.post(restaurantEndpoints.createRestaurant, { data });
+export const createRestaurant = async (data) => {
+  return await apiClient.post(restaurantEndpoints.createRestaurant, { data });
+};
 
-export const updateRestaurant = (id, data) =>
-  apiClient.put(restaurantEndpoints.updateRestaurant(id), data);
+export const updateRestaurant = async (id, data) => {
+  return await apiClient.put(restaurantEndpoints.updateRestaurant(id), data);
+};
 
-export const deleteRestaurant = (id) =>
-  apiClient.delete(restaurantEndpoints.deleteRestaurant(id));
+export const deleteRestaurant = async (id) => {
+  return await apiClient.delete(restaurantEndpoints.deleteRestaurant(id));
+};
 
-export const getFavoriteRestaurants = (id) =>
-  apiClient.get(restaurantEndpoints.getFavoriteRestaurants(id));
+export const getFavoriteRestaurants = async (id) => {
+  return await apiClient.get(restaurantEndpoints.getFavoriteRestaurants(id));
+};

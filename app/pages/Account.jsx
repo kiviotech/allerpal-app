@@ -49,7 +49,7 @@ const Account = () => {
   // Handle sign out
   const handleSignOut = () => {
     setModalVisible(false);
-    router.push("auth/Login");
+    router.replace("auth/Login");
     logout();
     clearAllergies();
     deleteToken();

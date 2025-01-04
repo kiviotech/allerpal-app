@@ -1,6 +1,5 @@
 const restaurantEndpoints = {
-  // getRestaurants: "/restaurants?populate=*",
-  getAllRestaurants: "/restaurants?populate=image",
+  getRestaurants: "/restaurants?populate=*",
   getRestaurantById: (id) => `/restaurants/${id}?populate=*`,
   createRestaurant: "/restaurants",
   updateRestaurant: (id) => `/restaurants/${id}`,

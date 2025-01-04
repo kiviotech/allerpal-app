@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Image,
   Alert,
+  ScrollView,
 } from "react-native";
 import { Rating } from "react-native-ratings";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,8 +20,7 @@ import { BASE_URL } from "../../src/api/apiClient";
 
 const ReviewForm = () => {
   const { id } = useLocalSearchParams();
-  const { documentId } = useAuthStore();
-  // console.log("documentId", documentId);
+  const profileId = useAuthStore((state) => state.profileId);
   const navigation = useNavigation();
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -29,7 +29,7 @@ const ReviewForm = () => {
     isAnonymous: false,
     allergensRelated: false,
     allergens: "",
-    rating: 4,
+    rating: 0,
   });
   const [image, setImage] = useState(null);
   const [imageIds, setImageIds] = useState([]);
@@ -85,6 +85,7 @@ const ReviewForm = () => {
         if (uploadedImageId) {
           setImageIds((prev) => [...prev, uploadedImageId]);
         }
+        console.log('image uploaded id', uploadedImageId)
       } catch (error) {
         console.error("Failed to upload image:", error);
         Alert.alert(
@@ -116,10 +117,11 @@ const ReviewForm = () => {
       allergens: formData.allergensRelated ? null : formData.allergens,
       rating: formData.rating,
       restaurant: id,
-      profile: documentId,
+      profile: profileId,
       Image: imageIds,
       locale: "en",
     };
+    console.log('reviewData', reviewData)
 
     const payload = { data: reviewData };
 
@@ -160,7 +162,8 @@ const ReviewForm = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView>
+      <View style={styles.container}>
       <View style={styles.ArrowContainer}>
         <TouchableOpacity
           style={styles.backArrow}
@@ -171,44 +174,47 @@ const ReviewForm = () => {
         <Text style={styles.header}>Review</Text>
       </View>
 
-      <Text style={styles.label}>Title of Review</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter name of title"
-        placeholderTextColor="#a0a0a0"
-        value={formData.title}
-        onChangeText={(value) => {
-          const textOnly = value.replace(/[^a-zA-Z\s]/g, '');
-          handleInputChange("title", textOnly);
-        }}
-      />
+      <View style={styles.lableInput}>
+        <Text style={styles.label}>Title of Review</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter name of title"
+          placeholderTextColor="#a0a0a0"
+          value={formData.title}
+          onChangeText={(value) => {
+            const textOnly = value.replace(/[^a-zA-Z\s]/g, '');
+            handleInputChange("title", textOnly);
+          }}
+        />
+      </View>
 
-      <Text style={styles.label}>Review Description</Text>
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        placeholder="Enter experience about food and visit here"
-        placeholderTextColor="#a0a0a0"
-        value={formData.description}
-        multiline
-        onChangeText={(value) => {
-          const textOnly = value.replace(/[^a-zA-Z\s]/g, '');
-          handleInputChange("title", textOnly);
-        }}
-      />
+      <View style={styles.lableInput}>
+        <Text style={styles.label}>Review Description</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          placeholder="Enter experience about food and visit here"
+          placeholderTextColor="#a0a0a0"
+          value={formData.description}
+          multiline
+          onChangeText={(value) => {
+            handleInputChange("description", value);
+          }}
+        />
+      </View>
 
       <View style={styles.row}>
         <Text style={styles.checkboxLabel}>Post this review anonymously</Text>
         <TouchableOpacity
           style={[
-            styles.checkbox,
-            formData.isAnonymous && styles.checkedCheckbox,
+            styles.checkboxContainer,
+            formData.isAnonymous && styles.selectedCheckbox,
           ]}
           onPress={() =>
             handleInputChange("isAnonymous", !formData.isAnonymous)
           }
         >
           {formData.isAnonymous && (
-            <Ionicons name="checkmark" size={15} color="#00C9D6" />
+            <Ionicons name="checkmark-sharp" size={18} color="#00C9D6" />
           )}
         </TouchableOpacity>
       </View>
@@ -226,7 +232,7 @@ const ReviewForm = () => {
             onPress={() => handleInputChange("allergensRelated", true)}
           >
             {formData.allergensRelated && (
-              <Ionicons name="checkmark" size={15} color="#00C9D6" />
+              <Ionicons name="checkmark-sharp" size={18} color="#00C9D6" />
             )}
           </TouchableOpacity>
           <Text style={styles.checkboxLabel}>Yes</Text>
@@ -238,7 +244,7 @@ const ReviewForm = () => {
             onPress={() => handleInputChange("allergensRelated", false)}
           >
             {!formData.allergensRelated && (
-              <Ionicons name="checkmark" size={15} color="#00C9D6" />
+              <Ionicons name="checkmark-sharp" size={18} color="#00C9D6" />
             )}
           </TouchableOpacity>
           <Text style={styles.checkboxLabel}>No</Text>
@@ -246,7 +252,7 @@ const ReviewForm = () => {
       </View>
 
       {!formData.allergensRelated && (
-        <>
+        <View style={styles.lableInput}>
           <Text style={styles.label}>Please specify any allergens</Text>
           <TextInput
             style={styles.input}
@@ -255,10 +261,10 @@ const ReviewForm = () => {
             value={formData.allergens}
             onChangeText={(value) => {
               const textOnly = value.replace(/[^a-zA-Z\s]/g, '');
-              handleInputChange("description", textOnly);
+              handleInputChange("allergens", textOnly);
             }}
           />
-        </>
+        </View>
       )}
 
       <View style={styles.uploadContainer}>
@@ -295,6 +301,7 @@ const ReviewForm = () => {
         </TouchableOpacity>
       </View>
     </View>
+    </ScrollView>
   );
 };
 
@@ -317,13 +324,11 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#000",
     padding: 10,
     borderRadius: 5,
-    marginBottom: 15,
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
   },
   input1: {
     borderWidth: 1,
@@ -346,15 +351,15 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 15,
+    marginVertical: 15,
     gap: 8,
   },
   checkboxLabel: {
-    fontSize: 14,
+    fontSize: 18,
     color: "#333",
   },
   option: {
-    fontSize: 16,
+    fontSize: 18,
     color: "#333",
     marginHorizontal: 10,
   },
@@ -397,9 +402,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
+  lableInput: {
+    marginVertical: 20
+  },
   label: {
-    fontSize: 16,
+    fontSize: 18,
     color: "#a0a0a0",
     marginBottom: 10,
   },
@@ -419,12 +426,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   uploadText: {
-    fontSize: 16,
+    fontSize: 18,
     color: "#808080",
     textAlign: "center",
   },
   fileTypes: {
-    fontSize: 12,
+    fontSize: 18,
     color: "#C0C0C0",
     marginTop: 5,
   },
@@ -440,9 +447,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#00C9D6",
     borderRadius: 5,
-    padding: 4,
-    width: 20,
-    height: 20,
+    width: 25,
+    height: 25,
     marginHorizontal: 8,
   },
   selectedCheckbox: {
