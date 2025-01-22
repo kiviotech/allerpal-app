@@ -11,6 +11,7 @@ import {
 import Restro from "../../assets/Restro.png";
 import { Ionicons } from "@expo/vector-icons";
 import {
+  fetchRestaurantDetails,
   getFavoriteRestaurantsForUser,
   updateRestaurantDetails,
 } from "../../src/services/restaurantServices";
@@ -18,6 +19,7 @@ import useAuthStore from "../../useAuthStore";
 import { MEDIA_BASE_URL } from "../../src/api/apiClient";
 import { useRouter, useFocusEffect } from "expo-router";
 import { EventEmitter } from "events";
+import { createNewFavourite, fetchFavouritesByUserId, updateFavouriteData } from "../../src/services/favouriteServices";
 
 const { width } = Dimensions.get("window");
 
@@ -29,11 +31,8 @@ if (!global.EventEmitter) {
 const RestaurantCard = ({ restaurant, onRefresh }) => {
   const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
-  const [isFavorite, setIsFavorite] = useState(
-    restaurant?.favourites?.includes(user?.id) || false
-  );
+  const [isFavorite, setIsFavorite] = useState(true);
 
-  // console.log('is', restaurant)
   const handleFavoritePress = async () => {
     if (!isAuthenticated) {
       router.push("/pages/Login");
@@ -41,123 +40,134 @@ const RestaurantCard = ({ restaurant, onRefresh }) => {
     }
 
     try {
-      const updatedFavorites = isFavorite
-        ? restaurant?.favourites?.filter((id) => id !== user?.id) || []
-        : [...(restaurant?.favourites || []), user?.id];
+      const response = await fetchFavouritesByUserId(user.id);
+      const favoriteData = response?.data?.[0]; // Get the existing favorite entry, if available
+      {
+        // Update existing favorite 
+        // Extract IDs from the existing favorite restaurants
+        const existingRestaurantIds = favoriteData.restaurants.map((fav) => fav.id);
 
-      const payload = {
-        data: {
-          favourites: updatedFavorites,
-          name: restaurant?.name,
-          description: restaurant?.description,
-          address: restaurant?.address,
-          rating: restaurant?.rating,
-          categories: restaurant?.categories,
-          reviews: restaurant?.reviews,
-          image:
-            restaurant?.image?.map((img) => ({
-              id: img.id,
-              name: img.name,
-              alternativeText: img.alternativeText,
-              url: img.url,
-            })) || [],
-        },
-      };
+        const updatedRestaurants = isFavorite
+          ? existingRestaurantIds.filter((id) => id !== restaurant.id) // Remove the current restaurant if it's already a favorite
+          : [...existingRestaurantIds, restaurant.id]; // Add the current restaurant ID if not already a favorite
 
-      Object.keys(payload.data).forEach((key) => {
-        if (payload.data[key] === undefined || payload.data[key] === null) {
-          delete payload.data[key];
-        }
-      });
+        const updatePayload = {
+          data: {
+            restaurants: updatedRestaurants,
+          },
+        };
 
-      await updateRestaurantDetails(restaurant.documentId, payload);
-      setIsFavorite(!isFavorite);
-
-      if (onRefresh) {
-        onRefresh();
+        await updateFavouriteData(favoriteData.documentId, updatePayload);
       }
 
-      global.EventEmitter?.emit("favoritesUpdated");
+      // Toggle the favorite state
+      setIsFavorite((prev) => !prev);
+      global.EventEmitter.emit("favoritesUpdated");
     } catch (error) {
       console.error("Error updating favorites:", error);
     }
   };
+
+  const goToRestaurantScreen = () => {
+    router.push({
+      pathname: "pages/RestaurantScreen",
+      params: {
+        id: restaurant.id,
+        documentId: restaurant.documentId,
+        isFavoriteItem: isFavorite,
+      },
+    })
+  };
+
+  const imageUrl =
+    (restaurant.image && restaurant.image[0]?.url)
+      ? `${MEDIA_BASE_URL}${restaurant.image[0].url}`
+      : Restro;
 
   if (!restaurant) {
     return null;
   }
 
   return (
-    <View style={styles.card}>
-      <Image
-        source={
-          restaurant?.image?.[0]?.url
-            ? { uri: `${MEDIA_BASE_URL}${restaurant.image[0].url}` }
-            : Restro
-        }
-        style={styles.image}
-        resizeMode="cover"
-      />
-      <View style={styles.iconContainer}>
-        <View style={styles.heart}>
-          <TouchableOpacity onPress={handleFavoritePress}>
-            <Ionicons
-              name="heart"
-              size={20}
-              color='red'
-              // color={isFavorite ? "red" : "white"}
-              style={styles.icon}
-            />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.heart}>
-          <TouchableOpacity
+    <TouchableOpacity onPress={goToRestaurantScreen}>
+      <View style={styles.card}>
+        <Image
+          source={{ uri: imageUrl }
+            // restaurant?.image?.[0]?.url
+            //   ? { uri: `${MEDIA_BASE_URL}${restaurant.image[0].url}` }
+            //   : Restro
+          }
+          style={styles.image}
+          resizeMode="cover"
+        />
+        <View style={styles.iconContainer}>
+          <View style={styles.heart}>
+            <TouchableOpacity onPress={handleFavoritePress}>
+              <Ionicons
+                name="heart"
+                size={20}
+                color='white'
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.heart}>
+            <TouchableOpacity
               onPress={() => router.push("pages/Chat")}
-          >
-            <Ionicons
-              name="chatbubble-outline"
-              size={20}
-              color="white"
-              style={styles.icon}
-            />
-          </TouchableOpacity>
+            >
+              <Ionicons
+                name="chatbubble-outline"
+                size={20}
+                color="white"
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-      <View style={styles.ratingContainer}>
-        <Text style={styles.ratingText}>{restaurant?.rating || 0} ⭐</Text>
-        {/* <Text style={styles.reviewText}>
+        <View style={styles.ratingContainer}>
+          <Text style={styles.ratingText}>{restaurant?.rating || 0} ⭐</Text>
+          {/* <Text style={styles.reviewText}>
           ({restaurant?.reviews?.length || 0}+)
         </Text> */}
+        </View>
+        <View style={styles.detailsContainer}>
+          <Text style={styles.name}>
+            {restaurant.name?.length > 20
+              ? `${restaurant.name?.substring(0, 20)}...`
+              : restaurant.name}
+          </Text>
+        </View>
       </View>
-      <View style={styles.detailsContainer}>
-        <Text style={styles.name}>
-          {restaurant?.name || "Unnamed Restaurant"}
-        </Text>
-      </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
 const Favourites = () => {
-  const [favorites, setFavorites] = useState([]);
+  const [favoriteRestaurants, setFavoriteRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuthStore();
   const router = useRouter();
 
   const fetchFavorites = React.useCallback(async () => {
     if (!user) {
-      setFavorites([]);
+      setFavoriteRestaurants([]);
       setLoading(false);
       return;
     }
-
     try {
       setLoading(true);
-      const response = await getFavoriteRestaurantsForUser(user.id);
-      setFavorites(response?.data || []);
+      const response = await fetchFavouritesByUserId(user.id);
+      const favoriteIds = response?.data?.[0]?.restaurants || [];
+      const restaurantDetails = await Promise.all(
+        favoriteIds.map(async (restaurant) => {
+          const restaurantData = await fetchRestaurantDetails(restaurant.documentId);
+          return restaurantData.data;
+        })
+      );
+      setFavoriteRestaurants(restaurantDetails);
     } catch (error) {
       console.error("Error fetching favorites:", error);
-      setFavorites([]);
+      setFavoriteRestaurants([]);
     } finally {
       setLoading(false);
     }
@@ -200,7 +210,7 @@ const Favourites = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Your Favorites</Text>
-      {!favorites || favorites.length === 0 ? (
+      {!favoriteRestaurants || favoriteRestaurants.length === 0 ? (
         <Text style={styles.noFavorites}>No favorite restaurants yet</Text>
       ) : (
         <ScrollView
@@ -208,11 +218,11 @@ const Favourites = () => {
           showsHorizontalScrollIndicator={false}
           style={styles.scrollContainer}
         >
-          {favorites.map((restaurant) => (
+          {favoriteRestaurants?.map((restaurant) => (
             <RestaurantCard
               key={restaurant?.id || Math.random().toString()}
               restaurant={restaurant}
-              onRefresh={fetchFavorites}
+            // onRefresh={fetchFavorites}
             />
           ))}
         </ScrollView>

@@ -11,32 +11,32 @@ import {
 import Restro from "../../assets/Restro.png";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { getAllRestaurants } from "../../src/api/repositories/restaurantRepositories";
-import { MEDIA_BASE_URL } from "../../src/api/apiClient";
-import { updateRestaurantDetails } from "../../src/services/restaurantServices";
+import { BASE_URL, MEDIA_BASE_URL } from "../../src/api/apiClient";
+import { fetchAllRestaurants, updateRestaurantDetails } from "../../src/services/restaurantServices";
 import useAuthStore from "../../useAuthStore";
 import axios from 'axios';
+import { createNewFavourite, fetchFavouritesByUserId, updateFavouriteData } from "../../src/services/favouriteServices";
+import { calculateDistanceFromUser } from "../../src/utils/distanceUtils";
+import Favourites from "./Favorites";
+import { getRestaurants } from "../../src/api/repositories/restaurantRepositories";
 
 const { width } = Dimensions.get("window");
 
 const RestaurantCard = ({ restaurant, onPress }) => {
   const router = useRouter();
   const { user, isAuthenticated, latitude, longitude } = useAuthStore();
-  const userLocation = useAuthStore((state) => state.location); // Getting the user's location from Zustand
-  const [isFavorite, setIsFavorite] = useState(
-    // restaurant.favourites?.includes(user?.id)
-    restaurant.favourites.some(fav => fav.id === user?.id)
-  );
+  // const userLocation = useAuthStore((state) => state.location); // Getting the user's location from Zustand
+  const [isFavorite, setIsFavorite] = useState(false);
   const [distance, setDistance] = useState(null); // State to hold the calculated distance
 
- // Hardcoded coordinates for the restaurant (replace with actual data in real scenarios)
- const hardcodedCoordinates = {
-  latitude: 51.479342,
-  longitude: -0.298706,
-};
+  // Hardcoded coordinates for the restaurant (replace with actual data in real scenarios)
+  // const hardcodedCoordinates = {
+  //   latitude: 51.479342,
+  //   longitude: -0.298706,
+  // };
 
   // Function to fetch coordinates using a geocoding service (like Google Geocoding API)
-// const getCoordinatesFromAddress = async (address) => {
+  // const getCoordinatesFromAddress = async (address) => {
   // const API_KEY = 'AIzaSyDFQTSshpxEzndpEMEIDi_8f7OUGyh-Hs8';
   // const response = await axios.get(
   //   `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${API_KEY}`
@@ -49,80 +49,120 @@ const RestaurantCard = ({ restaurant, onPress }) => {
   //     longitude: location.lng,
   //   };
   // } 
-//   else {
-//     return null; // Return null if geocoding fails
-//   }
-// };
+  //   else {
+  //     return null; // Return null if geocoding fails
+  //   }
+  // };
 
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const toRad = (value) => (value * Math.PI) / 180;
-    const R = 6371; // Earth's radius in km
+  // const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  //   const toRad = (value) => (value * Math.PI) / 180;
+  //   const R = 6371; // Earth's radius in km
 
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distance in km
-  };
+  //   const dLat = toRad(lat2 - lat1);
+  //   const dLon = toRad(lon2 - lon1);
+  //   const a =
+  //     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+  //     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+  //     Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  //   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  //   return R * c; // Distance in km
+  // };
+
+  // useEffect(() => {
+  //   // Ensure that the user and restaurant locations are available before calculating distance
+  //   if (latitude && longitude) {
+  //     const dist = calculateDistance(
+  //       latitude,
+  //       longitude,
+  //       hardcodedCoordinates.latitude,
+  //       hardcodedCoordinates.longitude
+  //     );
+  //     setDistance(dist.toFixed(2)); // Round the distance to 2 decimal places
+  //   }
+  // }, [latitude, longitude, restaurant.location]);
 
   useEffect(() => {
-    // Ensure that the user and restaurant locations are available before calculating distance
-    if (latitude && longitude) {
-      const dist = calculateDistance(
-        latitude,
-        longitude,
-        hardcodedCoordinates.latitude,
-        hardcodedCoordinates.longitude
-      );
-      setDistance(dist.toFixed(2)); // Round the distance to 2 decimal places
-    }
-  }, [latitude, longitude, restaurant.location]); 
+    const fetchDistanceToRestaurant = async () => {
+      if (latitude && longitude && restaurant.location) {
+        const dist = await calculateDistanceFromUser(
+          { latitude, longitude },
+          restaurant.location
+        );
+        if (dist) setDistance(dist); // Round distance to 2 decimal places
+      }
+    };
+
+    fetchDistanceToRestaurant();
+  }, [latitude, longitude, restaurant.location]);
+
+  // Fetch user's favorites on mount
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (!user?.id) return;
+
+      try {
+        const response = await fetchFavouritesByUserId(user.id);
+        if (response?.data?.length > 0) {
+          const userFavorites = response.data[0]; // Assuming one favorite record per user
+          const isRestaurantFavorite = userFavorites.restaurants.some(
+            (favRestaurant) => favRestaurant.documentId === restaurant.documentId
+          );
+          setIsFavorite(isRestaurantFavorite);
+        }
+      } catch (error) {
+        console.error("Error fetching favorites:", error);
+      }
+    };
+
+    fetchFavorites();
+  }, [user?.id, restaurant.id]);
 
   const handleFavoritePress = async () => {
     if (!isAuthenticated) {
       router.push("/pages/Login");
       return;
     }
-
     try {
-      const currentFavorites = restaurant.favourites || [];
+      const response = await fetchFavouritesByUserId(user.id);
+      const favoriteData = response?.data?.[0]; // Get the existing favorite entry, if available
 
-      const updatedFavorites = isFavorite
-        ? currentFavorites.filter((id) => id !== user.id)
-        : [...currentFavorites, user.id];
+      if (!favoriteData) {
+        // Create new favorite entry
+        const newFavorite = {
+          user: { id: user.id }, // Associate the user
+          restaurants: [
+            {
+              id: restaurant.id,
+            },
+          ],
+        };
+        await createNewFavourite({ data: newFavorite });
+        console.log('Favourites created successfully')
+      } else {
+        // Update existing favorite 
+        // Extract IDs from the existing favorite restaurants
+      const existingRestaurantIds = favoriteData.restaurants.map((fav) => fav.id);
+        
+        const updatedRestaurants = isFavorite
+        ? existingRestaurantIds.filter((id) => id !== restaurant.id) // Remove the current restaurant if it's already a favorite
+        : [...existingRestaurantIds, restaurant.id]; // Add the current restaurant ID if not already a favorite
 
-      const cleanedImage = restaurant.image?.map((img) => ({
-        id: img.id,
-        name: img.name,
-        alternativeText: img.alternativeText,
-        url: img.url,
-      }));
+        const updatePayload = {
+          data: {
+            restaurants: updatedRestaurants,
+          },
+        };
 
-      const payload = {
-        data: {
-          name: restaurant.name,
-          favourites: updatedFavorites,
-          rating: restaurant.rating,
-          image: cleanedImage,
-        },
-      };
+        await updateFavouriteData(favoriteData.documentId, updatePayload);
+      }
 
-      Object.keys(payload.data).forEach((key) => {
-        if (payload.data[key] === undefined || payload.data[key] === null) {
-          delete payload.data[key];
-        }
-      });
-
-      await updateRestaurantDetails(restaurant.documentId, payload);
-      setIsFavorite(!isFavorite);
+      // Toggle the favorite state
+      setIsFavorite((prev) => !prev);
+      global.EventEmitter.emit("favoritesUpdated");
     } catch (error) {
       console.error("Error updating favorites:", error);
     }
   };
-
 
   const goToRestaurantScreen = () => {
     router.push({
@@ -130,15 +170,7 @@ const RestaurantCard = ({ restaurant, onPress }) => {
       params: {
         id: restaurant.documentId,
         documentId: restaurant.documentId,
-        name: restaurant.name,
-        rating: restaurant.rating,
-        categories: restaurant.categories,
-        location: restaurant.location,
-        image: imageUrl,
-        isFavorite,
-        ...(Array.isArray(restaurant.favourites) && restaurant.favourites.length > 0
-          ? { favourites: restaurant.favourites }
-          : {}),
+        isFavoriteItem: isFavorite,
       },
     })
   };
@@ -149,76 +181,76 @@ const RestaurantCard = ({ restaurant, onPress }) => {
       ? `${MEDIA_BASE_URL}${restaurant.image[0].url}`
       : Restro;
 
-      return (
-        <TouchableOpacity onPress={goToRestaurantScreen}>
-          <View style={styles.card}>
-            <Image source={{ uri: imageUrl }} style={styles.image} />
-            <View style={styles.iconContainer}>
-              <TouchableOpacity onPress={handleFavoritePress}>
-                <Ionicons
-                  name={isFavorite ? "heart" : "heart-outline"}
-                  size={20}
-                  color={isFavorite ? "red" : "white"}
-                  style={styles.icon}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push("pages/Chat")}>
-                <Ionicons
-                  name="chatbubble-outline"
-                  size={20}
-                  color="white"
-                  style={styles.icon}
-                />
-              </TouchableOpacity>
-            </View>
-    
-            <View style={styles.ratingContainer}>
-              <Text style={styles.ratingText}>{restaurant.rating} ⭐</Text>
-            </View>
-    
-            <View style={styles.detailsContainer}>
-              <Text style={styles.name}>{restaurant.name}</Text>
-              <Text style={styles.location}>
-                {restaurant.location?.length > 20
-                  ? `${restaurant.location?.substring(0, 20)}...`
-                  : restaurant.location}
-              </Text>
-    
-              {distance && (
-                <Text style={styles.distanceText}>
-                  {distance} km away
-                </Text>
-              )}
-    
-              <View style={styles.categories}>
-                {Array.isArray(restaurant.categories) &&
-                  restaurant.categories.map((category, index) => (
-                    <Text key={index} style={styles.category}>
-                      {category}
-                    </Text>
-                  ))}
-              </View>
-    
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={goToRestaurantScreen}>
-                  <Text style={styles.buttonText}>View details</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+  return (
+    <TouchableOpacity onPress={goToRestaurantScreen}>
+      <View style={styles.card}>
+        <Image source={{ uri: imageUrl }} style={styles.image} />
+        <View style={styles.iconContainer}>
+          <View style={styles.heart}>
+            <TouchableOpacity onPress={handleFavoritePress}>
+              <Ionicons
+                name={isFavorite ? "heart" : "heart-outline"}
+                size={20}
+                color={isFavorite ? "white" : "white"}
+                style={styles.icon}
+              />
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
-      );
+          <View style={styles.heart}>
+            <TouchableOpacity onPress={() => router.push("pages/Chat")}>
+              <Ionicons
+                name="chatbubble-outline"
+                size={20}
+                color="white"
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.ratingContainer}>
+          <Text style={styles.ratingText}>{restaurant.rating} ⭐</Text>
+        </View>
+
+        <View style={styles.detailsContainer}>
+          <Text style={styles.name}>
+            {restaurant.name?.length > 20
+              ? `${restaurant.name?.substring(0, 20)}...`
+              : restaurant.name}
+          </Text>
+          <Text style={styles.location}>
+            {restaurant.location?.length > 20
+              ? `${restaurant.location?.substring(0, 20)}...`
+              : restaurant.location}
+          </Text>
+
+          {distance && (
+            <Text style={styles.distanceText}>
+              {distance} km away
+            </Text>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
 };
 
-const RestaurantRecommendation = ({ restaurants }) => {
+const RestaurantRecommendation = () => {
   const [restaurantData, setRestaurantData] = useState([]);
-  // console.log(restaurants)
 
   useEffect(() => {
-    // Update the list of restaurants whenever filteredRestaurants changes
-    setRestaurantData(restaurants);
-  }, [restaurants]); // dependency array ensures this runs on updates to filteredRestaurants
-
+    const collectRestaurants = async () => {
+      try {
+        const response = await fetchAllRestaurants();
+        setRestaurantData(response.data);
+      }
+      catch (error) {
+        console.error("Error fetching restaurants:", error);
+        setRestaurantData([])
+      }
+    }
+    collectRestaurants()
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -230,7 +262,6 @@ const RestaurantRecommendation = ({ restaurants }) => {
       >
         {Array.isArray(restaurantData) &&
           restaurantData.map((restaurant) => (
-            // console.log(restaurant)
             <RestaurantCard key={restaurant.id} restaurant={restaurant} />
           ))}
       </ScrollView>
@@ -264,7 +295,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
     elevation: 5,
-    height: 275,
+    maxHeight: 240,
+    minHeight: 240,
   },
   image: {
     width: "100%",

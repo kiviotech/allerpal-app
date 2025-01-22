@@ -4,8 +4,7 @@ import { useRouter } from "expo-router";
 import { TouchableOpacity } from "react-native";
 import ReviewForm from "./ReviewForm";
 
-const ReviewsSection = ({ restaurantId }) => {
-  console.log("rest", restaurantId);
+const ReviewsSection = ({ id, restaurantId }) => {
   const router = useRouter();
   return (
     <View style={styles.container}>
@@ -19,7 +18,8 @@ const ReviewsSection = ({ restaurantId }) => {
           router.push({
             pathname: "pages/ReviewForm",
             params: {
-              id: restaurantId,
+              id: id,
+              // documentId: restaurantId,
             },
           })
         }

@@ -8,6 +8,7 @@ const useAuthStore = create(
       isAuthenticated: false,
       jwt: null,
       documentId: null,
+      profileId: null,
       latitude: null, // Add latitude state
       longitude: null, // Add longitude state
       location: null, // Add location state
@@ -19,12 +20,15 @@ const useAuthStore = create(
           isAuthenticated: false,
           jwt: null,
           documentId: null,
-          latitude: null,
-          longitude: null,
+          profileId: null,
+          latitude: null, // Reset latitude on logout
+          longitude: null, // Reset longitude on logout
           location: null, // Reset location on logout
         }),
       setDocumentId: (id) => set({ documentId: id }),
-      setLocation: (lat, lon, loc) => set({ latitude: lat, longitude: lon, location: loc }), // Add method to set location
+      setProfileId: (id) => set({ profileId: id }),
+      setLocation: (lat, lon, loc) =>
+        set({ latitude: lat, longitude: lon, location: loc }), // Add method to set location
     }),
     {
       name: "auth-storage",

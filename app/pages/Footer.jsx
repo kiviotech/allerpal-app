@@ -527,20 +527,20 @@ const Footer = () => {
         {/* Community Tab */}
         <TouchableOpacity
           style={styles.footerItem}
-          onPress={() => handleTabPress("/pages/Community")}
+          onPress={() => handleTabPress("/pages/Blog")}
         >
           <Ionicons
-            name={isActiveTab("/pages/Community") ? "people" : "people-outline"}
+            name={isActiveTab("/pages/Blog") ? "newspaper" : "newspaper-outline"}
             size={24}
-            color={isActiveTab("/pages/Community") ? "#00aced" : "#888"}
+            color={isActiveTab("/pages/Blog") ? "#00aced" : "#888"}
           />
           <Text
             style={[
               styles.footerText,
-              isActiveTab("/pages/Community") && styles.activeFooterText,
+              isActiveTab("/pages/Blog") && styles.activeFooterText,
             ]}
           >
-            Community
+            Blog
           </Text>
         </TouchableOpacity>
 

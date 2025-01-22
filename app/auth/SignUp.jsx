@@ -62,7 +62,6 @@ const SignUp = ({ navigation }) => {
       setErrors(validationErrors);
       return;
     }
-
     setErrors({});
     setLoading(true);
 
@@ -75,18 +74,21 @@ const SignUp = ({ navigation }) => {
       // If signup is successful, navigate to the AccountSetup page
       router.push("../pages/AccountSetup");
     } catch (error) {
-      console.error("Signup error:", error);
-      // if (error.response && error.response.data) {
-      const backendMessage = error.response.data.error.message;
+      let errorMessage = "Something went wrong. Please try again later.";
+      
+      if (error.message === "Network Error") {
+        errorMessage = "Something went wrong. Please try again later.";
+      } else if (error.response?.data?.error?.message) {
+        const backendMessage = error.response.data.error.message;
 
-      setErrors((prevErrors) => {
-        const updatedErrors = { ...prevErrors };
         if (backendMessage.includes("Email or Username are already taken")) {
-          updatedErrors.general = "Email or Username are already taken.";
+          errorMessage = "Email or Username are already taken.";
+        } else {
+          errorMessage = backendMessage;
         }
-        return updatedErrors;
-      });
-      // }
+      }
+      setErrors({ general: errorMessage });
+      console.error("Signup error:", error);
     } finally {
       setLoading(false);
     }
@@ -105,7 +107,7 @@ const SignUp = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+      <View style={styles.contentContainer}>
         <Text style={styles.title}>Sign Up</Text>
 
         {errors.general && <Text style={styles.errorText}>{errors.general}</Text>}
@@ -168,17 +170,17 @@ const SignUp = ({ navigation }) => {
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Confirm Password</Text>
           <View style={styles.input}>
-          <TextInput
-            style={styles.inputField}
-            placeholder="Re-enter your password"
-            placeholderTextColor={"#B3B3B3"}
-            secureTextEntry={!showConfirmPassword}
-            value={formData.confirmPassword}
-            onChangeText={(value) =>
-              handleInputChange("confirmPassword", value)
-            }
-          />
-          <TouchableOpacity
+            <TextInput
+              style={styles.inputField}
+              placeholder="Re-enter your password"
+              placeholderTextColor={"#B3B3B3"}
+              secureTextEntry={!showConfirmPassword}
+              value={formData.confirmPassword}
+              onChangeText={(value) =>
+                handleInputChange("confirmPassword", value)
+              }
+            />
+            <TouchableOpacity
               onPress={() => setShowConfirmPassword((prev) => !prev)}
               style={styles.eyeIcon}
             >
@@ -188,7 +190,7 @@ const SignUp = ({ navigation }) => {
                 color="#B3B3B3"
               />
             </TouchableOpacity>
-            </View>
+          </View>
           {errors.confirmPassword && (
             <Text style={styles.errorText}>{errors.confirmPassword}</Text>
           )}
@@ -204,25 +206,27 @@ const SignUp = ({ navigation }) => {
             Login
           </Text>
         </Text>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
 
-// ~======================================================================================
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    alignItems: "center",
     padding: "5%",
     width: "100%",
   },
   contentContainer: {
-    flexGrow: 1,
+    flex: 1,
+    width: '100%',
     justifyContent: "center",
     alignItems: "center",
     paddingBottom: "10%",
+    maxWidth: 500,
   },
   title: {
     fontSize: width < 360 ? 26 : 30,

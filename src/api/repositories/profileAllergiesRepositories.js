@@ -7,6 +7,9 @@ export const getAllProfileAllergies = () =>
 export const getProfileAllergyById = (id) =>
   apiClient.get(profileAllergiesEndpoints.getProfileAllergyById(id));
 
+export const getProfileAllergyByProfileId = (id) =>
+  apiClient.get(profileAllergiesEndpoints.getProfileAllergiesbyProfileId(id));
+
 export const createProfileAllergy = (data) =>
   apiClient.post(profileAllergiesEndpoints.createProfileAllergy, data);
 

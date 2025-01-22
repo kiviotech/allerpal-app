@@ -21,30 +21,48 @@ import { fetchMenuByRestaurantId } from "../../src/services/menuServices";
 import * as Location from 'expo-location';
 import useAuthStore from "../../useAuthStore";
 import restaurantURL from '../../assets/restaurant.png'
+import { fetchRestaurantDetails } from "../../src/services/restaurantServices";
+import { MEDIA_BASE_URL } from "../../src/api/apiClient";
+import { calculateDistanceFromUser } from "../../src/utils/distanceUtils";
+import { createNewFavourite, fetchFavouritesByUserId, updateFavouriteData } from "../../src/services/favouriteServices";
 
 
 export default function () {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, latitude, longitude } = useAuthStore();
+  const { id, documentId, isFavoriteItem } = useLocalSearchParams();
   const [menuData, setMenuData] = useState([]);
   const [isAllergenOn, setIsAllergenOn] = React.useState(false);
   const [type, setType] = useState("normal");
   const [isFavorite, setIsFavorite] = useState(false);
   const scrollViewRef = useRef(null); // Added ref for ScrollView
+  const [restaurantData, setRestaurantData] = useState([]);
+  const [distance, setDistance] = useState(null);
 
   const toggleAllergen = (value) => {
     setIsAllergenOn(value);
     setType(value ? "allergen" : "normal"); // Set type based on switch
   };
 
-  const { id, name, rating, categories, image, documentId, location, isFavourite, favourites } =
-  useLocalSearchParams();
-
+  useEffect(() => {
+    // Set initial favorite state based on isFavoriteItem
+    setIsFavorite(isFavoriteItem === 'true'); // Ensure proper boolean handling
+  }, [isFavoriteItem]);
 
   useEffect(() => {
+    const collectRestaurants = async () => {
+      try {
+        const response = await fetchRestaurantDetails(documentId);
+          setRestaurantData(response.data);
+      }
+      catch (error) {
+        console.error("Error fetching restaurants:", error);
+        setRestaurantData([])
+      }
+    }
     const fetchMenus = async () => {
       try {
-        const response = await fetchMenuByRestaurantId(id);
+        const response = await fetchMenuByRestaurantId(documentId);
         if (response?.data) {
           setMenuData(response.data);
         }
@@ -52,9 +70,9 @@ export default function () {
         console.error("Error fetching menus:", error);
       }
     };
-  
+    collectRestaurants();
     fetchMenus();
-  }, [id]);
+  }, []);
 
   const handleFavoritePress = async () => {
     if (!user) {
@@ -62,63 +80,70 @@ export default function () {
       router.push("/pages/Login");
       return;
     }
-    setIsFavorite(!isFavorite)
-
-  
-    // try {
-    //   // Initialize favourites array if not present
-    //   const currentFavorites = restaurant.favourites || [];
-  
-    //   // Toggle favorite status
-    //   const updatedFavorites = isFavourite
-    //     ? currentFavorites.filter((favId) => favId !== user.id) // Remove user from favorites
-    //     : [...currentFavorites, user.id]; // Add user to favorites
-  
-    //   // Prepare image data for payload
-    //   const cleanedImage = image
-    //     ? [
-    //         {
-    //           id: image.id,
-    //           name: image.name,
-    //           alternativeText: image.alternativeText,
-    //           url: image.url,
-    //         },
-    //       ]
-    //     : [];
-  
-    //   // Construct payload
-    //   const payload = {
-    //     data: {
-    //       name,
-    //       favourites: updatedFavorites,
-    //       rating,
-    //       image: cleanedImage,
-    //     },
-    //   };
-  
-    //   // Remove undefined or null fields from payload
-    //   Object.keys(payload.data).forEach((key) => {
-    //     if (payload.data[key] === undefined || payload.data[key] === null) {
-    //       delete payload.data[key];
-    //     }
-    //   });
-  
-    //   // Update restaurant details in the backend
-    //   await updateRestaurantDetails(documentId, payload);
-  
-    //   // Update local state
-    //   setIsFavorite(!isFavourite);
-    // } catch (error) {
-    //   console.error("Error updating favorites:", error);
-    // }
+    try {
+          const response = await fetchFavouritesByUserId(user.id);
+          const favoriteData = response?.data?.[0]; // Get the existing favorite entry, if available
+    
+          if (!favoriteData) {
+            // Create new favorite entry
+            const newFavorite = {
+              user: { id: user.id }, // Associate the user
+              restaurants: [
+                {
+                  id: restaurantData.id,
+                  // documentId: restaurant.documentId,
+                },
+              ],
+              // menu_items: [],
+            };
+            await createNewFavourite({ data: newFavorite });
+            console.log('Favourites created successfully')
+          } else {
+            // Update existing favorite 
+            // Extract IDs from the existing favorite restaurants
+          const existingRestaurantIds = favoriteData.restaurants.map((fav) => fav.id);
+            
+            const updatedRestaurants = isFavorite
+            ? existingRestaurantIds.filter((id) => id !== restaurantData.id) // Remove the current restaurant if it's already a favorite
+            : [...existingRestaurantIds, restaurantData.id]; // Add the current restaurant ID if not already a favorite
+            
+            const updatePayload = {
+              data: {
+                restaurants: updatedRestaurants,
+              },
+            };
+    
+            await updateFavouriteData(favoriteData.documentId, updatePayload);
+          }
+          // Toggle the favorite state
+          setIsFavorite((prev) => !prev);
+        } catch (error) {
+          console.error("Error updating favorites:", error);
+        }
   };
+
+    useEffect(() => {
+      const fetchDistanceToRestaurant = async () => {
+        if (latitude && longitude && restaurantData.location) {
+          const dist = await calculateDistanceFromUser(
+            { latitude, longitude },
+            restaurantData.location
+          );
+          if (dist) setDistance(dist); // Round distance to 2 decimal places
+        }
+      };
   
+      fetchDistanceToRestaurant();
+    }, [latitude, longitude, restaurantData.location]);
 
   const filteredMenuItems = menuData.filter((item) => item.type === type);
 
-  const callResto = () => {
-    const phoneNumber = '+918277238505'; // Replace with the restaurant's phone number
-
+  const callResto = (contact_number) => {
+    const phoneNumber = contact_number; // Replace with the restaurant's phone number
+    if (!phoneNumber) {
+      Alert.alert('No phone number available');
+      return;
+    }
     // Open the phone dialer
     Linking.openURL(`tel:${phoneNumber}`).catch((err) =>
       Alert.alert('Error', 'Unable to make a call. Please try again later.')
@@ -139,7 +164,7 @@ export default function () {
         accuracy: Location.Accuracy.High,
       });
 
-      console.log("Current Location Coordinates:", currentLocation.coords);
+      // console.log("Current Location Coordinates:", currentLocation.coords);
 
       // Get latitude and longitude from current location
       const { latitude, longitude } = currentLocation.coords;
@@ -166,6 +191,14 @@ export default function () {
     });
   };
 
+  const getImageSource = () => {
+    if (Array.isArray(restaurantData.image) && restaurantData.image.length > 0) {
+      // Assuming `url` is the correct property for the image URL
+      return { uri: `${MEDIA_BASE_URL}${restaurantData.image[0]?.url}` || restaurantURL };
+    }
+    return restaurantURL;
+  };
+
   return (
     <SafeAreaView style={styles.AreaContainer}>
       <ScrollView ref={scrollViewRef}> {/* Assigned ref to ScrollView */}
@@ -180,55 +213,61 @@ export default function () {
                 <Ionicons
                   name={isFavorite ? "heart" : "heart-outline"}
                   size={20}
-                  color={isFavorite ? "red" : "white"}
-                // style={styles.icon}
+                  color={isFavorite ? "white" : "white"}
                 />
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Image Section */}
-          <Image source={{ uri: image ? image : restaurantURL }} style={styles.image} />
+          <Image
+            source={getImageSource()}
+            style={styles.image}
+          />
 
           {/* Restaurant Details */}
           <View style={styles.detailsContainer}>
             {/* Restaurant Name and Icons */}
             <View style={styles.titleRow}>
-              <Text style={styles.restaurantName}>{name}</Text>
+              <Text style={styles.restaurantName}>{restaurantData?.name}</Text>
               <View style={styles.iconRow}>
-                <TouchableOpacity style={styles.iconButton} onPress={callResto}>
-                  <FontAwesome name="phone" size={20} color="#ff6347" />
+                <TouchableOpacity onPress={() => 
+                  callResto(restaurantData?.contact_number? restaurantData?.contact_number : "+918277238505" )}>
+                  <FontAwesome name="phone" size={26} color="#ff6347" />
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.iconButton, styles.mapIcon]} onPress={openLocation}>
-                  <FontAwesome name="map-marker" size={20} color="#ff6347" />
+                <TouchableOpacity onPress={openLocation}>
+                  <FontAwesome name="map-marker" size={26} color="#ff6347" />
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Rating and Reviews */}
-            <View style={styles.ratingRow}>
-              <FontAwesome name="star" size={16} color="#FFD700" />
-              <Text style={styles.ratingText}>{rating} </Text>
-              {/* <Text style={styles.reviewText}>(30+)</Text> */}
-              <TouchableOpacity onPress={scrollToReviews}> {/* onPress now calls scrollToReviews */}
-                <Text style={styles.reviewLink}>See Reviews</Text>
-              </TouchableOpacity>
-            </View>
-
             <View style={styles.categories}>
-              {Array.isArray(categories) &&
-                categories.map((category, index) => (
+              {Array.isArray(restaurantData?.cuisines) &&
+                restaurantData?.cuisines.map((cuisine, index) => (
                   <Text key={index} style={styles.category}>
-                    {category}
+                    {cuisine.cuisine_type}
                   </Text>
                 ))}
             </View>
 
             {/* Distance and Address */}
-            <Text style={styles.addressText}>
-              <FontAwesome name="walking" size={14} color="#ff6347" /> 
-              {location}
-            </Text>
+            <View >
+              <View style={styles.addressRow}>
+                <FontAwesome name="map-marker" size={14} color="#ff6347" />
+                <Text style={styles.addressText}>{restaurantData?.location}</Text>
+              </View>
+              <Text style={styles.addressText}>{distance} Km away</Text>
+            </View>
+
+            {/* Rating and Reviews */}
+            <View style={styles.ratingRow}>
+              <FontAwesome name="star" size={16} color="#FFD700" />
+              <Text style={styles.ratingText}>{restaurantData?.rating} </Text>
+              {/* <Text style={styles.reviewText}>(30+)</Text> */}
+              <TouchableOpacity onPress={scrollToReviews}> {/* onPress now calls scrollToReviews */}
+                <Text style={styles.reviewLink}>See Reviews</Text>
+              </TouchableOpacity>
+            </View>
 
             {/* Contact Button */}
             <TouchableOpacity
@@ -240,7 +279,7 @@ export default function () {
 
             {/* Allergen Toggle */}
             <View style={styles.allergenContainer}>
-              <Text style={styles.allergenText}>Your Allergens</Text>
+              <Text style={styles.allergenText}>{isAllergenOn ? 'Your Allergen Menu' : 'Normal Menu'}</Text>
               <Switch
                 value={isAllergenOn}
                 onValueChange={toggleAllergen}
@@ -252,19 +291,19 @@ export default function () {
         </View>
 
         {/* Menu Card or Message */}
-        <View>
-          {filteredMenuItems.length > 0 ? (
-            <MenuCard menuItems={filteredMenuItems} />
-          ) : (
-            <Text style={styles.noItemsText}>
-              There are no foods available for this option.
-            </Text>
-          )}
-        </View>
+        {/* <View> */}
+        {filteredMenuItems.length > 0 ? (
+          <MenuCard menuItems={filteredMenuItems} />
+        ) : (
+          <Text style={styles.noItemsText}>
+            There are no foods available for this option.
+          </Text>
+        )}
+        {/* </View> */}
 
         {/* Review Section */}
         <View style={styles.Review}>
-          <ReviewsSection restaurantId={documentId} />
+          <ReviewsSection restaurantId={documentId} id={id} />
         </View>
         <View>
           <ReviewCards restaurantId={documentId} />
@@ -282,24 +321,20 @@ const styles = StyleSheet.create({
   categories: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginBottom: 10,
+    gap: 10,
+    marginVertical: 10,
   },
   category: {
-    fontSize: 12,
+    fontSize: 16,
     color: "#555",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     backgroundColor: "#eee",
     borderRadius: 15,
-    marginRight: 4,
-    marginBottom: 4,
   },
-
   AreaContainer: {
     flex: 1,
     padding: 10,
-    // marginTop: 20,
-    //  backgroundColor: '#fff',
     width: "100%",
   },
   container: {
@@ -331,12 +366,10 @@ const styles = StyleSheet.create({
   },
   iconRow: {
     flexDirection: "row",
-  },
-  iconButton: {
-    marginLeft: 8,
-  },
-  mapIcon: {
-    marginLeft: 16, // Extra space between phone and map marker icons
+    alignItems: 'center',
+    maxWidth: '15%',
+    minWidth: '15%',
+    justifyContent: 'space-between',
   },
   ratingRow: {
     flexDirection: "row",
@@ -358,36 +391,46 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     textDecorationLine: "underline",
   },
+  addressRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
   addressText: {
     fontSize: 16,
     color: "#000000",
-    marginVertical: 8,
+    marginVertical: 5,
   },
   contactButton: {
     backgroundColor: "#00D0DD",
-    paddingVertical: 12,
-    borderRadius: 25,
+    paddingVertical: 10,
+    borderRadius: 10,
     alignItems: "center",
-    marginVertical: 8,
-    height: 50,
-    width: 120,
+    marginVertical: 5,
+    paddingHorizontal: 8,
+    width: '50%',
   },
   contactButtonText: {
     color: "#fff",
-    fontSize: 10,
+    fontSize: 16,
     fontWeight: "bold",
     alignItems: "center",
-    top: 5,
   },
   allergenContainer: {
+    width: '50%',
     flexDirection: "row",
-    // justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: "center",
-    marginTop: 16,
+    marginTop: 10,
   },
   allergenText: {
     fontSize: 16,
     color: "#000000",
+  },
+  noItemsText: {
+    fontSize: 16,
+    padding: 15,
   },
   heart: {
     width: 30,

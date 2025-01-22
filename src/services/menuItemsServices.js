@@ -4,6 +4,7 @@ import {
   createMenuItem,
   updateMenuItem,
   deleteMenuItem,
+  getMenuItemBySubcuisine,
 } from "./../api/repositories/menuItemsRepositories";
 
 // Fetch all menu items
@@ -21,6 +22,17 @@ export const fetchAllMenuItems = async () => {
 export const fetchMenuItemById = async (id) => {
   try {
     const response = await getMenuItemById(id);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching menu item with ID ${id}:`, error);
+    throw error;
+  }
+};
+
+// Fetch a menu item by subcuisine
+export const fetchMenuItemBySubcuisine = async (id) => {
+  try {
+    const response = await getMenuItemBySubcuisine(id);
     return response.data;
   } catch (error) {
     console.error(`Error fetching menu item with ID ${id}:`, error);

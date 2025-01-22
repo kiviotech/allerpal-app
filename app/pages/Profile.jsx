@@ -17,12 +17,14 @@ import useAuthStore from '../../useAuthStore';
 import { fetchUserAllergyById } from '../../src/services/userAllergyServices';
 import { MEDIA_BASE_URL } from '../../src/api/apiClient';
 import useAllergyStore from '../../src/stores/allergyStore';
+import { fetchProfileAllergyById, fetchProfileAllergyByProfileId } from '../../src/services/profileAllergiesServices';
 
 const Profile = () => {
   const router = useRouter()
   const [allergens, setAllergens] = useState([]); // Dynamic allergens state
   const [loading, setLoading] = useState(true); // Loading state for allergens
   const [editing, setEditing] = useState(false);
+  const profileId = useAuthStore((state) => state.profileId);
   const setSelectedAllergies = useAllergyStore(
     (state) => state.setSelectedAllergies
   );
@@ -31,21 +33,33 @@ const Profile = () => {
   const userId = user?.id;
 
   useEffect(() => {
-    const fetchAllergies = async () => {
-      try {
-        const data = await fetchUserAllergyById(userId); // Fetch allergens dynamically
-        const allergies = data?.data?.map((item) => item.allergies).flat() || [];
-        setAllergens(allergies);
-        setSelectedAllergies(allergies); // Store selected allergies globally if needed
-      } catch (error) {
-        console.error('Error fetching allergies:', error);
-      } finally {
+    const getAllergiesOfUser = async () => {
+          try {
+            const response = await fetchProfileAllergyByProfileId(profileId);
+            console.log('allergies of user', response.data[0].allergies)
+            setAllergens(response.data[0].allergies)
+          } catch (error) {
+            console.warn("Error fetching profile allergies");
+          }
+        // };
+    // const fetchAllergies = async () => {
+    //   try {
+    //     const data = await fetchProfileAllergyById(userId); // Fetch allergens dynamically
+    //     console.log('userallergy', data)
+    //     const allergies = data?.data?.map((item) => item.allergies).flat() || [];
+    //     setAllergens(allergies);
+    //     setSelectedAllergies(allergies); // Store selected allergies globally if needed
+    //   } catch (error) {
+    //     console.error('Error fetching allergies:', error);
+      // } 
+      finally {
         setLoading(false);
       }
     };
 
     if (userId) {
-      fetchAllergies();
+      getAllergiesOfUser()
+      // fetchAllergies();
     }
   }, [userId, setSelectedAllergies]);
 
@@ -74,7 +88,7 @@ const Profile = () => {
         <TextInput
           style={styles.input}
           placeholder="Full name"
-          defaultValue={user.username}
+          defaultValue={user?.username}
         />
 
         <Text style={styles.label}>E-mail</Text>
@@ -82,7 +96,7 @@ const Profile = () => {
           style={styles.input}
           placeholder="Email"
           keyboardType="email-address"
-          defaultValue={user.email}
+          defaultValue={user?.email}
           editable={false} // Disable editing for email if needed
         />
 
@@ -118,17 +132,9 @@ const Profile = () => {
                 <Text style={styles.noDataText}>No allergies found</Text>
               ) : (
                 allergens.map((allergen, index) => {
-                  const imageUrl = allergen?.Allergeimage?.[0]?.url
-                    ? `${MEDIA_BASE_URL}${allergen.Allergeimage[0].url}`
-                    : null;
-
                   return (
                     <TouchableOpacity key={index} style={styles.allergenTag}>
-                      {imageUrl ? (
-                        <Image source={{ uri: imageUrl }} style={styles.image} />
-                      ) : (
-                        <Icon name="leaf-outline" size={16} color="#00CFFF" />
-                      )}
+                      <Image source={{uri: `${MEDIA_BASE_URL}${allergen?.Allergen_icon?.url}`}} style={styles.icon}></Image>
                       <Text style={styles.allergenText}>{allergen.name}</Text>
                     </TouchableOpacity>
                   );
@@ -203,7 +209,12 @@ const styles = StyleSheet.create({
   allergenText: {
     color: '#333',
     fontSize: 14,
-    marginLeft: 5,
+    marginLeft: 15,
+  },
+  icon: {
+    width: 25,
+    height: 25,
+    marginLeft: 10,
   },
   loader: { marginTop: 50 },
   noDataText: { fontSize: 14, color: '#888' },
