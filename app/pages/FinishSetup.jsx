@@ -327,10 +327,11 @@ import { createNewProfileAllergy } from "../../src/services/profileAllergiesServ
 import useAuthStore from "../../useAuthStore";
 import useSetupStore from "../../useSetupStore";
 import { MEDIA_BASE_URL } from "../../src/api/apiClient";
+import { updateProfileById } from "../../src/services/profileServices";
 
 const FinishSetUp = () => {
   const router = useRouter();
-  const { profileId } = useLocalSearchParams();
+  const { profileId, documentId } = useLocalSearchParams();
   const [allergens, setAllergensState] = useState([]);
   const {
     selectedAllergies,
@@ -343,7 +344,7 @@ const FinishSetUp = () => {
 
   const user = useAuthStore((state) => state.user);
   useEffect(() => {
-    console.log("User:", user.documentId); // Log user info when the component mounts
+    // console.log("User:", user.documentId); // Log user info when the component mounts
     console.log("Profile ID received finish setup:", profileId); // Log the received profileId
   }, [user, profileId]);
 
@@ -353,7 +354,7 @@ const FinishSetUp = () => {
         const response = await getAllergies();
         const allergyData = response?.data?.data;
         console.log('allergy', allergyData)
-          setAllergensState(allergyData);
+        setAllergensState(allergyData);
       } catch (error) {
         console.error("Error fetching allergens:", error);
       }
@@ -370,8 +371,8 @@ const FinishSetUp = () => {
           : item
       )
     );
-      toggleAllergySelection(key.id); // Update Zustand store
-      // return updatedAllergens;
+    toggleAllergySelection(key.id); // Update Zustand store
+    // return updatedAllergens;
     // };
   };
 
@@ -411,8 +412,8 @@ const FinishSetUp = () => {
       };
 
       try {
-        // const response = await createNewUserAllergy(payload);
-        // console.log("User allergy profile saved", response);
+        console.log("User profile Id", profileId);
+        console.log('User Profile document Id', documentId)
 
         // Create profile allergies with allergies as array
         const profileAllergyPayload = {
@@ -423,10 +424,22 @@ const FinishSetUp = () => {
             locale: "en",
           },
         };
-        const resp = await createNewProfileAllergy(profileAllergyPayload);
-        console.log('Successfully created profile_allergy', resp.data)
 
-        router.push("./Home");
+        if (profileId) {
+          const resp = await createNewProfileAllergy(profileAllergyPayload);
+          const profileAllergyId = resp.data?.id;
+          const updateProfilePayload = {
+            data: {
+              profile_allergies: [profileAllergyId], // Assuming profile_allergies is an array
+            },
+          };
+
+          const updateProfileResponse = await updateProfileById(documentId, updateProfilePayload);
+          console.log('Successfully updated profile with profile_allergy:', updateProfileResponse.data);
+
+          router.push("./Home");
+
+        }
       } catch (error) {
         console.error("Error creating/updating allergy profiles:", error);
       }
@@ -461,7 +474,7 @@ const FinishSetUp = () => {
                 onPress={() => handleToggleAllergen(key)}
               />
               <View style={styles.imageiconContainer}>
-                <Image source={{uri: `${MEDIA_BASE_URL}${key?.Allergen_icon?.url}`}} style={styles.icon} ></Image>
+                <Image source={{ uri: `${MEDIA_BASE_URL}${key?.Allergen_icon?.url}` }} style={styles.icon} ></Image>
                 <Text style={styles.checkboxLabel}>
                   {key.name}
                 </Text>
@@ -506,7 +519,7 @@ const FinishSetUp = () => {
         style={[
           styles.finishButton,
           !(termsAccepted && selectedAllergies.length > 0) &&
-            styles.buttonDisabled,
+          styles.buttonDisabled,
         ]}
         onPress={handleFinishSetup}
       >
@@ -619,8 +632,8 @@ const styles = StyleSheet.create({
     width: '90%',
     maxWidth: 500,
     borderWidth: 1,
-    borderRadius: 8, 
-    padding: 5, 
+    borderRadius: 8,
+    padding: 5,
     display: "flex",
     flexDirection: "row",
     alignItems: 'center',

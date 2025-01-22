@@ -10,10 +10,10 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 
 const Disclaimer = () => {
-  const { profileId } = useLocalSearchParams();
+  const { profileId, documentId } = useLocalSearchParams();
   const router = useRouter();
   useEffect(() => {
-    console.log("Profile ID received disclamire:", profileId);
+    console.log("Profile ID received disclamire:", profileId, documentId);
   }, [profileId]);
 
   return (
@@ -52,7 +52,10 @@ const Disclaimer = () => {
           onPressIn={() =>
             router.push({
               pathname: "pages/FinishSetup",
-              params: { profileId: profileId },
+              params: { 
+                profileId: profileId,
+                documentId: documentId,
+              },
             })
           }
         >

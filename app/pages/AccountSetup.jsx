@@ -20,8 +20,8 @@ const AccountSetup = () => {
   const router = useRouter();
   const [selectedOption, setSelectedOption] = useState(null);
   const [inputValue, setInputValue] = useState("");
-  const userId = useAuthStore((state) => state.user.id);
-  const userName = useAuthStore((state) => state.user.username);
+  const userId = useAuthStore((state) => state?.user?.id);
+  const userName = useAuthStore((state) => state?.user?.username);
 
   const handleOptionChange = (option) => {
     setSelectedOption(option);
@@ -56,7 +56,10 @@ const AccountSetup = () => {
       // Navigate to the Disclamier page with profileId as a parameter
       router.push({
         pathname: "./Disclamier",
-        params: { profileId: profileId },
+        params: { 
+          profileId: profileId,
+          documentId: documentId,
+        },
       });
     } catch (error) {
       console.error("Error creating profile:", error.response?.data || error.message); // Log error details

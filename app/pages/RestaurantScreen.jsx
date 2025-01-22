@@ -233,7 +233,7 @@ export default function () {
               <View style={styles.iconRow}>
                 <TouchableOpacity onPress={() => 
                   callResto(restaurantData?.contact_number? restaurantData?.contact_number : "+918277238505" )}>
-                  <FontAwesome name="phone" size={26} color="#ff6347" />
+                  <FontAwesome name="phone" size={28} color="#ff6347" />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={openLocation}>
                   <FontAwesome name="map-marker" size={26} color="#ff6347" />
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   },
   AreaContainer: {
     flex: 1,
-    padding: 10,
+    paddingHorizontal: 10,
     width: "100%",
   },
   container: {

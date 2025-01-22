@@ -327,6 +327,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 4,
     marginTop: 10,
+    textTransform: 'capitalize',
   },
   heartContainer: {
     width: 25,

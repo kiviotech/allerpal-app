@@ -29,6 +29,8 @@ const Profile = () => {
     (state) => state.setSelectedAllergies
   );
 
+  console.log('profileId for profile page', profileId)
+
   const user = useAuthStore((state) => state.user);
   const userId = user?.id;
 
@@ -36,22 +38,11 @@ const Profile = () => {
     const getAllergiesOfUser = async () => {
           try {
             const response = await fetchProfileAllergyByProfileId(profileId);
-            console.log('allergies of user', response.data[0].allergies)
+            console.log('allergies of user', response.data)
             setAllergens(response.data[0].allergies)
           } catch (error) {
             console.warn("Error fetching profile allergies");
           }
-        // };
-    // const fetchAllergies = async () => {
-    //   try {
-    //     const data = await fetchProfileAllergyById(userId); // Fetch allergens dynamically
-    //     console.log('userallergy', data)
-    //     const allergies = data?.data?.map((item) => item.allergies).flat() || [];
-    //     setAllergens(allergies);
-    //     setSelectedAllergies(allergies); // Store selected allergies globally if needed
-    //   } catch (error) {
-    //     console.error('Error fetching allergies:', error);
-      // } 
       finally {
         setLoading(false);
       }
@@ -101,28 +92,6 @@ const Profile = () => {
         />
 
         <Text style={styles.label}>Allergens</Text>
-        {/* <View style={styles.allergensContainer}>
-          {allergens.length === 0 ? (
-            <Text style={styles.noDataText}>No allergies found</Text>
-          ) : (
-            allergens.map((allergen, index) => {
-              const imageUrl = allergen?.Allergeimage?.[0]?.url
-                ? `${MEDIA_BASE_URL}${allergen.Allergeimage[0].url}`
-                : null;
-
-              return (
-                <TouchableOpacity key={index} style={styles.allergenTag}>
-                  {imageUrl ? (
-                    <Image source={{ uri: imageUrl }} style={styles.image} />
-                  ) : (
-                    <Icon name="leaf-outline" size={16} color="#00CFFF" />
-                  )}
-                  <Text style={styles.allergenText}>{allergen.name}</Text>
-                </TouchableOpacity>
-              );
-            })
-          )}
-        </View> */}
         {editing ?
           <EditScreen />
           :

@@ -302,6 +302,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 4,
+    textTransform: 'capitalize',
   },
   heart: {
     width: 30,

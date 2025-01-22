@@ -123,7 +123,7 @@ const Login = () => {
               style={styles.eyeIcon}
             >
               <Icon
-                name={showPassword ? "eye-slash" : "eye"}
+                name={showPassword ? "eye" : "eye-slash"}
                 size={20}
                 color="#B3B3B3"
               />

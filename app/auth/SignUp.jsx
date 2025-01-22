@@ -37,50 +37,66 @@ const SignUp = ({ navigation }) => {
   const handleSignUp = async () => {
     let validationErrors = {};
     const { fullName, email, password, confirmPassword } = formData;
-
-    // Basic validation
+  
+    // Full Name validation: must be alphabetic or alphanumeric, not only numbers
     if (!fullName) {
       validationErrors.fullName = "Full Name is required";
+    } else if (!/^(?!\d+$)[a-zA-Z0-9\s]+$/.test(fullName)) {
+      validationErrors.fullName = "Full Name cannot be only numbers";
     }
+  
+    // Email validation
     if (!email) {
       validationErrors.email = "Email is required";
     } else if (!isValidEmail(email)) {
       validationErrors.email = "Please enter a valid email address";
     }
+  
+    // Password validation
     if (!password) {
       validationErrors.password = "Password is required";
-    } else if (password.length < 6) {
-      validationErrors.password = "Password should be at least 6 characters";
+    } else if (/\s/.test(password)) {
+      validationErrors.password = "Password should not contain spaces";
+    } else if (password.length < 8) {
+      validationErrors.password = "Password must be at least 8 characters long";
+    } else if (!/[A-Z]/.test(password)) {
+      validationErrors.password = "Password must contain at least one uppercase letter";
+    } else if (!/\d/.test(password)) {
+      validationErrors.password = "Password must contain at least one number";
     }
+  
+    // Confirm Password validation
     if (!confirmPassword) {
       validationErrors.confirmPassword = "Confirm Password is required";
     } else if (password !== confirmPassword) {
       validationErrors.confirmPassword = "Passwords do not match";
     }
-
+  
+    // If there are validation errors, set them and exit
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
+  
+    // Clear errors and proceed with signup
     setErrors({});
     setLoading(true);
-
+  
     try {
-      // Call the signup function from auth.js
+      // Call the signup function
       const response = await signup(fullName, email, password);
-
       console.log(response);
-
+  
       // If signup is successful, navigate to the AccountSetup page
       router.push("../pages/AccountSetup");
     } catch (error) {
       let errorMessage = "Something went wrong. Please try again later.";
-      
+  
       if (error.message === "Network Error") {
-        errorMessage = "Something went wrong. Please try again later.";
+        errorMessage = "Network error. Please check your connection.";
       } else if (error.response?.data?.error?.message) {
         const backendMessage = error.response.data.error.message;
-
+  
         if (backendMessage.includes("Email or Username are already taken")) {
           errorMessage = "Email or Username are already taken.";
         } else {
@@ -93,6 +109,8 @@ const SignUp = ({ navigation }) => {
       setLoading(false);
     }
   };
+  
+
 
   const gotoLogin = () => {
     router.push("auth/Login");
@@ -156,7 +174,7 @@ const SignUp = ({ navigation }) => {
               style={styles.eyeIcon}
             >
               <Icon
-                name={showPassword ? "eye-slash" : "eye"}
+                name={showPassword ? "eye" : "eye-slash"}
                 size={20}
                 color="#B3B3B3"
               />
@@ -185,7 +203,7 @@ const SignUp = ({ navigation }) => {
               style={styles.eyeIcon}
             >
               <Icon
-                name={showConfirmPassword ? "eye-slash" : "eye"}
+                name={showConfirmPassword ? "eye" : "eye-slash"}
                 size={20}
                 color="#B3B3B3"
               />
