@@ -22,16 +22,18 @@ import { useRouter, useStore } from "expo-router";
 import { fetchLocation } from "../../src/services/locationService";
 import * as Location from 'expo-location';
 import { fetchUserById } from "../../src/services/userServices";
+import useSetupStore from "../../useSetupStore";
 
 const Home = () => {
   const router = useRouter();
+  const { excludeMayContain } = useSetupStore();
   const { width, height } = Dimensions.get("window");
   const { setLocation } = useAuthStore(); // Access setLocation from Zustand  const [address, setAddress] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const userId = useAuthStore((state) => state.user?.id);
   const [menuItems, setMenuItems] = useState([]);
   const [filteredFoodRecommendations, setFilteredFoodRecommendations] = useState([]);
-  const [isAllergenOn, setIsAllergenOn] = useState(false);
+  const [isAllergenOn, setIsAllergenOn] = useState(!excludeMayContain);
 
   useEffect(() => {
     if (!userId) {
@@ -46,8 +48,6 @@ const Home = () => {
     getProfileIdbyUserId();
   }, [userId])
 
-  // Static location values
-  // Static location values
   useEffect(() => {
     // Static location data
     const latitude = 51.5074; // Example: London latitude

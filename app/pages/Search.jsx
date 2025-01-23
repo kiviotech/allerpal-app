@@ -93,6 +93,7 @@ const Search = () => {
   // }, [latitude, longitude]);
 
 
+  
   // Handle load more for restaurants (pagination)
   const handleLoadMore = () => {
     if (hasMoreRestaurants && !loadingRestaurants && searchTerm == "") {

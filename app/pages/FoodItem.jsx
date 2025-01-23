@@ -44,9 +44,6 @@ const FoodItem = () => {
     fetchCuisines();
   }, []);
 
-  // const truncateName = (name, maxLength = 10) =>
-  //   name.length > maxLength ? `${name.slice(0, maxLength)}...` : name;
-
   if (loading) {
     return (
       <View style={styles.center}>

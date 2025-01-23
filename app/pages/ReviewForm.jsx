@@ -34,6 +34,7 @@ const ReviewForm = () => {
   const [image, setImage] = useState(null);
   const [imageIds, setImageIds] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const { jwt } = useAuthStore(state => state);
 
   const handleInputChange = (field, value) => {
     setFormData((prevData) => ({
@@ -76,7 +77,7 @@ const ReviewForm = () => {
           formData,
           {
             headers: {
-              Authorization: `Bearer 8204599028bbb232d3c9812d84b2b3558aad0531f9d1b4679ac919d9fd416292a2d2e04145fe6a946065397df33e560349aeae80c1881fb75043bbec688846f82b6c438b405b84ab72ba3272b9efd34d395792ab5ef695192e7f1cf5e3c0918a1e61345ce346c2eb3375ff678e6494cfbbd9b8534adab205424cd2e124ebdef7`, // Replace with a valid JWT token
+              Authorization: `Bearer ${jwt}`,
             },
           }
         );
@@ -85,7 +86,6 @@ const ReviewForm = () => {
         if (uploadedImageId) {
           setImageIds((prev) => [...prev, uploadedImageId]);
         }
-        console.log('image uploaded id', uploadedImageId)
       } catch (error) {
         console.error("Failed to upload image:", error);
         Alert.alert(
@@ -121,14 +121,13 @@ const ReviewForm = () => {
       Image: imageIds,
       locale: "en",
     };
-    console.log('reviewData', reviewData)
 
     const payload = { data: reviewData };
 
     try {
       const response = await axios.post(`${BASE_URL}/reviews`, payload, {
         headers: {
-          Authorization: `Bearer 8204599028bbb232d3c9812d84b2b3558aad0531f9d1b4679ac919d9fd416292a2d2e04145fe6a946065397df33e560349aeae80c1881fb75043bbec688846f82b6c438b405b84ab72ba3272b9efd34d395792ab5ef695192e7f1cf5e3c0918a1e61345ce346c2eb3375ff678e6494cfbbd9b8534adab205424cd2e124ebdef7`, // Replace with a valid JWT token
+          Authorization: `Bearer ${jwt}`, // Replace with a valid JWT token
         },
       });
 
@@ -164,143 +163,143 @@ const ReviewForm = () => {
   return (
     <ScrollView>
       <View style={styles.container}>
-      <View style={styles.ArrowContainer}>
-        <TouchableOpacity
-          style={styles.backArrow}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.header}>Review</Text>
-      </View>
-
-      <View style={styles.lableInput}>
-        <Text style={styles.label}>Title of Review</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter name of title"
-          placeholderTextColor="#a0a0a0"
-          value={formData.title}
-          onChangeText={(value) => {
-            const textOnly = value.replace(/[^a-zA-Z\s]/g, '');
-            handleInputChange("title", textOnly);
-          }}
-        />
-      </View>
-
-      <View style={styles.lableInput}>
-        <Text style={styles.label}>Review Description</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="Enter experience about food and visit here"
-          placeholderTextColor="#a0a0a0"
-          value={formData.description}
-          multiline
-          onChangeText={(value) => {
-            handleInputChange("description", value);
-          }}
-        />
-      </View>
-
-      <View style={styles.row}>
-        <Text style={styles.checkboxLabel}>Post this review anonymously</Text>
-        <TouchableOpacity
-          style={[
-            styles.checkboxContainer,
-            formData.isAnonymous && styles.selectedCheckbox,
-          ]}
-          onPress={() =>
-            handleInputChange("isAnonymous", !formData.isAnonymous)
-          }
-        >
-          {formData.isAnonymous && (
-            <Ionicons name="checkmark-sharp" size={18} color="#00C9D6" />
-          )}
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.reviewContainer}>
-        <Text style={styles.label}>
-          Is this review related to your saved allergens?
-        </Text>
-        <View style={styles.row}>
+        <View style={styles.ArrowContainer}>
           <TouchableOpacity
-            style={[
-              styles.checkboxContainer,
-              formData.allergensRelated && styles.selectedCheckbox,
-            ]}
-            onPress={() => handleInputChange("allergensRelated", true)}
+            style={styles.backArrow}
+            onPress={() => router.back()}
           >
-            {formData.allergensRelated && (
-              <Ionicons name="checkmark-sharp" size={18} color="#00C9D6" />
-            )}
+            <Ionicons name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
-          <Text style={styles.checkboxLabel}>Yes</Text>
-          <TouchableOpacity
-            style={[
-              styles.checkboxContainer,
-              !formData.allergensRelated && styles.selectedCheckbox,
-            ]}
-            onPress={() => handleInputChange("allergensRelated", false)}
-          >
-            {!formData.allergensRelated && (
-              <Ionicons name="checkmark-sharp" size={18} color="#00C9D6" />
-            )}
-          </TouchableOpacity>
-          <Text style={styles.checkboxLabel}>No</Text>
+          <Text style={styles.header}>Review</Text>
         </View>
-      </View>
 
-      {!formData.allergensRelated && (
         <View style={styles.lableInput}>
-          <Text style={styles.label}>Please specify any allergens</Text>
+          <Text style={styles.label}>Title of Review</Text>
           <TextInput
             style={styles.input}
-            placeholder="Type your allergens here"
+            placeholder="Enter name of title"
             placeholderTextColor="#a0a0a0"
-            value={formData.allergens}
+            value={formData.title}
             onChangeText={(value) => {
               const textOnly = value.replace(/[^a-zA-Z\s]/g, '');
-              handleInputChange("allergens", textOnly);
+              handleInputChange("title", textOnly);
             }}
           />
         </View>
-      )}
 
-      <View style={styles.uploadContainer}>
-        <Text style={styles.label}>Upload related photos</Text>
-        <TouchableOpacity
-          style={styles.uploadBox}
-          onPress={pickImage}
-          disabled={uploading}
-        >
-          <View style={styles.uploadContent}>
-            <Image source={download} style={styles.icon} />
-            <Text style={styles.uploadText}>
-              Drag & Drop or Choose file to Upload
-            </Text>
+        <View style={styles.lableInput}>
+          <Text style={styles.label}>Review Description</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="Enter experience about food and visit here"
+            placeholderTextColor="#a0a0a0"
+            value={formData.description}
+            multiline
+            onChangeText={(value) => {
+              handleInputChange("description", value);
+            }}
+          />
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.checkboxLabel}>Post this review anonymously</Text>
+          <TouchableOpacity
+            style={[
+              styles.checkboxContainer,
+              formData.isAnonymous && styles.selectedCheckbox,
+            ]}
+            onPress={() =>
+              handleInputChange("isAnonymous", !formData.isAnonymous)
+            }
+          >
+            {formData.isAnonymous && (
+              <Ionicons name="checkmark-sharp" size={18} color="#00C9D6" />
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.reviewContainer}>
+          <Text style={styles.label}>
+            Is this review related to your saved allergens?
+          </Text>
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={[
+                styles.checkboxContainer,
+                formData.allergensRelated && styles.selectedCheckbox,
+              ]}
+              onPress={() => handleInputChange("allergensRelated", true)}
+            >
+              {formData.allergensRelated && (
+                <Ionicons name="checkmark-sharp" size={18} color="#00C9D6" />
+              )}
+            </TouchableOpacity>
+            <Text style={styles.checkboxLabel}>Yes</Text>
+            <TouchableOpacity
+              style={[
+                styles.checkboxContainer,
+                !formData.allergensRelated && styles.selectedCheckbox,
+              ]}
+              onPress={() => handleInputChange("allergensRelated", false)}
+            >
+              {!formData.allergensRelated && (
+                <Ionicons name="checkmark-sharp" size={18} color="#00C9D6" />
+              )}
+            </TouchableOpacity>
+            <Text style={styles.checkboxLabel}>No</Text>
           </View>
-        </TouchableOpacity>
-        {image && <Image source={{ uri: image }} style={styles.previewImage} />}
-        {uploading && <Text>Uploading image...</Text>}
-      </View>
+        </View>
 
-      <Text style={styles.label}>Rate your Experience</Text>
-      <View style={styles.ratingContainer}>
-        <Rating
-          startingValue={formData.rating}
-          imageSize={30}
-          onFinishRating={(value) => handleInputChange("rating", value)}
-          style={styles.rating}
-        />
-      </View>
+        {!formData.allergensRelated && (
+          <View style={styles.lableInput}>
+            <Text style={styles.label}>Please specify any allergens</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Type your allergens here"
+              placeholderTextColor="#a0a0a0"
+              value={formData.allergens}
+              onChangeText={(value) => {
+                const textOnly = value.replace(/[^a-zA-Z\s]/g, '');
+                handleInputChange("allergens", textOnly);
+              }}
+            />
+          </View>
+        )}
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Submit Review</Text>
-        </TouchableOpacity>
+        <View style={styles.uploadContainer}>
+          <Text style={styles.label}>Upload related photos</Text>
+          <TouchableOpacity
+            style={styles.uploadBox}
+            onPress={pickImage}
+            disabled={uploading}
+          >
+            <View style={styles.uploadContent}>
+              <Image source={download} style={styles.icon} />
+              <Text style={styles.uploadText}>
+                Drag & Drop or Choose file to Upload
+              </Text>
+            </View>
+          </TouchableOpacity>
+          {image && <Image source={{ uri: image }} style={styles.previewImage} />}
+          {uploading && <Text>Uploading image...</Text>}
+        </View>
+
+        <Text style={styles.label}>Rate your Experience</Text>
+        <View style={styles.ratingContainer}>
+          <Rating
+            startingValue={formData.rating}
+            imageSize={30}
+            onFinishRating={(value) => handleInputChange("rating", value)}
+            style={styles.rating}
+          />
+        </View>
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+            <Text style={styles.submitButtonText}>Submit Review</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
     </ScrollView>
   );
 };

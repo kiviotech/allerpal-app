@@ -71,7 +71,6 @@ const Login = () => {
 
     try {
       const response = await login(email, password);
-      console.log("Login response" + response);
 
       router.push("../pages/Home");
     } catch (error) {

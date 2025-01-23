@@ -18,6 +18,7 @@ import { fetchUserAllergyById } from '../../src/services/userAllergyServices';
 import { MEDIA_BASE_URL } from '../../src/api/apiClient';
 import useAllergyStore from '../../src/stores/allergyStore';
 import { fetchProfileAllergyById, fetchProfileAllergyByProfileId } from '../../src/services/profileAllergiesServices';
+import { fetchProfileByUserId } from '../../src/services/profileServices';
 
 const Profile = () => {
   const router = useRouter()
@@ -28,18 +29,15 @@ const Profile = () => {
   const setSelectedAllergies = useAllergyStore(
     (state) => state.setSelectedAllergies
   );
-
-  console.log('profileId for profile page', profileId)
-
   const user = useAuthStore((state) => state.user);
   const userId = user?.id;
 
   useEffect(() => {
     const getAllergiesOfUser = async () => {
           try {
-            const response = await fetchProfileAllergyByProfileId(profileId);
-            console.log('allergies of user', response.data)
-            setAllergens(response.data[0].allergies)
+            const response = await fetchProfileByUserId(userId);
+            const userAllergies = response?.data[0]?.profile_allergies[0]?.allergies || []
+            setAllergens(userAllergies);
           } catch (error) {
             console.warn("Error fetching profile allergies");
           }
@@ -50,7 +48,6 @@ const Profile = () => {
 
     if (userId) {
       getAllergiesOfUser()
-      // fetchAllergies();
     }
   }, [userId, setSelectedAllergies]);
 
@@ -97,10 +94,10 @@ const Profile = () => {
           :
           <>
             <View style={styles.allergensContainer}>
-              {allergens.length === 0 ? (
+            {(!allergens || allergens.length === 0) ? (
                 <Text style={styles.noDataText}>No allergies found</Text>
               ) : (
-                allergens.map((allergen, index) => {
+                allergens?.map((allergen, index) => {
                   return (
                     <TouchableOpacity key={index} style={styles.allergenTag}>
                       <Image source={{uri: `${MEDIA_BASE_URL}${allergen?.Allergen_icon?.url}`}} style={styles.icon}></Image>

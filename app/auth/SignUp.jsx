@@ -85,7 +85,6 @@ const SignUp = ({ navigation }) => {
     try {
       // Call the signup function
       const response = await signup(fullName, email, password);
-      console.log(response);
   
       // If signup is successful, navigate to the AccountSetup page
       router.push("../pages/AccountSetup");
@@ -110,17 +109,22 @@ const SignUp = ({ navigation }) => {
     }
   };
   
-
-
+  
   const gotoLogin = () => {
     router.push("auth/Login");
   };
-
   const handleInputChange = (field, value) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
       [field]: value,
     }));
+  
+    // Clear the error for the specific field being updated
+    setErrors((prevErrors) => {
+      const updatedErrors = { ...prevErrors };
+      delete updatedErrors[field]; // Remove error for the current field
+      return updatedErrors;
+    });
   };
 
   return (

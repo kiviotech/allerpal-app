@@ -97,7 +97,6 @@ export default function () {
               // menu_items: [],
             };
             await createNewFavourite({ data: newFavorite });
-            console.log('Favourites created successfully')
           } else {
             // Update existing favorite 
             // Extract IDs from the existing favorite restaurants
@@ -163,9 +162,7 @@ export default function () {
       const currentLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
-
-      // console.log("Current Location Coordinates:", currentLocation.coords);
-
+      
       // Get latitude and longitude from current location
       const { latitude, longitude } = currentLocation.coords;
 
@@ -186,14 +183,13 @@ export default function () {
   // Scroll to reviews section
   const scrollToReviews = () => {
     scrollViewRef.current?.scrollTo({
-      y: 500, // Adjust this value to control scroll position if needed
+      y: 500,
       animated: true,
     });
   };
 
   const getImageSource = () => {
     if (Array.isArray(restaurantData.image) && restaurantData.image.length > 0) {
-      // Assuming `url` is the correct property for the image URL
       return { uri: `${MEDIA_BASE_URL}${restaurantData.image[0]?.url}` || restaurantURL };
     }
     return restaurantURL;
@@ -201,9 +197,8 @@ export default function () {
 
   return (
     <SafeAreaView style={styles.AreaContainer}>
-      <ScrollView ref={scrollViewRef}> {/* Assigned ref to ScrollView */}
-        <View style={styles.container}>
-          {/* Header Icons */}
+      <ScrollView ref={scrollViewRef} style={styles.container}>
+        <View >
           <View style={styles.headerIcons}>
             <TouchableOpacity onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={24} color="#333" />
@@ -340,6 +335,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F9F9F9",
+    marginBottom: 50
   },
   headerIcons: {
     flexDirection: "row",

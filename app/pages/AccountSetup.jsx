@@ -37,11 +37,10 @@ const AccountSetup = () => {
       },
     };
   
-    console.log("Profile Data:", JSON.stringify(profileData, null, 2)); // Debugging log
+    // console.log("Profile Data:", JSON.stringify(profileData, null, 2)); // Debugging log
   
     try {
       const response = await apiClient.post(profileEndpoints.createProfile, profileData); // POST request to API
-      console.log("Profile created successfully:", response.data.data);
   
       const documentId = response.data.data.documentId;
       const profileId = response.data.data.id;
@@ -62,7 +61,6 @@ const AccountSetup = () => {
         },
       });
     } catch (error) {
-      console.error("Error creating profile:", error.response?.data || error.message); // Log error details
       Alert.alert("Error", "Failed to create profile. Please try again."); // Show error alert
     }
   };

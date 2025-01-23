@@ -137,7 +137,6 @@ const RestaurantCard = ({ restaurant, onPress }) => {
           ],
         };
         await createNewFavourite({ data: newFavorite });
-        console.log('Favourites created successfully')
       } else {
         // Update existing favorite 
         // Extract IDs from the existing favorite restaurants
