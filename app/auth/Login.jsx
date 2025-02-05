@@ -71,7 +71,6 @@ const Login = () => {
 
     try {
       const response = await login(email, password);
-      console.log("Login response" + response);
 
       router.push("../pages/Home");
     } catch (error) {
@@ -123,7 +122,7 @@ const Login = () => {
               style={styles.eyeIcon}
             >
               <Icon
-                name={showPassword ? "eye-slash" : "eye"}
+                name={showPassword ? "eye" : "eye-slash"}
                 size={20}
                 color="#B3B3B3"
               />

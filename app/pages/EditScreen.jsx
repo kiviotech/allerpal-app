@@ -8,6 +8,7 @@ import { fetchAllAllergies } from '../../src/services/allergyServices';
 import { useRouter } from 'expo-router';
 import { fetchProfileAllergyByProfileId, updateProfileAllergyById } from '../../src/services/profileAllergiesServices';
 import { MEDIA_BASE_URL } from '../../src/api/apiClient';
+import { fetchProfileByUserId } from '../../src/services/profileServices';
 
 const Profile = () => {
   const router = useRouter()
@@ -20,104 +21,102 @@ const Profile = () => {
 
   const userId = useAuthStore((state) => state.user?.id); // Fetch logged-in user's ID
 
-    useEffect(() => {
-      const fetchAllergenData = async () => {
-        try {
-          const data = await fetchAllAllergies(); // Fetch allergens from backend
-          setAllergenList(data.data);
-        } catch (error) {
-          console.error('Error fetching allergens:', error);
-        }
-      };
-
-      const fetchUserAllergens = async () => {
-        try {
-          const response = await fetchProfileAllergyByProfileId(profileId);
-          setProfileAllergyId(response.data[0]?.documentId);
-          setUserAllergenId(response.data[0]?.allergies)
-          const userAllergies = response.data[0]?.allergies || [];
-          const userAllergenIds = userAllergies?.map((item) => item.id) || [];
-          // setUserAllergens(userAllergies);
-          setSelectedAllergens(userAllergenIds); // Set initially selected allergens for checkboxes
-        } catch (error) {
-          console.error('Error fetching user allergens:', error);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      if (userId) {
-        fetchAllergenData();
-        fetchUserAllergens();
-      }
-    }, [userId]);
-
-    // Handle checkbox toggle
-    const handleCheckboxChange = (allergenId) => {
-      setSelectedAllergens((prevState) =>
-        prevState.includes(allergenId)
-          ? prevState.filter((id) => id !== allergenId) // Remove allergen
-          : [...prevState, allergenId] // Add allergen
-      );
-    };
-
-    const handleSaveChanges = async () => {
+  useEffect(() => {
+    const fetchAllergenData = async () => {
       try {
-        const formattedAllergens = selectedAllergens.map((allergenId) => ({
-          id: allergenId,
-        }));
-        const payload = {
-          data: {
-            allergies: formattedAllergens,
-          },
-        };
-    
-        const response = await updateProfileAllergyById( profileAllergyId, payload);
-    
-        if (response?.data) {
-          console.log('Allergen preferences updated successfully.');
-          Alert.alert('Allergen preferences updated successfully.', '', [
-          router.push('/pages/Account'),
-          ]);
-          
-        } else {
-          console.error('Unexpected response:', response);
-          alert('Failed to update allergen preferences. Please try again.');
-        }
+        const data = await fetchAllAllergies(); // Fetch allergens from backend
+        setAllergenList(data.data);
       } catch (error) {
-        console.error('Error updating allergens:', error);
-        alert('Failed to update allergen preferences.');
+        console.error('Error fetching allergens:', error);
       }
     };
 
-    if (loading) {
-      return <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />;
+    const fetchUserAllergens = async () => {
+      try {
+        // const response = await fetchProfileAllergyByProfileId(profileId);
+
+        const response = await fetchProfileByUserId(userId);
+        setProfileAllergyId(response.data[0]?.profile_allergies[0]?.documentId);
+        setUserAllergenId(response.data[0]?.profile_allergies[0]?.allergies)
+        const userAllergies = response?.data[0]?.profile_allergies[0]?.allergies || []
+        const userAllergenIds = userAllergies?.map((item) => item.id) || [];
+        setSelectedAllergens(userAllergenIds); // Set initially selected allergens for checkboxes
+      } catch (error) {
+        console.error('Error fetching user allergens:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (userId) {
+      fetchAllergenData();
+      fetchUserAllergens();
     }
-    const CustomCheckBox = ({ checked, onPress }) => (
-      <TouchableOpacity
-        style={[styles.checkBox, checked]}
-        onPress={onPress}
-      >
-        {checked && <Ionicons name="checkmark-sharp" size={24} color="#00c4cc" />}
-      </TouchableOpacity>
+  }, [userId]);
+
+  // Handle checkbox toggle
+  const handleCheckboxChange = (allergenId) => {
+    setSelectedAllergens((prevState) =>
+      prevState.includes(allergenId)
+        ? prevState.filter((id) => id !== allergenId) // Remove allergen
+        : [...prevState, allergenId] // Add allergen
     );
+  };
+
+  const handleSaveChanges = async () => {
+    try {
+      const formattedAllergens = selectedAllergens.map((allergenId) => ({
+        id: allergenId,
+      }));
+      const payload = {
+        data: {
+          allergies: formattedAllergens,
+        },
+      };
+
+      const response = await updateProfileAllergyById(profileAllergyId, payload);
+
+      if (response?.data) {
+        Alert.alert('Allergen preferences updated successfully.', '', [
+          router.push('/pages/Account'),
+        ]);
+
+      } else {
+        alert('Failed to update allergen preferences. Please try again.');
+      }
+    } catch (error) {
+      alert('Failed to update allergen preferences.');
+    }
+  };
+
+  if (loading) {
+    return <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />;
+  }
+  const CustomCheckBox = ({ checked, onPress }) => (
+    <TouchableOpacity
+      style={[styles.checkBox, checked]}
+      onPress={onPress}
+    >
+      {checked && <Ionicons name="checkmark-sharp" size={24} color="#00c4cc" />}
+    </TouchableOpacity>
+  );
 
   return (
     <View contentContainerStyle={styles.container}>
       <View style={styles.allergensContainer}>
         <View style={styles.checkboxContainer}>
-        {allegenList.map((allergen) => (
-          <View key={allergen.id} style={styles.checkboxRow}>
-            <CustomCheckBox
-              checked={selectedAllergens.includes(allergen.id)} // Check if allergen is selected
-              onPress={() => handleCheckboxChange(allergen.id)} // Toggle allergen selection
-            />
-            <View style={styles.imageiconContainer}>
-              <Image source={{uri: `${MEDIA_BASE_URL}${allergen?.Allergen_icon?.url}`}} style={styles.icon} ></Image>
-              <Text style={styles.checkboxLabel}>{allergen.name}</Text>
+          {allegenList.map((allergen) => (
+            <View key={allergen.id} style={styles.checkboxRow}>
+              <CustomCheckBox
+                checked={selectedAllergens.includes(allergen.id)} // Check if allergen is selected
+                onPress={() => handleCheckboxChange(allergen.id)} // Toggle allergen selection
+              />
+              <View style={styles.imageiconContainer}>
+                <Image source={{ uri: `${MEDIA_BASE_URL}${allergen?.Allergen_icon?.url}` }} style={styles.icon} ></Image>
+                <Text style={styles.checkboxLabel}>{allergen.name}</Text>
+              </View>
             </View>
-          </View>
-        ))}
+          ))}
         </View>
       </View>
       <TouchableOpacity style={styles.signOutButton} onPress={handleSaveChanges}>
@@ -224,8 +223,8 @@ const styles = StyleSheet.create({
     width: '90%',
     maxWidth: 500,
     borderWidth: 1,
-    borderRadius: 8, 
-    padding: 5, 
+    borderRadius: 8,
+    padding: 5,
     display: "flex",
     flexDirection: "row",
     alignItems: 'center',

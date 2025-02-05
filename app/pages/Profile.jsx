@@ -18,6 +18,7 @@ import { fetchUserAllergyById } from '../../src/services/userAllergyServices';
 import { MEDIA_BASE_URL } from '../../src/api/apiClient';
 import useAllergyStore from '../../src/stores/allergyStore';
 import { fetchProfileAllergyById, fetchProfileAllergyByProfileId } from '../../src/services/profileAllergiesServices';
+import { fetchProfileByUserId } from '../../src/services/profileServices';
 
 const Profile = () => {
   const router = useRouter()
@@ -28,30 +29,18 @@ const Profile = () => {
   const setSelectedAllergies = useAllergyStore(
     (state) => state.setSelectedAllergies
   );
-
   const user = useAuthStore((state) => state.user);
   const userId = user?.id;
 
   useEffect(() => {
     const getAllergiesOfUser = async () => {
           try {
-            const response = await fetchProfileAllergyByProfileId(profileId);
-            console.log('allergies of user', response.data[0].allergies)
-            setAllergens(response.data[0].allergies)
+            const response = await fetchProfileByUserId(userId);
+            const userAllergies = response?.data[0]?.profile_allergies[0]?.allergies || []
+            setAllergens(userAllergies);
           } catch (error) {
             console.warn("Error fetching profile allergies");
           }
-        // };
-    // const fetchAllergies = async () => {
-    //   try {
-    //     const data = await fetchProfileAllergyById(userId); // Fetch allergens dynamically
-    //     console.log('userallergy', data)
-    //     const allergies = data?.data?.map((item) => item.allergies).flat() || [];
-    //     setAllergens(allergies);
-    //     setSelectedAllergies(allergies); // Store selected allergies globally if needed
-    //   } catch (error) {
-    //     console.error('Error fetching allergies:', error);
-      // } 
       finally {
         setLoading(false);
       }
@@ -59,7 +48,6 @@ const Profile = () => {
 
     if (userId) {
       getAllergiesOfUser()
-      // fetchAllergies();
     }
   }, [userId, setSelectedAllergies]);
 
@@ -101,37 +89,15 @@ const Profile = () => {
         />
 
         <Text style={styles.label}>Allergens</Text>
-        {/* <View style={styles.allergensContainer}>
-          {allergens.length === 0 ? (
-            <Text style={styles.noDataText}>No allergies found</Text>
-          ) : (
-            allergens.map((allergen, index) => {
-              const imageUrl = allergen?.Allergeimage?.[0]?.url
-                ? `${MEDIA_BASE_URL}${allergen.Allergeimage[0].url}`
-                : null;
-
-              return (
-                <TouchableOpacity key={index} style={styles.allergenTag}>
-                  {imageUrl ? (
-                    <Image source={{ uri: imageUrl }} style={styles.image} />
-                  ) : (
-                    <Icon name="leaf-outline" size={16} color="#00CFFF" />
-                  )}
-                  <Text style={styles.allergenText}>{allergen.name}</Text>
-                </TouchableOpacity>
-              );
-            })
-          )}
-        </View> */}
         {editing ?
           <EditScreen />
           :
           <>
             <View style={styles.allergensContainer}>
-              {allergens.length === 0 ? (
+            {(!allergens || allergens.length === 0) ? (
                 <Text style={styles.noDataText}>No allergies found</Text>
               ) : (
-                allergens.map((allergen, index) => {
+                allergens?.map((allergen, index) => {
                   return (
                     <TouchableOpacity key={index} style={styles.allergenTag}>
                       <Image source={{uri: `${MEDIA_BASE_URL}${allergen?.Allergen_icon?.url}`}} style={styles.icon}></Image>

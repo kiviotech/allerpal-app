@@ -223,6 +223,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 20,
+    marginBottom: 50,
   },
   title: {
     fontSize: 24,
@@ -250,7 +251,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   signOutButton: {
-    // marginTop: 20,
+    // marginBottom: 50,
     paddingVertical: 10,
     paddingHorizontal: 5,
     alignItems: "center",

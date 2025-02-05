@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons"; // Use Ionicons for consistency
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Modal } from "react-native";
+import Icon from "react-native-vector-icons/Ionicons";
 import useAuthStore from "../../useAuthStore"; // Corrected import path
 import apiClient from "../../src/api/apiClient";
 
@@ -15,22 +15,35 @@ const ChangePassword = () => {
     const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
     const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+    const [passwordError, setPasswordError] = useState("");
+    const [isModalVisible, setIsModalVisible] = useState(false); // Modal visibility state
 
-    const [validation, setValidation] = useState({
-        minLength: false,
-        hasNumber: false,
-        noSpaces: true,
-        hasUpperLower: false,
-    });
+    const handlePasswordValidation = (password) => {
+        setNewPassword(password);
+
+        // Password validation
+        if (/\s/.test(password)) {
+            setPasswordError("Password should not contain spaces.");
+        } else if (password.length < 8) {
+            setPasswordError("Password must be at least 8 characters long.");
+        } else if (!/[A-Z]/.test(password)) {
+            setPasswordError("Password must contain at least one uppercase letter.");
+        // } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        //     setPasswordError("Password must contain at least one special character.");
+        } else if (!/\d/.test(password)) {
+            setPasswordError("Password must contain at least one number.");
+        } else {
+            setPasswordError(""); // Clear error message if validation passes
+        }
+    };
 
     const handlePasswordChange = async () => {
-        // Validate passwords
         if (!currentPassword || !newPassword || !confirmPassword) {
             setErrorMessage("All fields are required.");
             return;
         }
-        if (currentPassword !== user.password) { // Check if current password matches the stored user password
-            setErrorMessage("Current password is incorrect.");
+        if (passwordError) {
+            setErrorMessage("Please fix the password validation issues.");
             return;
         }
         if (newPassword !== confirmPassword) {
@@ -38,55 +51,44 @@ const ChangePassword = () => {
             return;
         }
 
-        if (
-            newPassword === confirmPassword &&
-            validation.minLength &&
-            validation.hasNumber &&
-            validation.noSpaces &&
-            validation.hasUpperLower
-        ) {
-
-            console.log('token', jwt, currentPassword, newPassword, confirmPassword)
-            try {
-                const response = await apiClient.post(
-                    "/auth/change-password",
-                    {
-                        currentPassword,
-                        password: newPassword,
-                        passwordConfirmation: confirmPassword,
+        try {
+            const response = await apiClient.post(
+                "/auth/change-password",
+                {
+                    currentPassword,
+                    password: newPassword,
+                    passwordConfirmation: confirmPassword,
+                },
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${jwt}`,
                     },
-                    {
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${jwt}`
-                        },
-                    }
-                );
-                if (response.status === 200) {
-                    Alert.alert("Success", "Password changed successfully!");
-                    router.push("./Account"); // Navigate back to account page
-                } else {
-                    alert(response.data.error?.message || "Failed to update password.");
                 }
-            } catch (error) {
-                console.error("Password change error:", error.response?.data || error.message);
-                Alert.alert("Error", error.response?.data?.message || "Failed to change password. Please try again.");
+            );
+            if (response.status === 200) {
+                Alert.alert("Success", "Password changed successfully!");
+                router.push("./Account");
+            } else {
+                alert(response.data.error?.message || "Failed to update password.");
             }
-        } else {
-            alert("Please ensure all requirements are met.");
-            Alert.alert("Please ensure all requirements are met.");
+        } catch (error) {
+            console.error("Password change error:", error.response?.data || error.message);
+            Alert.alert("Error", error.response?.data?.message || "Failed to change password. Please try again.");
         }
     };
 
-    // Optional: Handle password validation during input
-    const handlePasswordValidation = (password) => {
-        setNewPassword(password);
-        setValidation({
-            minLength: password.length >= 8,
-            hasNumber: /\d/.test(password),
-            noSpaces: !/\s/.test(password),
-            hasUpperLower: /[a-z]/.test(password) && /[A-Z]/.test(password),
-        });
+    const openConfirmationPopup = () => {
+        setIsModalVisible(true);
+    };
+
+    const closeConfirmationPopup = () => {
+        setIsModalVisible(false);
+    };
+
+    const confirmPasswordChange = () => {
+        closeConfirmationPopup();
+        handlePasswordChange();
     };
 
     return (
@@ -99,7 +101,8 @@ const ChangePassword = () => {
             </View>
 
             <View style={styles.mainContainer}>
-            {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
+                {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
+
                 {/* Current Password Input */}
                 <View style={{ marginTop: 20 }}>
                     <Text style={styles.label}>Current Password</Text>
@@ -116,7 +119,7 @@ const ChangePassword = () => {
                             style={styles.eyeIcon}
                         >
                             <Icon
-                                name={isCurrentPasswordVisible ? "eye-slash" : "eye"}
+                                name={isCurrentPasswordVisible ? "eye" : "eye-off"}
                                 size={20}
                                 color="#B3B3B3"
                             />
@@ -133,19 +136,20 @@ const ChangePassword = () => {
                             placeholder="New Password"
                             secureTextEntry={!isNewPasswordVisible}
                             value={newPassword}
-                            onChangeText={handlePasswordValidation} // Validates as user types
+                            onChangeText={handlePasswordValidation}
                         />
                         <TouchableOpacity
                             style={styles.eyeIcon}
                             onPress={() => setIsNewPasswordVisible(!isNewPasswordVisible)}
                         >
                             <Icon
-                                name={isNewPasswordVisible ? "eye-slash" : "eye"}
+                                name={isNewPasswordVisible ? "eye" : "eye-off"}
                                 size={20}
                                 color="#B3B3B3"
                             />
                         </TouchableOpacity>
                     </View>
+                    {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
                 </View>
 
                 {/* Confirm Password Input */}
@@ -164,7 +168,7 @@ const ChangePassword = () => {
                             onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
                         >
                             <Icon
-                                name={isConfirmPasswordVisible ? "eye-slash" : "eye"}
+                                name={isConfirmPasswordVisible ? "eye" : "eye-off"}
                                 size={20}
                                 color="#B3B3B3"
                             />
@@ -173,14 +177,36 @@ const ChangePassword = () => {
                 </View>
 
                 {/* Change Password Button */}
-                <TouchableOpacity style={styles.button} onPress={handlePasswordChange}>
+                <TouchableOpacity style={styles.button} onPress={openConfirmationPopup}>
                     <Text style={styles.buttonText}>Change Password</Text>
                 </TouchableOpacity>
             </View>
+
+            {/* Confirmation Popup */}
+            <Modal
+                visible={isModalVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={closeConfirmationPopup}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        <Text style={styles.modalTitle}>Are you sure?</Text>
+                        <Text style={styles.modalMessage}>Do you really want to change your password?</Text>
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity style={styles.cancelButton} onPress={closeConfirmationPopup}>
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.confirmButton} onPress={confirmPasswordChange}>
+                                <Text style={styles.confirmButtonText}>Confirm</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };
-
 
 const styles = StyleSheet.create({
     container: {
@@ -207,6 +233,9 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#777',
     },
+    errorMessage: {
+        color: 'red',
+    },
     inputContainer: {
         width: "100%",
         flexDirection: "row",
@@ -226,7 +255,7 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     button: {
-        backgroundColor: "#00cccc",
+        backgroundColor: "#00CFFF",
         width: "100%",
         padding: 15,
         borderRadius: 25,
@@ -237,6 +266,55 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontSize: 16,
         fontWeight: "bold",
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    modalContainer: {
+        backgroundColor: "white",
+        borderRadius: 10,
+        padding: 20,
+        width: "80%",
+        alignItems: "center",
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: "bold",
+        marginBottom: 10,
+    },
+    modalMessage: {
+        fontSize: 14,
+        marginBottom: 20,
+        textAlign: "center",
+    },
+    modalButtons: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        width: "100%",
+    },
+    cancelButton: {
+        flex: 1,
+        backgroundColor: "gray",
+        borderRadius: 5,
+        padding: 10,
+        alignItems: "center",
+        marginRight: 10,
+    },
+    confirmButton: {
+        flex: 1,
+        backgroundColor: "cyan",
+        borderRadius: 5,
+        padding: 10,
+        alignItems: "center",
+    },
+    cancelButtonText: {
+        color: "white",
+    },
+    confirmButtonText: {
+        color: "white",
     },
 });
 

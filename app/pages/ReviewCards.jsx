@@ -117,7 +117,7 @@ const ReviewCards = ({ restaurantId }) => {
                       </View>
                       <View style={styles.headerText}>
                         <Text style={styles.name}>
-                          {!item.isAnonymous ? item.profile.name : "Anonymous"}
+                          {!item?.isAnonymous ? item?.profile?.name : "Anonymous"}
                         </Text>
                         <Text style={styles.date}>
                           {new Date(item.createdAt).toLocaleDateString('en-US', {

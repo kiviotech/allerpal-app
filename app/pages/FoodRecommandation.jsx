@@ -18,7 +18,7 @@ import { useRouter } from "expo-router";
 import restaurantImg from '../../assets/restaurant.png'
 import { fetchMenuByMenuItemId } from "../../src/services/menuServices";
 import useAuthStore from "../../useAuthStore";
-import { fetchProfileById } from "../../src/services/profileServices";
+import { fetchProfileById, fetchProfileByUserId } from "../../src/services/profileServices";
 import { fetchProfileAllergyByProfileId } from "../../src/services/profileAllergiesServices";
 import { createNewFavourite, fetchFavouritesByUserId, updateFavouriteData } from "../../src/services/favouriteServices";
 // import { fetchAllMenuItems } from "../../src/services/menuItemsServices"
@@ -50,7 +50,6 @@ const FoodCard = ({ item, onPress }) => {
           ],
         };
         await createNewFavourite({ data: newFavorite });
-        console.log('Favourites created successfully!')
       } else {
         // Update existing favorite 
         // Extract IDs from the existing favorite restaurants
@@ -66,7 +65,6 @@ const FoodCard = ({ item, onPress }) => {
         };
 
         await updateFavouriteData(favoriteData.documentId, updatePayload);
-        console.log('Favourites updated successfully!')
       }
 
       // Toggle the favorite state
@@ -126,10 +124,10 @@ const FoodRecommendations = ({isAllergenOn}) => {
   const [filteredFoodRecommendations, setFilteredFoodRecommendations] = useState([]);
   const [profileAllergies, setProfileAllergies] = useState([]);
   const profileId = useAuthStore((state) => state.profileId);
+  const userId = useAuthStore((state) => state?.user?.id);
   const router = useRouter();
 
   const onFoodCardPress = async (menuItemId) => {
-    console.log("Selected Menu Item ID:", menuItemId);
     try {
       // Fetch restaurants for the selected menu item
       const response = await fetchMenuByMenuItemId(menuItemId)
@@ -156,8 +154,9 @@ const FoodRecommendations = ({isAllergenOn}) => {
     let selectedAllergies = [];
     const getAllergiesOfUser = async () => {
       try {
-        const response = await fetchProfileAllergyByProfileId(profileId)
-        const profileAllergy = response.data[0].allergies
+        const response = await fetchProfileByUserId(userId)
+        const profileAllergy = response?.data[0]?.profile_allergies[0]?.allergies || []
+        console.log('profile', profileAllergy)
         selectedAllergies = profileAllergy.map((allergy) => allergy.name.toLowerCase());
       } catch (error) {
         console.warn("Error fetching profile allergies");
@@ -328,6 +327,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 4,
     marginTop: 10,
+    textTransform: 'capitalize',
   },
   heartContainer: {
     width: 25,

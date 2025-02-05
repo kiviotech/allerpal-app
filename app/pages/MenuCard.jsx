@@ -2,8 +2,6 @@ import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 
 const MenuCard = ({ menuItems }) => {
-  // Log menu items to confirm data
-  console.log("menu items", menuItems);
 
   return (
     <View style={styles.container}>
@@ -20,20 +18,15 @@ const MenuCard = ({ menuItems }) => {
                   style={styles.image}
                 />
                 <View style={styles.ratingContainer}>
-                  {/* Rating and Review Count (Sample data) */}
                   <Text style={styles.ratingText}>4.5</Text>
                   <Text style={styles.star}>★</Text>
                   <Text style={styles.ratingCount}>(25+)</Text>
                 </View>
-                {/* <TouchableOpacity style={styles.favoriteButton}>
-                  <Text style={styles.heartIcon}>💙</Text>
-                </TouchableOpacity> */}
               </View>
 
               {/* Details Section */}
               <View style={styles.detailsContainer}>
                 <View style={styles.titleRow}>
-                  {/* Display item name and price */}
                   <Text style={styles.title}>{item.item_name}</Text>
                   <Text style={styles.price}>£{item.price || "N/A"}</Text>
                 </View>
@@ -42,7 +35,6 @@ const MenuCard = ({ menuItems }) => {
                 <Text style={styles.allergens}>
                   Allergens: {item.description || "None specified"}
                 </Text>
-                {/* <Text style={styles.orderedBefore}>✓ Ordered before</Text> */}
               </View>
             </View>
           ))}

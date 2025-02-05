@@ -6,6 +6,7 @@ import {
   createProfile,
   updateProfile,
   deleteProfile,
+  getProfileByUserId,
 } from "./../api/repositories/profileRepositories";
 
 // Fetch all profiles
@@ -26,6 +27,17 @@ export const fetchProfileById = async (id) => {
     return response.data;
   } catch (error) {
     console.error(`Error fetching profile with ID ${id}:`, error);
+    throw error;
+  }
+};
+
+// Fetch a specific profile by user ID
+export const fetchProfileByUserId = async (userId) => {
+  try {
+    const response = await getProfileByUserId(userId);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching profile with ID ${userId}:`, error);
     throw error;
   }
 };

@@ -137,7 +137,6 @@ const RestaurantCard = ({ restaurant, onPress }) => {
           ],
         };
         await createNewFavourite({ data: newFavorite });
-        console.log('Favourites created successfully')
       } else {
         // Update existing favorite 
         // Extract IDs from the existing favorite restaurants
@@ -341,6 +340,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 4,
+    textTransform: 'capitalize',
     // overflow: 'hidden'
   },
   categories: {
