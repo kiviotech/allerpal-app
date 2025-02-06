@@ -25,9 +25,11 @@ import { fetchRestaurantDetails } from "../../src/services/restaurantServices";
 import { MEDIA_BASE_URL } from "../../src/api/apiClient";
 import { calculateDistanceFromUser } from "../../src/utils/distanceUtils";
 import { createNewFavourite, fetchFavouritesByUserId, updateFavouriteData } from "../../src/services/favouriteServices";
+import CustomSwitch from "./CustomSwitch";
+import { useFocusEffect } from '@react-navigation/native';
 
 
-export default function () {
+const RestaurantScreen = () => {
   const router = useRouter();
   const { user, latitude, longitude } = useAuthStore();
   const { id, documentId, isFavoriteItem } = useLocalSearchParams();
@@ -45,34 +47,43 @@ export default function () {
   };
 
   useEffect(() => {
-    // Set initial favorite state based on isFavoriteItem
     setIsFavorite(isFavoriteItem === 'true'); // Ensure proper boolean handling
   }, [isFavoriteItem]);
 
-  useEffect(() => {
-    const collectRestaurants = async () => {
-      try {
-        const response = await fetchRestaurantDetails(documentId);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!documentId) {
+        console.error("documentId is missing. Skipping fetch.");
+        return;
+      }
+  
+      const collectRestaurants = async () => {
+        try {
+          const response = await fetchRestaurantDetails(documentId);
           setRestaurantData(response.data);
-      }
-      catch (error) {
-        console.error("Error fetching restaurants:", error);
-        setRestaurantData([])
-      }
-    }
-    const fetchMenus = async () => {
-      try {
-        const response = await fetchMenuByRestaurantId(documentId);
-        if (response?.data) {
-          setMenuData(response.data);
+        } catch (error) {
+          console.error("Error fetching restaurants:", error);
+          setRestaurantData([]);
         }
-      } catch (error) {
-        console.error("Error fetching menus:", error);
-      }
-    };
-    collectRestaurants();
-    fetchMenus();
-  }, []);
+      };
+  
+      const fetchMenus = async () => {
+        try {
+          const response = await fetchMenuByRestaurantId(documentId);
+          if (response?.data) {
+            setMenuData(response.data);
+          }
+        } catch (error) {
+          console.error("Error fetching menus:", error);
+        }
+      };
+  
+      collectRestaurants();
+      fetchMenus();
+    }, [documentId])
+  );
+  
+  
 
   const handleFavoritePress = async () => {
     if (!user) {
@@ -81,59 +92,59 @@ export default function () {
       return;
     }
     try {
-          const response = await fetchFavouritesByUserId(user.id);
-          const favoriteData = response?.data?.[0]; // Get the existing favorite entry, if available
-    
-          if (!favoriteData) {
-            // Create new favorite entry
-            const newFavorite = {
-              user: { id: user.id }, // Associate the user
-              restaurants: [
-                {
-                  id: restaurantData.id,
-                  // documentId: restaurant.documentId,
-                },
-              ],
-              // menu_items: [],
-            };
-            await createNewFavourite({ data: newFavorite });
-          } else {
-            // Update existing favorite 
-            // Extract IDs from the existing favorite restaurants
-          const existingRestaurantIds = favoriteData.restaurants.map((fav) => fav.id);
-            
-            const updatedRestaurants = isFavorite
-            ? existingRestaurantIds.filter((id) => id !== restaurantData.id) // Remove the current restaurant if it's already a favorite
-            : [...existingRestaurantIds, restaurantData.id]; // Add the current restaurant ID if not already a favorite
-            
-            const updatePayload = {
-              data: {
-                restaurants: updatedRestaurants,
-              },
-            };
-    
-            await updateFavouriteData(favoriteData.documentId, updatePayload);
-          }
-          // Toggle the favorite state
-          setIsFavorite((prev) => !prev);
-        } catch (error) {
-          console.error("Error updating favorites:", error);
-        }
+      const response = await fetchFavouritesByUserId(user.id);
+      const favoriteData = response?.data?.[0]; // Get the existing favorite entry, if available
+
+      if (!favoriteData) {
+        // Create new favorite entry
+        const newFavorite = {
+          user: { id: user.id }, // Associate the user
+          restaurants: [
+            {
+              id: restaurantData.id,
+              // documentId: restaurant.documentId,
+            },
+          ],
+          // menu_items: [],
+        };
+        await createNewFavourite({ data: newFavorite });
+      } else {
+        // Update existing favorite 
+        // Extract IDs from the existing favorite restaurants
+        const existingRestaurantIds = favoriteData.restaurants.map((fav) => fav.id);
+
+        const updatedRestaurants = isFavorite
+          ? existingRestaurantIds.filter((id) => id !== restaurantData.id) // Remove the current restaurant if it's already a favorite
+          : [...existingRestaurantIds, restaurantData.id]; // Add the current restaurant ID if not already a favorite
+
+        const updatePayload = {
+          data: {
+            restaurants: updatedRestaurants,
+          },
+        };
+
+        await updateFavouriteData(favoriteData.documentId, updatePayload);
+      }
+      // Toggle the favorite state
+      setIsFavorite((prev) => !prev);
+    } catch (error) {
+      console.error("Error updating favorites:", error);
+    }
   };
 
-    useEffect(() => {
-      const fetchDistanceToRestaurant = async () => {
-        if (latitude && longitude && restaurantData.location) {
-          const dist = await calculateDistanceFromUser(
-            { latitude, longitude },
-            restaurantData.location
-          );
-          if (dist) setDistance(dist); // Round distance to 2 decimal places
-        }
-      };
-  
-      fetchDistanceToRestaurant();
-    }, [latitude, longitude, restaurantData.location]);
+  useEffect(() => {
+    const fetchDistanceToRestaurant = async () => {
+      if (latitude && longitude && restaurantData.location) {
+        const dist = await calculateDistanceFromUser(
+          { latitude, longitude },
+          restaurantData.location
+        );
+        if (dist) setDistance(dist); // Round distance to 2 decimal places
+      }
+    };
+
+    fetchDistanceToRestaurant();
+  }, [latitude, longitude, restaurantData.location]);
 
   const filteredMenuItems = menuData.filter((item) => item.type === type);
 
@@ -162,7 +173,7 @@ export default function () {
       const currentLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
-      
+
       // Get latitude and longitude from current location
       const { latitude, longitude } = currentLocation.coords;
 
@@ -198,7 +209,7 @@ export default function () {
   return (
     <SafeAreaView style={styles.AreaContainer}>
       <ScrollView ref={scrollViewRef} style={styles.container}>
-        <View >
+        <View>
           <View style={styles.headerIcons}>
             <TouchableOpacity onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={24} color="#333" />
@@ -215,10 +226,7 @@ export default function () {
           </View>
 
           {/* Image Section */}
-          <Image
-            source={getImageSource()}
-            style={styles.image}
-          />
+          <Image source={getImageSource()} style={styles.image} />
 
           {/* Restaurant Details */}
           <View style={styles.detailsContainer}>
@@ -226,32 +234,15 @@ export default function () {
             <View style={styles.titleRow}>
               <Text style={styles.restaurantName}>{restaurantData?.name}</Text>
               <View style={styles.iconRow}>
-                <TouchableOpacity onPress={() => 
-                  callResto(restaurantData?.contact_number? restaurantData?.contact_number : "+918277238505" )}>
+                <TouchableOpacity onPress={() =>
+                  callResto(restaurantData?.contact_number ? restaurantData?.contact_number : "")}
+                  style={styles.icons}>
                   <FontAwesome name="phone" size={28} color="#ff6347" />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={openLocation}>
-                  <FontAwesome name="map-marker" size={26} color="#ff6347" />
+                <TouchableOpacity onPress={openLocation} style={styles.icons}>
+                  <FontAwesome name="map-marker" size={26} color="#00D0DD" />
                 </TouchableOpacity>
               </View>
-            </View>
-
-            <View style={styles.categories}>
-              {Array.isArray(restaurantData?.cuisines) &&
-                restaurantData?.cuisines.map((cuisine, index) => (
-                  <Text key={index} style={styles.category}>
-                    {cuisine.cuisine_type}
-                  </Text>
-                ))}
-            </View>
-
-            {/* Distance and Address */}
-            <View >
-              <View style={styles.addressRow}>
-                <FontAwesome name="map-marker" size={14} color="#ff6347" />
-                <Text style={styles.addressText}>{restaurantData?.location}</Text>
-              </View>
-              <Text style={styles.addressText}>{distance} Km away</Text>
             </View>
 
             {/* Rating and Reviews */}
@@ -259,58 +250,94 @@ export default function () {
               <FontAwesome name="star" size={16} color="#FFD700" />
               <Text style={styles.ratingText}>{restaurantData?.rating} </Text>
               {/* <Text style={styles.reviewText}>(30+)</Text> */}
-              <TouchableOpacity onPress={scrollToReviews}> {/* onPress now calls scrollToReviews */}
-                <Text style={styles.reviewLink}>See Reviews</Text>
+              <TouchableOpacity onPress={scrollToReviews}>
+                <Text style={styles.reviewLink}>Reviews</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Contact Button */}
-            <TouchableOpacity
-              style={styles.contactButton}
-              onPress={() => router.push("pages/Chat")}
-            >
-              <Text style={styles.contactButtonText}>Contact Restaurant</Text>
-            </TouchableOpacity>
+            <View style={styles.distanceContact}>
+              {/* Distance and Address */}
+              <View style={styles.addressRow}>
+                <View style={styles.address}>
+                  <Ionicons name="walk" size={26} color="#ff6347" />
+                  <Text style={styles.addressText}>{distance} Km away</Text>
+                </View>
+                <Text style={styles.addressTextDistance}>{restaurantData?.location}</Text>
+              </View>
+
+              {/* Contact Button */}
+              <TouchableOpacity
+                style={styles.contactButton}
+                onPress={() => router.push("pages/Chat")}
+              >
+                <Text style={styles.contactButtonText}>Contact Restaurant</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Cuisines Section */}
+            <View style={styles.categories}>
+              <Text style={styles.subTitle}>Cuisines: </Text>
+              {Array.isArray(restaurantData?.cuisines) && restaurantData.cuisines.length > 0 ? (
+                <View>
+                  {restaurantData.cuisines.map((cuisine, index) => (
+                    <Text key={index} style={styles.category}>
+                      {cuisine?.cuisine_type || "Unknown cuisine type"}
+                    </Text>
+                  ))}
+                </View>
+              ) : (
+                <Text>No cuisines available</Text>
+              )}
+            </View>
 
             {/* Allergen Toggle */}
             <View style={styles.allergenContainer}>
-              <Text style={styles.allergenText}>{isAllergenOn ? 'Your Allergen Menu' : 'Normal Menu'}</Text>
-              <Switch
+              <Text style={styles.allergenText}>Your Allergens Filter</Text>
+              {/* <Switch
                 value={isAllergenOn}
                 onValueChange={toggleAllergen}
                 thumbColor={isAllergenOn ? "#ff6347" : "#f4f3f4"}
                 trackColor={{ false: "#767577", true: "#ffdbc1" }}
+              /> */}
+
+              {/* Replace the existing Switch with the CustomSwitch */}
+              <CustomSwitch
+                value={isAllergenOn}
+                initialState={isAllergenOn}      // Pass the current state of the switch
+                onToggle={toggleAllergen}        // Pass the function to handle toggle
               />
             </View>
           </View>
-        </View>
 
-        {/* Menu Card or Message */}
-        {/* <View> */}
-        {filteredMenuItems.length > 0 ? (
-          <MenuCard menuItems={filteredMenuItems} />
-        ) : (
-          <Text style={styles.noItemsText}>
-            There are no foods available for this option.
-          </Text>
-        )}
-        {/* </View> */}
+          {/* Menu Card or Message */}
+          <View>
+            {filteredMenuItems.length > 0 ? (
+              <MenuCard menuItems={filteredMenuItems} />
+            ) : (
+              <Text style={styles.noItemsText}>
+                There are no foods available for this option.
+              </Text>
+            )}
+          </View>
 
-        {/* Review Section */}
-        <View style={styles.Review}>
-          <ReviewsSection restaurantId={documentId} id={id} />
-        </View>
-        <View>
-          <ReviewCards restaurantId={documentId} />
+          {/* Review Section */}
+          <View style={styles.Review}>
+            <ReviewsSection restaurantId={documentId} id={id} />
+          </View>
+
+          <View>
+            <ReviewCards restaurantId={documentId} />
+          </View>
         </View>
       </ScrollView>
-      <View>
+      {/* <View>
         <Footer />
-      </View>
+      </View> */}
     </SafeAreaView>
   );
 };
 
+export default RestaurantScreen;
 
 const styles = StyleSheet.create({
   categories: {
@@ -318,6 +345,10 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 10,
     marginVertical: 10,
+  },
+  subTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   category: {
     fontSize: 16,
@@ -334,7 +365,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#F9F9F9",
+    // backgroundColor: "#F9F9F9",
     marginBottom: 50
   },
   headerIcons: {
@@ -363,9 +394,15 @@ const styles = StyleSheet.create({
   iconRow: {
     flexDirection: "row",
     alignItems: 'center',
-    maxWidth: '15%',
-    minWidth: '15%',
+    maxWidth: '30%',
+    minWidth: '30%',
     justifyContent: 'space-between',
+  },
+  icons: {
+    backgroundColor: '#fff',
+    paddingVertical: 13,
+    paddingHorizontal: 18,
+    borderRadius: 30,
   },
   ratingRow: {
     flexDirection: "row",
@@ -387,13 +424,29 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     textDecorationLine: "underline",
   },
-  addressRow: {
+  distanceContact: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 10,
+    marginTop: 10,
+  },
+  addressRow: {
+    flex: 1,
+    flexDirection: 'column',
+    flexWrap: 'wrap',
+    gap: 5,
+    maxWidth: '58%',
+  },
+  address: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
   },
   addressText: {
+    flex: 1,
     fontSize: 16,
     color: "#000000",
     marginVertical: 5,
@@ -404,24 +457,27 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     marginVertical: 5,
-    paddingHorizontal: 8,
-    width: '50%',
+    // paddingHorizontal: 8,
+    width: '40%',
   },
   contactButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
     alignItems: "center",
   },
   allergenContainer: {
-    width: '50%',
+    backgroundColor: '#fff',
     flexDirection: "row",
     justifyContent: 'space-between',
     alignItems: "center",
     marginTop: 10,
+    borderRadius: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
   },
   allergenText: {
-    fontSize: 16,
+    fontSize: 20,
     color: "#000000",
   },
   noItemsText: {

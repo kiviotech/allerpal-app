@@ -101,7 +101,7 @@ const FoodItem = () => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 20,
+    paddingVertical: 5,
     backgroundColor: "#f2f2f2",
   },
   listContainer: {

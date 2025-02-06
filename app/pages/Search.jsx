@@ -40,7 +40,10 @@ const Search = () => {
   const { user, isAuthenticated, latitude, longitude } = useAuthStore();
   const [error, setError] = useState(null);
   const [ErrorMenuItem, setErrorMenuItem] = useState(null);
+  const [errorRestaurants, setErrorRestaurants] = useState(null);
   const [distance, setDistance] = useState(null); // State to hold the calculated distance
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [popularSearchedRestaurants, setPopularSearchedRestaurants] = useState([]);
 
   // const hardcodedCoordinates = {
   //   latitude: 51.479342,
@@ -93,7 +96,7 @@ const Search = () => {
   // }, [latitude, longitude]);
 
 
-  
+
   // Handle load more for restaurants (pagination)
   const handleLoadMore = () => {
     if (hasMoreRestaurants && !loadingRestaurants && searchTerm == "") {
@@ -102,55 +105,54 @@ const Search = () => {
   };
 
   // Fetch menu items API
-  const fetchMenuItem = async (newPage = 1, cuisine) => {
-    try {
-      let url = `/menu-items?pagination[page]=${newPage}&pagination[pageSize]=50&populate=*`;
-      if (cuisine) {
-        // If cuisine is neither "Price: high to low" nor "Price: low to high", filter by cuisine type
-        if (cuisine !== "Price: high to low" && cuisine !== "Price: low to high") {
-          url += `&filters[cuisine][cuisine_type][$contains]=${encodeURIComponent(cuisine)}`;
-        }
-        // If cuisine is "Price: high to low", sort by price: high to low
-        else if (cuisine === "Price: high to low") {
-          url += `&sort=price:desc`;
-        }
-        // If cuisine is "Price: low to high", sort by price: low to high
-        else if (cuisine === "Price: low to high") {
-          url += `&sort=price:asc`;
-        }
-      }
+  // const fetchMenuItem = async (newPage = 1, cuisine) => {
+  //   try {
+  //     let url = `/menu-items?pagination[page]=${newPage}&pagination[pageSize]=50&populate=*`;
+  //     if (cuisine) {
+  //       // If cuisine is neither "Price: high to low" nor "Price: low to high", filter by cuisine type
+  //       if (cuisine !== "Price: high to low" && cuisine !== "Price: low to high") {
+  //         url += `&filters[cuisine][cuisine_type][$contains]=${encodeURIComponent(cuisine)}`;
+  //       }
+  //       // If cuisine is "Price: high to low", sort by price: high to low
+  //       else if (cuisine === "Price: high to low") {
+  //         url += `&sort=price:desc`;
+  //       }
+  //       // If cuisine is "Price: low to high", sort by price: low to high
+  //       else if (cuisine === "Price: low to high") {
+  //         url += `&sort=price:asc`;
+  //       }
+  //     }
 
-      const response = await apiClient.get(url);
-      const newMenuItems = response?.data?.data || [];
+  //     const response = await apiClient.get(url);
+  //     const newMenuItems = response?.data?.data || [];
 
-      // Update the restaurants state with new API data
-      if (newMenuItems && newMenuItems.length > 0) {
-        // If results are found, update products and page state
-        setMenuItems(prevFoodItem => (newPage === 1 ? newMenuItems : [...prevFoodItem, ...newMenuItems]));
-        // Update pagination and control states
-        setRestaurantPageMenuItem(newPage);
-        setHasMoreMenuItems(newMenuItems.length > 0);
-      } else {
-        // If no products match, clear the list and set hasMore to false
-        if (newPage === 1) setMenuItems([]);
-        setHasMoreMenuItems(false); // No more products to load
+  //     // Update the restaurants state with new API data
+  //     if (newMenuItems && newMenuItems.length > 0) {
+  //       // If results are found, update products and page state
+  //       setMenuItems(prevFoodItem => (newPage === 1 ? newMenuItems : [...prevFoodItem, ...newMenuItems]));
+  //       // Update pagination and control states
+  //       setRestaurantPageMenuItem(newPage);
+  //       setHasMoreMenuItems(newMenuItems.length > 0);
+  //     } else {
+  //       // If no products match, clear the list and set hasMore to false
+  //       if (newPage === 1) setMenuItems([]);
+  //       setHasMoreMenuItems(false); // No more products to load
 
-      }
-      setLoadingFood(false);
-      if (newMenuItems.length == 0) {
-        setErrorMenuItem("No menu item found");
-      } else {
-        setErrorMenuItem(null);
-      }
-      setSelectedSortOption(null);
-    } catch (err) {
-      console.error("Error fetching menu items:", err);
-      setHasMoreMenuItems(false); // Stop further calls on error
-    } finally {
-      setLoadingFood(false);
-    }
-  };
-
+  //     }
+  //     setLoadingFood(false);
+  //     if (newMenuItems.length == 0) {
+  //       setErrorMenuItem("No menu item found");
+  //     } else {
+  //       setErrorMenuItem(null);
+  //     }
+  //     setSelectedSortOption(null);
+  //   } catch (err) {
+  //     console.error("Error fetching menu items:", err);
+  //     setHasMoreMenuItems(false); // Stop further calls on error
+  //   } finally {
+  //     setLoadingFood(false);
+  //   }
+  // };
 
   const fetchRestaurants = async (newPage = 1, topRated = false) => {
     if (loadingRestaurants || !hasMoreRestaurants) return;
@@ -166,6 +168,7 @@ const Search = () => {
       const response = await apiClient.get(url);
       const newRestaurants = response?.data?.data || [];
       const isFavorite = newRestaurants?.favourites?.includes(user?.id); // Check if the current user has favorited this restaurant
+      const sortedRestaurants = newRestaurants.sort((a, b) => b.rating - a.rating);
 
       // Update the restaurants state with new API data
       if (newRestaurants && newRestaurants.length > 0) {
@@ -173,13 +176,14 @@ const Search = () => {
         setRestaurants(prevResto => (newPage === 1 ? newRestaurants : [...prevResto, ...newRestaurants]));
         // Update pagination and control states
         setRestaurantPage(newPage);
+        setPopularSearchedRestaurants(sortedRestaurants);
         setHasMoreRestaurants(newRestaurants.length > 0);
       } else {
         // If no products match, clear the list and set hasMore to false
         if (newPage === 1) setRestaurants([]);
         setHasMoreRestaurants(false); // No more products to load
       }
-      setErrorMenuItem(null);
+      setErrorRestaurants(null);
     } catch (err) {
       console.error("Error fetching restaurants:", err);
       setHasMoreRestaurants(false);
@@ -203,39 +207,35 @@ const Search = () => {
     try {
       const encodedQuery = query ? encodeURIComponent(query) : '';
 
-      // API 1: Restaurants
+      // Initialize URL with pagination and populate image
       let url1 = `/restaurants?pagination[page]=1&pagination[pageSize]=10&populate=image`;
-      if (query) {
-        url1 += `&filters[$or][0][name][$contains]=${encodedQuery}&filters[$or][1][location][$contains]=${encodedQuery}`;
+
+      // Add filters for reviews and location
+      if (selectedSortOption === 'Reviews: low to high') {
+        url1 += `&filters[rating][$gte]=1&filters[rating][$lte]=5`; // Filter restaurants with rating between 1 and 5 (from low to high)
+      } else if (selectedSortOption === 'Reviews: high to low') {
+        url1 += `&filters[rating][$gte]=4`; // Filter restaurants with rating above 4 (high to low)
+      } else if (selectedSortOption === 'Location: nearest to farthest') {
+        url1 += `&filters[location][$contains]=${encodedQuery}`; // Filter restaurants based on location (nearest)
+      } else if (selectedSortOption === 'Location: farthest to nearest') {
+        url1 += `&filters[location][$contains]=${encodedQuery}`; // Filter restaurants based on location (farthest)
       }
 
-      // API 2: Menu Items
-      let url2 = `/menu-items?pagination[page]=1&pagination[pageSize]=50&populate=*`;
-      if (query) {
-        url2 += `&filters[item_name][$contains]=${encodedQuery}`;
-      }
-
-      const [api1, api2] = await Promise.all([
-        apiClient.get(url1),
-        apiClient.get(url2),
-      ]);
+      // API Request
+      const api1 = await apiClient.get(url1);
 
       // Process and filter results
       const restaurantResults = api1.data.data.map((item) => ({
         ...item,
         source: 'Restaurant',
       }));
+      if (selectedSortOption === 'Reviews: low to high') {
+        restaurantResults.sort((a, b) => a.rating - b.rating); // Sort by rating in ascending order
+      } else if (selectedSortOption === 'Reviews: high to low') {
+        restaurantResults.sort((a, b) => b.rating - a.rating); // Sort by rating in ascending order
+      }
+      setRestaurants(restaurantResults); // Update restaurant state with filtered results
 
-      const menuItemResults = api2.data.data.map((item) => ({
-        ...item,
-        source: 'Menu Item',
-      }));
-
-
-      // Update state
-      setRestaurants(restaurantResults);
-      setMenuItems(menuItemResults);
-      setErrorMenuItem(null);
     } catch (err) {
       console.error('Error fetching results:', err);
       setError('Failed to fetch results. Please try again.');
@@ -261,18 +261,29 @@ const Search = () => {
     handleSearch(searchTerm);
   }, [searchTerm]);
 
+  // Apply the selected filters when "Apply" is clicked
   const applyFilters = () => {
-    setFilterVisible(false);
+    if (selectedSortOption) {
+      // Apply sorting logic based on the selected option
+      console.log("Applying filter:", selectedSortOption);
+      fetchResults(selectedSortOption); // Fetch results based on the selected sort option
+    }
+    setFilterVisible(false); // Close the modal after applying the filter
   };
 
+
+  // const handleSortOptionPress = (option) => {
+  //   setSelectedSortOption(option);
+  //   console.log(option)
+  //   if (option !== "nearest to farthest" || option !== "farthest to nearest") {
+  //     // fetchMenuItem(1, option);
+  //   } else {
+  //     fetchResults(option)
+  //   }
+  // };
+
   const handleSortOptionPress = (option) => {
-    setSelectedSortOption(option);
-    console.log(option)
-    if (option !== "nearest to farthest" || option !== "farthest to nearest") {
-      fetchMenuItem(1, option);
-    } else {
-      fetchResults(option)
-    }
+    setSelectedSortOption(option); // Store the selected option
   };
 
   const getSortOptionStyle = (option) => {
@@ -434,8 +445,14 @@ const Search = () => {
                 {item.name.length > 30 ? `${item.name.substring(0, 30)}...` : item.name}
               </Text>
               <View style={styles.categories1}>
+                <View style={{display: 'flex', flexDirection: 'row', alignItems: 'center',}}>
+                <Ionicons name='location' size={20} color='#00D0DD' />
                 <Text style={styles.loc}>{item.location}</Text>
-                {distance && <Text style={styles.distanceText}>{distance} km away</Text>}
+                </View>
+                <View style={{display: 'flex', flexDirection: 'row', alignItems: 'center',}}>
+                  <Ionicons name='walk' size={20} color='#00D0DD' />
+                  {distance && <Text style={styles.distanceText}>{distance} km away</Text>}
+                </View>
               </View>
             </View>
           </View>
@@ -446,18 +463,33 @@ const Search = () => {
 
   return (
     <SafeAreaView style={styles.AreaContainer}>
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
-        <TextInput
-          placeholder="Find food or restaurant..."
-          style={styles.searchInput}
-          value={searchTerm}
-          onChangeText={setSearchTerm}
-        />
+
+      {/* <View style={styles.menu}>
+      <TouchableOpacity style={styles.menuButton} onPress={() => setSidebarVisible(true)}>
+        <Ionicons name="menu-sharp" size={24} color="black" />
+      </TouchableOpacity>
+      </View> */}
+
+      <View style={styles.searchHeader}>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={26} style={styles.searchIcon} />
+        </TouchableOpacity>
+
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+          <TextInput
+            placeholder="Find food or restaurant..."
+            style={styles.searchInput}
+            value={searchTerm}
+            onChangeText={setSearchTerm}
+          />
+        </View>
         <TouchableOpacity onPress={() => setFilterVisible(true)}>
           <Ionicons name="options" size={26} color="#00D0DD" style={{ marginLeft: 15 }} />
         </TouchableOpacity>
       </View>
+
+      {/* {sidebarVisible && <Sidebar isVisible={sidebarVisible} onClose={() => setSidebarVisible(false)} />} */}
 
       {searchTerm.length === 0 && recentSearches.length > 0 && (
         <View>
@@ -492,7 +524,7 @@ const Search = () => {
         </View>
       )}
 
-      {/* <View>
+      <View>
         <Text style={styles.sectionTitle}>Popular Searches</Text>
         <FlatList
           data={popularSearches}
@@ -510,8 +542,9 @@ const Search = () => {
             </TouchableOpacity>
           )}
         />
-      </View> */}
+      </View>
 
+      {/* 
       <View style={{ alignItems: 'center', marginTop: 10 }}>
         {menuItems?.length === 0 && restaurants?.length === 0 && !loadingRestaurants ? (
           <Text style={{ color: 'red', fontSize: 20 }}>No Menu and Restaurants found</Text>
@@ -541,9 +574,9 @@ const Search = () => {
             />
           </>
         </View>
-      )}
+      )} */}
 
-      {restaurants?.length > 0 && (
+      {restaurants?.length > 0 ? (
         <>
           <Text style={[styles.subTitle, { marginTop: 15 }]}>Restaurants</Text>
           <FlatList
@@ -556,10 +589,9 @@ const Search = () => {
                 handleViewRestaurant={handleViewRestaurant}
               />
             )}
-            horizontal={false}
-            numColumns={1}
-            showsHorizontalScrollIndicator={false} // Horizontal scrolling is not needed for vertical lists
             keyExtractor={(item) => item.id.toString()}
+            numColumns={1}
+            showsVerticalScrollIndicator={false}
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.5}
             ListFooterComponent={
@@ -569,8 +601,11 @@ const Search = () => {
             }
           />
         </>
+      ) : (
+        <View style={{ alignItems: "center", marginTop: 10 }}>
+          <Text style={{ color: "red", fontSize: 20 }}>No restaurants found</Text>
+        </View>
       )}
-
       <Modal
         visible={filterVisible}
         animationType="slide"
@@ -583,14 +618,11 @@ const Search = () => {
 
             <Text style={styles.sectionTitle}>Sort by</Text>
             <View style={styles.sortOptions}>
-              {['Price: low to high', 'Price: high to low', 'Location: nearest to farthest', 'Location: farthest to nearest'].map((option) => (
+              {['Reviews: low to high', 'Reviews: high to low', 'Location: nearest to farthest', 'Location: farthest to nearest'].map((option) => (
                 <TouchableOpacity
                   key={option}
                   style={[styles.optionButton, getSortOptionStyle(option)]}
-                  onPress={() => {
-                    handleSortOptionPress(option);
-                    setFilterVisible(false);
-                  }}
+                  onPress={() => handleSortOptionPress(option)} // Store selected option
                 >
                   <Text style={{ color: option === selectedSortOption ? 'white' : 'black' }}>
                     {option}
@@ -598,23 +630,6 @@ const Search = () => {
                 </TouchableOpacity>
               ))}
             </View>
-
-            <Text style={styles.sectionTitle}>By Cuisine</Text>
-            <View style={styles.cusinesOptions}>
-              {['Italian', 'Mexican', 'Chinese', 'Indian', 'British', 'Korean'].map((cuisine, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[styles.optionButton, getSortOptionStyle(index)]}
-                  onPress={() => {
-                    handleSortOptionPress(cuisine);
-                    setFilterVisible(false);  // Close filter options after selection
-                  }}
-                >
-                  <Text style={{ color: index === selectedSortOption ? 'white' : 'black' }}>{cuisine}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
 
             <View style={styles.buttonContainer}>
               <TouchableOpacity onPress={() => setFilterVisible(false)} style={styles.cancelButton}>
@@ -628,7 +643,7 @@ const Search = () => {
         </View>
       </Modal>
 
-      <Footer />
+      {/* <Footer /> */}
     </SafeAreaView>
   );
 };
@@ -639,9 +654,43 @@ const styles = StyleSheet.create({
     paddingLeft: 16, // Add padding around the content
     marginBottom: 50,
   },
-  searchContainer: { flexDirection: 'row', alignItems: 'center', padding: 12, marginBottom: 20 },
+  menu: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: 10
+  },
+  menuButton: {
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 30,
+  },
+  searchHeader: {
+    paddingTop: 20,
+    paddingBottom: 10,
+    paddingHorizontal: 10,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 20,
+    backgroundColor: "#fff",
+    margin: "auto",
+    width: "80%",
+  },
   searchIcon: { marginRight: 8, },
-  searchInput: { flex: 1, borderWidth: 1, borderColor: '#ddd', borderRadius: 20, padding: 10 },
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 14,
+  },
   filterImage: {
     width: 20,
     height: 20,

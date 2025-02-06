@@ -9,6 +9,8 @@ import { useRouter } from 'expo-router';
 import { fetchProfileAllergyByProfileId, updateProfileAllergyById } from '../../src/services/profileAllergiesServices';
 import { MEDIA_BASE_URL } from '../../src/api/apiClient';
 import { fetchProfileByUserId } from '../../src/services/profileServices';
+import { Switch } from 'react-native-web';
+import SwitchToggle from 'react-native-switch-toggle';
 
 const Profile = () => {
   const router = useRouter()
@@ -16,6 +18,7 @@ const Profile = () => {
   const [userAllergenId, setUserAllergenId] = useState(''); // To store allergens of the user
   const [selectedAllergens, setSelectedAllergens] = useState([]); // To track selected allergens
   const [profileAllergyId, setProfileAllergyId] = useState(''); // To store profileAllergyId
+  const [isAllergenOn, setIsAllergenOn] = useState(false);
   const [loading, setLoading] = useState(true);
   const profileId = useAuthStore((state) => state.profileId);
 
@@ -24,8 +27,10 @@ const Profile = () => {
   useEffect(() => {
     const fetchAllergenData = async () => {
       try {
-        const data = await fetchAllAllergies(); // Fetch allergens from backend
-        setAllergenList(data.data);
+        const data = await fetchAllAllergies();
+        const allergyData = data?.data
+        allergyData.sort((a, b) => a.name.localeCompare(b.name));
+        setAllergenList(allergyData);
       } catch (error) {
         console.error('Error fetching allergens:', error);
       }
@@ -41,6 +46,7 @@ const Profile = () => {
         const userAllergies = response?.data[0]?.profile_allergies[0]?.allergies || []
         const userAllergenIds = userAllergies?.map((item) => item.id) || [];
         setSelectedAllergens(userAllergenIds); // Set initially selected allergens for checkboxes
+        setIsAllergenOn(response?.data[0]?.profile_allergies[0]?.excludeMayContain)
       } catch (error) {
         console.error('Error fetching user allergens:', error);
       } finally {
@@ -63,6 +69,10 @@ const Profile = () => {
     );
   };
 
+  const toggleAllergen = () => {
+    setIsAllergenOn((prevState) => !prevState);
+  };
+
   const handleSaveChanges = async () => {
     try {
       const formattedAllergens = selectedAllergens.map((allergenId) => ({
@@ -71,6 +81,7 @@ const Profile = () => {
       const payload = {
         data: {
           allergies: formattedAllergens,
+          excludeMayContain: isAllergenOn,
         },
       };
 
@@ -118,6 +129,26 @@ const Profile = () => {
             </View>
           ))}
         </View>
+      </View>
+
+      <View style={styles.switchContainer}>
+        <Text style={styles.toggleLabel}>
+          Do you wish to EXCLUDE dishes that 'MAY CONTAIN' the selected
+          Allergies
+        </Text>
+        <SwitchToggle
+          switchOn={isAllergenOn}
+          onPress={() => setIsAllergenOn(!isAllergenOn)}
+          circleColorOff="#bbb"
+          circleColorOn="#00c4cc"
+          backgroundColorOn="#e0f7fa"
+          backgroundColorOff="#ddd"
+          containerStyle={styles.switchToggleContainer}
+          circleStyle={styles.switchCircle}
+        />
+        <Text style={styles.switchText}>
+          {isAllergenOn ? "Yes" : "No"}
+        </Text>
       </View>
       <TouchableOpacity style={styles.signOutButton} onPress={handleSaveChanges}>
         <Text style={styles.signOutText}>Save Changes</Text>
@@ -194,8 +225,34 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#555',
   },
+  switchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: "7%",
+  },
+  switchToggleContainer: {
+    width: 50,
+    height: 25,
+    borderRadius: 25,
+  },
+  switchCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 20,
+  },
+  switchText: {
+    marginLeft: 10,
+    fontSize: 14,
+    color: "#00c4cc",
+    fontWeight: "bold",
+  },
+  input: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 14,
+  },
   signOutButton: {
-    marginTop: 50,
+    // marginTop: 30,
     paddingVertical: 15,
     alignItems: 'center',
     borderRadius: 10,

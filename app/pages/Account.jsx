@@ -16,6 +16,7 @@ import useAuthStore from "../../useAuthStore";
 import { deleteToken } from "../../src/utils/storage";
 import useAllergyStore from "../../src/stores/allergyStore";
 import { logout } from "../../src/utils/auth";
+import { Ionicons } from "@expo/vector-icons";
 
 const Account = () => {
   const router = useRouter();
@@ -58,9 +59,17 @@ const Account = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.wrapper}>
-        <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => router.push('/pages/Home')}
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color="black" />
+          </TouchableOpacity>
           <Text style={styles.title}>Account</Text>
+        </View>
 
+        <ScrollView contentContainerStyle={styles.container}>
           {/* Profile navigation */}
           <TouchableOpacity
             style={styles.option}
@@ -143,12 +152,8 @@ const Account = () => {
           {/* Legal & Policies */}
           <TouchableOpacity
             style={styles.option}
-            onPress={() =>
-              showModal(
-                "The Legal & Policies page is currently unavailable."
-              )
-            }
-          >
+            onPress={() => router.push('./LegalPolicy')}>
+              
             <Icon name="document-text-outline" size={24} color="#00CFFF" />
             <Text style={styles.optionText}>Legal & Policies</Text>
             <Icon name="chevron-forward-outline" size={24} color="#00CFFF" />
@@ -201,9 +206,9 @@ const Account = () => {
           </View>
         </Modal>
 
-        <View style={styles.footer}>
+        {/* <View style={styles.footer}>
           <Footer />
-        </View>
+        </View> */}
       </View>
     </SafeAreaView>
   );
@@ -215,6 +220,16 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#f8f9fa",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+    backgroundColor: "#fff",
+    elevation: 2,
+  },
+  backButton: {
+    marginRight: 20,
   },
   wrapper: {
     flex: 1,
@@ -228,7 +243,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 20,
+    // marginBottom: 20,
     color: "#333",
   },
   option: {

@@ -18,22 +18,22 @@ import Favourites from "./Favorites";
 import { ScrollView } from "react-native-web";
 import Footer from "./Footer";
 import useAuthStore from "../../useAuthStore";
-import { useRouter, useStore } from "expo-router";
+import { useRouter } from "expo-router";
 import { fetchLocation } from "../../src/services/locationService";
 import * as Location from 'expo-location';
 import { fetchUserById } from "../../src/services/userServices";
-import useSetupStore from "../../useSetupStore";
+import Sidebar from "./SideBar";
 
 const Home = () => {
   const router = useRouter();
-  const { excludeMayContain } = useSetupStore();
   const { width, height } = Dimensions.get("window");
   const { setLocation } = useAuthStore(); // Access setLocation from Zustand  const [address, setAddress] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const userId = useAuthStore((state) => state.user?.id);
   const [menuItems, setMenuItems] = useState([]);
   const [filteredFoodRecommendations, setFilteredFoodRecommendations] = useState([]);
-  const [isAllergenOn, setIsAllergenOn] = useState(!excludeMayContain);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+  // const [isAllergenOn, setIsAllergenOn] = useState(!excludeMayContain);
 
   useEffect(() => {
     if (!userId) {
@@ -62,14 +62,33 @@ const Home = () => {
     router.push('./Search')
   };
 
-  const toggleAllergen = () => {
-    setIsAllergenOn((prevState) => !prevState);
-  };
+  // const toggleAllergen = () => {
+  //   setIsAllergenOn((prevState) => !prevState);
+  // };
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.TextContainer}>
-        <Text>Location</Text>
+      <View style={
+        // styles.TextContainer,
+        styles.headerContainer
+      }>
+        <View>
+          <Text style={styles.locationLabel}>Location</Text>
+          <TouchableOpacity
+            onPress={() => router.push("./LocationAccessScreen")}
+          >
+            <View style={styles.locationRow}>
+              <Ionicons name="location-outline" size={20} color="blue" />
+              <Text style={styles.locationText}>London, United Kingdom</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.menuButton} onPress={() => setSidebarVisible(true)}>
+          <Ionicons name="menu-sharp" size={24} color="black" />
+        </TouchableOpacity>
+
+        {/* <Text>Location</Text>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <TouchableOpacity
             onPress={() => router.push("./LocationAccessScreen")}
@@ -77,18 +96,34 @@ const Home = () => {
             <Ionicons name="location-outline" size={24} color="blue" />
           </TouchableOpacity>
           <Text style={{ marginLeft: 5 }}>London, United Kingdom</Text>
-        </View>
+        </View> */}
       </View>
+
+      {/* <View style={styles.innerContainer}>
+        <TouchableOpacity style={styles.searchContainer} onPress={handleSearch}>
+          <Ionicons name="search" size={20} color="black" />
+          <TextInput
+            style={styles.input}
+            placeholder="Find for food or restaurant..."
+            value={searchQuery}
+          />
+          <Ionicons name="options-outline" size={20} color="black" />
+        </TouchableOpacity>
+      </View> */}
+
       <View style={styles.innerContainer}>
         <TouchableOpacity style={styles.container} onPress={handleSearch}>
           <Ionicons name="search" size={24} color="black" />
           <TextInput
             style={styles.input}
-            placeholder="Restaurant, dishes, cuisines..."
+            placeholder="Restaurant, dishes, cuisines and location"
             value={searchQuery}
           />
+          {/* Filter Icon */}
+          {/* <Ionicons name="options-outline" size={20} color="black" /> */}
         </TouchableOpacity>
-       <View style={styles.containContainer}>
+
+        {/* <View style={styles.containContainer}>
          <Text style={styles.input}>May Contain Allergen</Text>
         <Switch
           value={isAllergenOn}
@@ -96,24 +131,28 @@ const Home = () => {
           thumbColor={isAllergenOn ? "#ff6347" : "#f4f3f4"}
           trackColor={{ false: "#767577", true: "#ffdbc1" }}
         />
-       </View>
+       </View> */}
+       
       </View>
+      {/* Sidebar Component */}
+      {sidebarVisible && <Sidebar isVisible={sidebarVisible} onClose={() => setSidebarVisible(false)} />}
+
       <ScrollView style={styles.outerContainer}>
         <View>
           <FoodItem />
         </View>
         <View style={styles.FoodRestro}>
-          <FoodRecommendations isAllergenOn={isAllergenOn} />
+          <FoodRecommendations />
         </View>
         <View style={styles.Restro}>
           <RestaurantRecommendation />
         </View>
-        <View style={{marginBottom: 20}}>
+        <View style={{ marginBottom: 20 }}>
           <Favourites />
         </View>
       </ScrollView>
-      <Footer />
-    </SafeAreaView>
+      {/* <Footer /> */}
+    </SafeAreaView >
   );
 };
 
@@ -123,12 +162,38 @@ const styles = StyleSheet.create({
   outerContainer: {
     width: "100%",
     height: "66%",
+    marginTop: 10,
+  },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
     marginTop: 20,
+  },
+  locationLabel: {
+    fontSize: 18,
+    color: "#888",
+  },
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 5,
+  },
+  locationText: {
+    marginLeft: 5,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  menuButton: {
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 30,
   },
   innerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: "10%",
+    marginTop: "3%",
   },
   container: {
     flexDirection: "row",
@@ -139,7 +204,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#fff",
     margin: "auto",
-    width: "70%",
+    width: "90%",
   },
   containContainer: {
     flexDirection: "row",

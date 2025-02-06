@@ -12,12 +12,9 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useRouter } from 'expo-router'
 import EditScreen from "./EditScreen"
-import Account from './Account'
 import useAuthStore from '../../useAuthStore';
-import { fetchUserAllergyById } from '../../src/services/userAllergyServices';
 import { MEDIA_BASE_URL } from '../../src/api/apiClient';
 import useAllergyStore from '../../src/stores/allergyStore';
-import { fetchProfileAllergyById, fetchProfileAllergyByProfileId } from '../../src/services/profileAllergiesServices';
 import { fetchProfileByUserId } from '../../src/services/profileServices';
 
 const Profile = () => {
@@ -72,10 +69,10 @@ const Profile = () => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.label}>Full name</Text>
+        <Text style={styles.label}>Username</Text>
         <TextInput
           style={styles.input}
-          placeholder="Full name"
+          placeholder="Username"
           defaultValue={user?.username}
         />
 
@@ -85,7 +82,7 @@ const Profile = () => {
           placeholder="Email"
           keyboardType="email-address"
           defaultValue={user?.email}
-          editable={false} // Disable editing for email if needed
+          editable={false}
         />
 
         <Text style={styles.label}>Allergens</Text>

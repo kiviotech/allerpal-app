@@ -1,59 +1,26 @@
-import React, { useState, useRef } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-} from "react-native";
+import React from "react";
+import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useRouter } from "expo-router";
 
-// const SESSION_TIMEOUT = 2 * 60 * 1000; // 2 minutes in milliseconds
+const chats = [
+  { id: 1, name: "John Doe", lastMessage: "Hey, how are you?", avatar: "https://randomuser.me/api/portraits/men/1.jpg" },
+  { id: 2, name: "Alice Smith", lastMessage: "Let's meet up!", avatar: "https://randomuser.me/api/portraits/women/2.jpg" },
+  { id: 3, name: "Bob Johnson", lastMessage: "I'll call you later.", avatar: "https://randomuser.me/api/portraits/men/3.jpg" },
+  { id: 4, name: "Emma Wilson", lastMessage: "Just got home!", avatar: "https://randomuser.me/api/portraits/women/4.jpg" },
+];
 
-const ChatScreen = () => {
+const Chat = () => {
   const router = useRouter();
-  const navigation = useNavigation();
-  const [messages, setMessages] = useState([
-    { text: "Hi! How can I help you today?", sender: "bot" },
-  ]);
-  const [userInput, setUserInput] = useState("");
-  const [isInputDisabled, setIsInputDisabled] = useState(false); // State to control input field
-  const flatListRef = useRef(null); // Ref for the FlatList
 
-  const handleSendMessage = () => {
-    if (userInput.trim()) {
-      addMessage(userInput, "user");
-      setUserInput("");
-      setTimeout(() => generateAndAddResponse(userInput.toLowerCase()), 300);
-    }
-  };
-
-  const generateAndAddResponse = (userMessage) => {
-    if (["hi", "hello", "hey"].includes(userMessage)) {
-      botResponse = "Hello! How can I assist you today?";
-    } else if (userMessage.includes("restaurant")) {
-      botResponse =
-        "Thank you for chatting with us. We will inform the restaurant and get back to you after 24 hours.";
-        setIsInputDisabled(true)
-    } else {
-      botResponse = "Ask me about any restaurant"
-    }
-    addMessage(botResponse, "bot");
-  };
-
-  const addMessage = (text, sender) => {
-    setMessages((prevMessages) => [...prevMessages, { text, sender }]);
-    // Scroll to the end of the chat
-    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+  const handleChatPress = (chat) => {
+    router.push({ pathname: "/pages/ChatScreen", 
+      // params: { chatId: chat.id, name: chat.name, avatar: chat.avatar } 
+    });
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header with Back Arrow and Title */}
+    <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -61,61 +28,30 @@ const ChatScreen = () => {
         >
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Chat Support</Text>
+        <Text style={styles.headerTitle}>Chats</Text>
       </View>
-
-      {/* Message List */}
       <FlatList
-        ref={flatListRef} // Attach ref to FlatList
-        data={messages}
+        data={chats}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <View
-            style={[
-              styles.messageContainer,
-              item.sender === "user"
-                ? styles.userMessageContainer
-                : styles.botMessageContainer,
-            ]}
-          >
-            <Text
-              style={
-                item.sender === "user" ? styles.userMessage : styles.botMessage
-              }
-            >
-              {item.text}
-            </Text>
-          </View>
+          <TouchableOpacity style={styles.chatItem} onPress={() => handleChatPress(item)}>
+            <Image source={{ uri: item.avatar }} style={styles.avatar} />
+            <View style={styles.chatInfo}>
+              <Text style={styles.name}>{item.name}</Text>
+              <Text style={styles.lastMessage}>{item.lastMessage}</Text>
+            </View>
+          </TouchableOpacity>
         )}
-        keyExtractor={(item, index) => index.toString()}
-        contentContainerStyle={styles.messageList}
-        onContentSizeChange={() =>
-          flatListRef.current?.scrollToEnd({ animated: true })
-        } // Auto-scroll when new messages are added
       />
-
-      {/* Input Field */}
-      <View style={styles.footer}>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            value={userInput}
-            onChangeText={setUserInput}
-            placeholder="Type a message..."
-            editable={!isInputDisabled} // Disable input when isInputDisabled is true
-          />
-          <Button title="Send" onPress={handleSendMessage} 
-            disabled={isInputDisabled} // Disable button when isInputDisabled is true
-          />
-        </View>
-      </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#fff",
+    padding: 10,
   },
   header: {
     flexDirection: "row",
@@ -131,47 +67,31 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
-  messageList: {
-    flexGrow: 1,
-    justifyContent: "flex-end",
-    paddingHorizontal: 10,
-  },
-  messageContainer: {
-    marginVertical: 5,
-    padding: 10,
-    borderRadius: 10,
-  },
-  userMessageContainer: {
-    alignSelf: "flex-end",
-    backgroundColor: "#2196F3",
-  },
-  botMessageContainer: {
-    alignSelf: "flex-start",
-    backgroundColor: "#EEE",
-  },
-  userMessage: {
-    color: "#FFF",
-  },
-  botMessage: {
-    color: "#000",
-  },
-  footer: {
-    backgroundColor: "#FFF",
-    padding: 10,
-    borderTopWidth: 1,
-    borderTopColor: "#DDD",
-  },
-  inputContainer: {
+  chatItem: {
     flexDirection: "row",
     alignItems: "center",
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
   },
-  input: {
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 15,
+  },
+  chatInfo: {
     flex: 1,
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 10,
-    marginRight: 10,
+  },
+  name: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  lastMessage: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 5,
   },
 });
 
-export default ChatScreen;
+export default Chat;

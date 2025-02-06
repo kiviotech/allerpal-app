@@ -10,15 +10,17 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useRouter } from 'expo-router'; // Import useRouter for navigation
 import { forgotPassword } from '../../src/utils/auth';
 
 const ResetPassword = () => {
-  const [email, setEmail] = useState(''); // State for email input
-  const [loader, setLoader] = useState(false); // State for loader during API call
-  const [successMessage, setSuccessMessage] = useState(''); // State for success message
-  const [errors, setErrors] = useState(''); // State for error messages
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [loader, setLoader] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errors, setErrors] = useState('');
+  const [buttonDisabled, setButtonDisabled] = useState(false); // State to disable the button
 
-  // Form validation function
   const validateForm = () => {
     if (!email) {
       setErrors('Email is required.');
@@ -29,31 +31,31 @@ const ResetPassword = () => {
       setErrors('Please enter a valid email address.');
       return false;
     }
-    setErrors(''); // Clear errors if validation passes
+    setErrors('');
     return true;
   };
 
-  // Function to handle password reset
   const handlePasswordReset = async () => {
-    const isValid = validateForm();
-    if (isValid) {
-      setLoader(true);
-      setSuccessMessage('');
-      try {
-        const response = await forgotPassword(email); // Pass the email directly
-        if (response) {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
-          setSuccessMessage(
-            'We have sent a password reset link to your email address. Please check your inbox and click the link to reset your password.'
-          );
-        }
-      } catch (error) {
-        console.error('Error:', error.message);
-        Alert.alert('Error', 'Failed to send reset link. Please try again.');
-      } finally {
-        setLoader(false);
+    if (!validateForm()) return;
+
+    setLoader(true);
+    setSuccessMessage('');
+    try {
+      const response = await forgotPassword(email);
+      if (response) {
+        setSuccessMessage(
+          'We have sent a password reset link to your email address. Please check your inbox and follow the instructions.'
+        );
+        setButtonDisabled(true); // Disable button
+        setTimeout(() => {
+          router.replace('/');
+        }, 5000);
       }
-    } else {
-      console.log('Form is not valid', errors);
+    } catch (error) {
+      console.error('Error:', error.message);
+      Alert.alert('Error', 'Failed to send reset link. Please try again.');
+    } finally {
+      setLoader(false);
     }
   };
 
@@ -80,17 +82,14 @@ const ResetPassword = () => {
         />
 
         {errors ? <Text style={styles.errorText}>{errors}</Text> : null}
+        {successMessage ? <Text style={styles.successMessage}>{successMessage}</Text> : null}
 
-        {successMessage ? (
-          <Text style={styles.successMessage}>{successMessage}</Text>
-        ) : null}
-
-        <TouchableOpacity style={styles.button} onPress={handlePasswordReset}>
-          {loader ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Send new password</Text>
-          )}
+        <TouchableOpacity
+          style={[styles.button, buttonDisabled && styles.disabledButton]}
+          onPress={handlePasswordReset}
+          disabled={buttonDisabled} // Disable button after success
+        >
+          {loader ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Send new password</Text>}
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -142,6 +141,9 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: 'center',
   },
+  disabledButton: {
+    backgroundColor: '#ccc', // Greyed-out button when disabled
+  },
   buttonText: {
     color: '#fff',
     fontSize: 16,
@@ -153,6 +155,12 @@ const styles = StyleSheet.create({
     marginTop: 5,
     alignSelf: "flex-start",
     marginLeft: "10%",
+  },
+  successMessage: {
+    color: "green",
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 10,
   },
 });
 
