@@ -1,8 +1,11 @@
 import axios from "axios";
 import { getToken } from "../utils/storage";
 
-export const BASE_URL = "http://localhost:1337/api";
-export const MEDIA_BASE_URL = "http://localhost:1337";
+// export const BASE_URL = "http://localhost:1337/api";
+export const BASE_URL = "https://api.allerpal.com/api";
+
+// export const MEDIA_BASE_URL = "http://localhost:1337";
+export const MEDIA_BASE_URL = "https://api.allerpal.com";
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
