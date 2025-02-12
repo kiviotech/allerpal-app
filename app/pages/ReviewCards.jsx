@@ -14,6 +14,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { fetchReviewsByRestaurantId } from "../../src/services/reviewServices";
 import Restro from "../../assets/Restro.png";
 import { MEDIA_BASE_URL } from "../../src/api/apiClient";
+import { useFocusEffect } from "expo-router";
 
 
 // const GOOGLE_API_KEY = "AIzaSyDFQTSshpxEzndpEMEIDi_8f7OUGyh-Hs8"; // Replace with your actual Google API Key
@@ -72,21 +73,28 @@ const ReviewCards = ({ restaurantId }) => {
   //   );
   // }
 
-  useEffect(() => {
-    const collectRestaurants = async () => {
-      try {
-        setLoading(true)
-        const response = await fetchReviewsByRestaurantId(restaurantId);
-        setReviews(response.data)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!restaurantId) {
+        console.error("restaurantId is missing. Skipping fetch.");
+        return;
       }
-      catch (error) {
-        console.error("Error fetching restaurants:", error);
-        setReviews([])
+      const collectRestaurants = async () => {
+        try {
+          setLoading(true)
+          const response = await fetchReviewsByRestaurantId(restaurantId);
+          setReviews(response.data)
+        }
+        catch (error) {
+          console.error("Error fetching restaurants:", error);
+          setReviews([])
+        }
+        setLoading(false)
       }
-      setLoading(false)
-    }
-    collectRestaurants()
-  }, []);
+      collectRestaurants()
+      // The cleanup is automatically handled by `useFocusEffect`
+    }, [restaurantId]) // Trigger effect on `documentId` change
+  );
 
   return (
     <SafeAreaView >

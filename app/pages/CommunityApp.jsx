@@ -121,9 +121,9 @@ const CommunityApp = ({showFooter= true}) => {
         </View>
 
       </ScrollView>
-{ showFooter && (
+{/* { showFooter && (
       <Footer />
-)}
+)} */}
     </SafeAreaView>
   );
 };

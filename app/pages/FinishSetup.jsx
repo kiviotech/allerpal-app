@@ -7,6 +7,7 @@ import {
   StyleSheet,
   CheckBox,
   Image,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -32,6 +33,7 @@ const FinishSetUp = () => {
     termsAccepted,
     setTermsAccepted,
   } = useSetupStore();
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const user = useAuthStore((state) => state.user);
   useEffect(() => {
@@ -44,6 +46,7 @@ const FinishSetUp = () => {
       try {
         const response = await getAllergies();
         const allergyData = response?.data?.data;
+        allergyData.sort((a, b) => a.name.localeCompare(b.name));
         setAllergensState(allergyData);
       } catch (error) {
         console.error("Error fetching allergens:", error);
@@ -83,21 +86,17 @@ const FinishSetUp = () => {
       };
 
       try {
-        // console.log("User profile Id", profileId);
-        // console.log('User Profile document Id', documentId)
-
         const profileAllergyPayload = {
           data: {
             profile: documentId,
             severity: "mild",
-            allergies: selectedAllergies, // Changed 'allergy' to 'allergies'
+            allergies: selectedAllergies,
             locale: "en",
+            excludeMayContain: excludeMayContain
           },
         };
-
-          const resp = await createNewProfileAllergy(profileAllergyPayload);
-        //  if (resp.ok) 
-          router.push("./Home");
+        const resp = await createNewProfileAllergy(profileAllergyPayload);
+        router.push("./Home");
       } catch (error) {
         console.error("Error creating/updating allergy profiles:", error);
       }
@@ -162,14 +161,14 @@ const FinishSetUp = () => {
         </Text>
       </View>
 
+      <TouchableOpacity onPress={() => setIsModalVisible(true)} style={styles.disclaimerButton}>
+        <Text style={styles.linkText}>User Agreement and Legal Disclaimer</Text>
+      </TouchableOpacity>
+
       <View style={styles.termsContainer}>
         <CheckBox value={termsAccepted} onValueChange={setTermsAccepted} style={styles.termsCheckbox} />
         <Text style={styles.termsText}>
-          By ticking this box, I confirm that I have read, understood, and agree
-          to the terms outlined in this User Agreement and Legal Disclaimer. I
-          accept full responsibility for verifying all allergen-related
-          information and assume all risks associated with dining out with food
-          allergies.
+          By ticking this box you are confirming you have read, understood, and agree to all of the terms outlined in this User Agreement and Legal Disclaimer. You accept full responsibility for verifying all allergen-related information and assume all risks related to dining with food allergies.
         </Text>
       </View>
 
@@ -183,6 +182,34 @@ const FinishSetUp = () => {
       >
         <Text style={styles.buttonText}>Finish Setup</Text>
       </TouchableOpacity>
+
+      <Modal
+        visible={isModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setIsModalVisible(false)}>
+          <View style={styles.modalContainer}>
+            <TouchableOpacity style={styles.modalButton} onPress={() => setIsModalVisible(false)}>
+              <Text style={styles.modalButtonText}>X</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Allerpal User Agreement and Legal Disclaimer</Text>
+            <Text style={styles.modelSubtitle}>By creating an Allerpal account and using this app, you acknowledge and agree to the following terms:</Text>
+            <ScrollView style={styles.modalContent}>
+              <Text style={styles.modalText}>
+                1.	Restaurant and Menu Information Disclaimer: Allerpal compiles restaurant and menu information from publicly available sources, data provided by restaurants, and feedback from users. While Allerpal endeavors to ensure accuracy, we cannot and do not guarantee the completeness, reliability, or timeliness of this information. Restaurant menus, ingredients, and allergen-handling practices are subject to change without notice, and Allerpal has no control over these changes. It is the user’s responsibility to verify all menu items and ingredients directly with restaurant staff to confirm allergen information before consuming any food or beverage.
+              </Text>
+              <Text style={styles.modalText}>
+                2.	User Responsibility Disclaimer: Allerpal provides informational support to assist users in making dining decisions but does not assume responsibility for individual choices, actions, or outcomes. Users are solely responsible for assessing their own risk, confirming allergen safety with restaurant staff, and making dining decisions that align with their allergy management needs. Allerpal recommends that users practice vigilance, use personal discretion, and make decisions in consultation with medical professionals regarding any specific allergen management requirements.
+              </Text>
+              <Text style={styles.modalText}>
+                3.	Liability Disclaimer: Allerpal, its founders, employees, and affiliates are not liable for any adverse reactions, allergic responses, injuries, or other incidents that may result from dining at any restaurant listed, recommended, or reviewed within this app. Allerpal is provided “as is,” without warranties of any kind, whether expressed or implied, including but not limited to warranties of accuracy, completeness, merchantability, or fitness for a particular purpose. By using Allerpal, you accept all inherent risks associated with dining out with food allergies and agree to release, indemnify, and hold harmless Allerpal, its founders, employees, and affiliates from any claims, liabilities, damages, or losses, arising from or related to your use of this app or reliance on its information.
+              </Text>
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </ScrollView>
   );
 };
@@ -244,6 +271,16 @@ const styles = StyleSheet.create({
     color: "#00c4cc",
     fontWeight: "bold",
   },
+  disclaimerButton: {
+    marginTop: 10,
+    padding: 10
+  },
+  linkText: {
+    color: "#00c4cc",
+    fontSize: 18,
+    fontWeight: "bold",
+    textDecorationLine: "underline",
+  },
   finishButton: {
     backgroundColor: "#00c4cc",
     paddingVertical: 15,
@@ -262,7 +299,7 @@ const styles = StyleSheet.create({
   },
   termsContainer: {
     flexDirection: "row",
-    marginTop: "10%",
+    marginTop: "5%",
   },
   termsCheckbox: {
     width: 25,
@@ -308,6 +345,75 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 10,
   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
+  },
+
+  modalContainer: {
+    backgroundColor: "white",
+    borderRadius: 10,
+    paddingHorizontal: 20,
+    width: "90%", // Responsive width
+    maxWidth: 500, // Max width to prevent over-expansion
+    alignItems: "center",
+  },
+
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  modelSubtitle: {
+    fontSize: 16,
+    // fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+
+  modalContent: {
+    maxHeight: 500, // Scrollable if content is long
+    paddingVertical: 10,
+  },
+
+  modalText: {
+    fontSize: 14,
+    textAlign: "justify",
+    // color: "#333", 
+    marginBottom: 15,
+  },
+
+  modalButton: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginTop: 15,
+    marginLeft: 'auto'
+  },
+
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: 'right',
+  },
+
+  modalCloseButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "transparent",
+  },
+
+  modalCloseIcon: {
+    fontSize: 22,
+    color: "#333",
+  },
+
 });
 
 export default FinishSetUp;

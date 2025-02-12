@@ -136,10 +136,10 @@ const SignUp = ({ navigation }) => {
 
         {/* Input Fields with Labels and Error Messages */}
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Full Name</Text>
+          <Text style={styles.label}>Username</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your full name"
+            placeholder="Enter your username"
             placeholderTextColor={"#B3B3B3"}
             value={formData.fullName}
             onChangeText={(value) => handleInputChange("fullName", value)}

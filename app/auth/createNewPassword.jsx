@@ -73,7 +73,7 @@ const CreateNewPassword = () => {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Create New Password</Text>
         <Text style={styles.subtitle}>
-          Enter your new password below.
+          Enter new password
         </Text>
 
         {/* New Password Field */}
@@ -90,6 +90,10 @@ const CreateNewPassword = () => {
             <Text style={styles.errorText}>{errors.password}</Text>
           )}
         </View>
+
+        <Text style={styles.subtitle}>
+          Confirm password
+        </Text>
 
         {/* Confirm Password Field */}
         <View style={styles.inputContainer}>
@@ -121,23 +125,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   content: {
-    padding: 20,
-
+    paddingHorizontal: 20,
+    flex: 1,
+    justifyContent: "center",
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 10,
-    // textAlign: "center",
+    marginBottom: 30,
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
     color: "#666",
     // textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   inputContainer: {
-    marginBottom: 15,
+    marginBottom: 25,
   },
   input: {
     borderWidth: 1,
@@ -161,7 +166,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "bold",
   },
 });

@@ -51,6 +51,7 @@ const Layout = () => {
           <Stack.Screen name="pages/ReviewForm" />
           <Stack.Screen name="pages/Disclamier" />
           <Stack.Screen name="pages/FinishSetup" />
+          <Stack.Screen name="pages/LegalPolicy" />
         </Stack>
       </ToastProvider>
     </NavigationContainer>

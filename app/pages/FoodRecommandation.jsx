@@ -118,13 +118,14 @@ const FoodCard = ({ item, onPress }) => {
   );
 };
 
-const FoodRecommendations = ({isAllergenOn}) => {
+const FoodRecommendations = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filteredFoodRecommendations, setFilteredFoodRecommendations] = useState([]);
   const [profileAllergies, setProfileAllergies] = useState([]);
   const profileId = useAuthStore((state) => state.profileId);
   const userId = useAuthStore((state) => state?.user?.id);
+  const [isAllergenOn, setIsAllergenOn] = useState(false);
   const router = useRouter();
 
   const onFoodCardPress = async (menuItemId) => {
@@ -156,8 +157,8 @@ const FoodRecommendations = ({isAllergenOn}) => {
       try {
         const response = await fetchProfileByUserId(userId)
         const profileAllergy = response?.data[0]?.profile_allergies[0]?.allergies || []
-        console.log('profile', profileAllergy)
         selectedAllergies = profileAllergy.map((allergy) => allergy.name.toLowerCase());
+        setIsAllergenOn(response?.data[0]?.profile_allergies[0]?.excludeMayContain)
       } catch (error) {
         console.warn("Error fetching profile allergies");
       }
@@ -209,7 +210,7 @@ const FoodRecommendations = ({isAllergenOn}) => {
       <Text style={styles.title}>Dish recommendations for you</Text>
       <FlatList
         data={
-          isAllergenOn
+          !isAllergenOn
             ? menuItems.length > 0
               ? menuItems
               : []

@@ -65,6 +65,7 @@ const Blog = () => {
   const [articles, setArticles] = useState([]);
   const [filteredArticles, setFilteredArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter()
 
   const quickSearches = ['All', 'Dairy-Free', 'Nut-Free', 'Gluten-Free', 'Egg-Free']
   useEffect(() => {
@@ -85,7 +86,7 @@ const Blog = () => {
 
   const handleSearch = (text) => {
     setSearchQuery(text);
-  
+
     const filtered = articles.filter((blog) => {
       // Extract sorted keywords for the blog
       const content = blog?.article_content || '';
@@ -97,17 +98,17 @@ const Blog = () => {
           counts[lowerWord] = (counts[lowerWord] || 0) + 1;
           return counts;
         }, {});
-  
+
       const sortedKeywords = Object.entries(wordCounts)
         .map(entry => entry[0]); // Get only the words
-  
+
       // Check if the title or sorted keywords match the search query
       return (
         blog.title.toLowerCase().includes(text.toLowerCase()) ||
         sortedKeywords.some((keyword) => keyword.toLowerCase().includes(text.toLowerCase()))
       );
     });
-  
+
     setFilteredArticles(filtered);
   };
 
@@ -115,10 +116,19 @@ const Blog = () => {
     const query = filter === 'All' ? '' : filter;
     handleSearch(query); // Apply the search logic
   };
-  
+
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Blog</Text>
+      </View>
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={24} color="#888" style={styles.searchIcon} />
         <TextInput
@@ -136,10 +146,10 @@ const Blog = () => {
       <ScrollView horizontal style={styles.filterBar} showsHorizontalScrollIndicator={false}>
         {quickSearches.map((filter, index) => (
           <TouchableOpacity key={index} style={styles.filterButton}
-          onPress={() => {
-            setSearchQuery(filter === 'All' ? '' : filter); // Update search input
-            handleQuickSearch(filter); // Trigger search logic
-          }}
+            onPress={() => {
+              setSearchQuery(filter === 'All' ? '' : filter); // Update search input
+              handleQuickSearch(filter); // Trigger search logic
+            }}
           >
             <Text style={styles.filterText}>{filter}</Text>
           </TouchableOpacity>
@@ -154,7 +164,7 @@ const Blog = () => {
           <Text style={styles.noResultsText}>No blogs found matching your search.</Text>
         )}
       </ScrollView>
-      <Footer />
+      {/* <Footer /> */}
     </SafeAreaView>
   );
 };
@@ -165,6 +175,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     backgroundColor: '#FAFAFA'
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+    backgroundColor: "#fff",
+    elevation: 2,
+  },
+  backButton: {
+    marginRight: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    // marginBottom: 20,
+    color: "#333",
   },
   searchContainer: {
     flexDirection: 'row',
