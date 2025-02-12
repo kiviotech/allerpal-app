@@ -321,7 +321,7 @@ const RestaurantScreen = () => {
                 })}
               >
                 <Text style={styles.contactButtonText}>Contact Restaurant</Text>
-              </TouchableOpacity>
+            </TouchableOpacity>
             </View>
 
             {/* Rating and Reviews */}
@@ -444,18 +444,27 @@ const styles = StyleSheet.create({
   imageRating: {
     display: 'flex',
     flexDirection: 'row',
-
   },
   image: {
-    width: "85%",
+    width: "90%",
     height: 180,
     borderRadius: 10,
-    margin: 'auto',
+    marginHorizontal: 20,
   },
   ratingContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 5,
     position: "relative",
-    right: 50
-
+    right: 98,
+    top: 10,
+    height: 30,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   detailsContainer: {
     padding: 16,
