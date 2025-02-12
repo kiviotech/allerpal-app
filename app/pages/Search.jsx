@@ -306,12 +306,7 @@ const Search = () => {
   };
 
   const handleViewRestaurant = (restaurant) => {
-    const imageUrl =
-      (restaurant.image && restaurant.image[0]?.url)
-        ? `${MEDIA_BASE_URL}${restaurant.image[0].url}`
-        : Restro;
-
-    router.push({
+      router.push({
       pathname: "pages/RestaurantScreen",
       params: {
         id: restaurant.id,
@@ -330,28 +325,28 @@ const Search = () => {
     });
   };
 
-  const renderFoodItem = ({ item }) => (
-    <View style={styles.card}>
-      <Image source={foodrestro} style={styles.image} />
-      <View style={styles.ratingContainer}>
-        <Text style={styles.ratingText}>
-          {item.is_vegetarian ? "🥬" : "🍖"}
-        </Text>
-        <Text style={styles.reviewText}>
-          {item.is_available ? "Available" : "Unavailable"}
-        </Text>
-        {/* <Text style={styles.ratingText}>{item.rating} ⭐</Text>
-        <Text style={styles.reviewText}>({item.reviews}+)</Text> */}
-      </View>
-      <View style={styles.detailsContainer}>
-        <Text style={styles.name}>
-          {item.item_name.length > 15
-            ? `${item.item_name.substring(0, 15)}...`
-            : item.item_name}
-        </Text>
-      </View>
-    </View>
-  );
+  // const renderFoodItem = ({ item }) => (
+  //   <View style={styles.card}>
+  //     <Image source={foodrestro} style={styles.image} />
+  //     <View style={styles.ratingContainer}>
+  //       <Text style={styles.ratingText}>
+  //         {item.is_vegetarian ? "🥬" : "🍖"}
+  //       </Text>
+  //       <Text style={styles.reviewText}>
+  //         {item.is_available ? "Available" : "Unavailable"}
+  //       </Text>
+  //       {/* <Text style={styles.ratingText}>{item.rating} ⭐</Text>
+  //       <Text style={styles.reviewText}>({item.reviews}+)</Text> */}
+  //     </View>
+  //     <View style={styles.detailsContainer}>
+  //       <Text style={styles.name}>
+  //         {item.item_name.length > 15
+  //           ? `${item.item_name.substring(0, 15)}...`
+  //           : item.item_name}
+  //       </Text>
+  //     </View>
+  //   </View>
+  // );
 
   // const renderRestaurantItem = ({ item }) => {
 
@@ -410,7 +405,6 @@ const Search = () => {
 
   const RestaurantCard = ({ item, latitude, longitude }) => {
     const [distance, setDistance] = useState(null);
-
     useEffect(() => {
       const fetchDistanceToRestaurant = async () => {
         if (latitude && longitude && item.location) {
@@ -431,11 +425,16 @@ const Search = () => {
       })
     };
 
+    const imageUrl =
+      (item?.image && item?.image[0]?.url)
+        ? `${MEDIA_BASE_URL}${item?.image[0].url}`
+        : Restro;
+
     return (
       <TouchableOpacity onPress={goToRestaurantScreen}>
         <View style={styles.cardContainer}>
           <View style={styles.card1}>
-            <Image source={Restro} style={styles.image1} />
+            <Image source={imageUrl} style={styles.image1} />
             <View style={styles.ratingContainer1}>
               <Text style={styles.ratingText1}>{item?.rating} ⭐</Text>
               <Text style={styles.reviewText1}>({item?.reviews}+)</Text>
@@ -445,7 +444,7 @@ const Search = () => {
                 {item.name.length > 30 ? `${item.name.substring(0, 30)}...` : item.name}
               </Text>
               <View style={styles.categories1}>
-                <View style={{display: 'flex', flexDirection: 'row', alignItems: 'center',}}>
+                <View style={{display: 'flex', flexDirection: 'row', alignItems: 'center', maxWidth: '55%',}}>
                 <Ionicons name='location' size={20} color='#00D0DD' />
                 <Text style={styles.loc}>{item.location}</Text>
                 </View>
@@ -864,7 +863,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
     elevation: 5,
-    height: 270,
+    height: 290,
     marginTop: 10,
     marginLeft: 15,
     marginRight: 15,
@@ -916,15 +915,15 @@ const styles = StyleSheet.create({
   },
   categories1: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    // flexWrap: 'wrap',
     marginBottom: 10,
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
   },
   loc: {
     fontSize: 16,
-    width: '65%',
+    // maxWidth: '55%',
     display: 'flex',
-    flexWrap: 'wrap'
+    flexWrap: 'wrap',
   },
   distanceText: {
     textAlign: 'right'
