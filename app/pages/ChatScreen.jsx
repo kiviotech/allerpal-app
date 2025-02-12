@@ -268,7 +268,7 @@ const ChatScreen = () => {
         >
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Chat Support</Text>
+        <Text style={styles.headerTitle}>Chat</Text>
       </View>
 
       {/* Message List */}

@@ -164,12 +164,12 @@ const Account = () => {
             style={styles.signOutButton}
             onPress={() =>
               showModal(
-                "Are you sure you want to sign out?",
+                "Are you sure you want to logout?",
                 true // Pass `isSignOut` as true
               )
             }
           >
-            <Text style={styles.signOutText}>Sign Out</Text>
+            <Text style={styles.signOutText}>Logout</Text>
           </TouchableOpacity>
         </ScrollView>
 

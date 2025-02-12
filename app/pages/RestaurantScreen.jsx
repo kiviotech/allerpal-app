@@ -37,9 +37,11 @@ const RestaurantScreen = () => {
   const [isAllergenOn, setIsAllergenOn] = React.useState(false);
   const [type, setType] = useState("normal");
   const [isFavorite, setIsFavorite] = useState(false);
-  const scrollViewRef = useRef(null); // Added ref for ScrollView
+  const scrollViewRef = useRef(null); // Ref for the ScrollView
+  const reviewsRef = useRef(null); // Ref for the Reviews Section
   const [restaurantData, setRestaurantData] = useState([]);
   const [distance, setDistance] = useState(null);
+  const [showScrollToTopButton, setShowScrollToTopButton] = useState(false); // State to show/hide button
 
   const toggleAllergen = (value) => {
     setIsAllergenOn(value);
@@ -193,10 +195,9 @@ const RestaurantScreen = () => {
 
   // Scroll to reviews section
   const scrollToReviews = () => {
-    scrollViewRef.current?.scrollTo({
-      y: 500,
-      animated: true,
-    });
+    if (reviewsRef.current) {
+      reviewsRef.current.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   const getImageSource = () => {
@@ -206,9 +207,36 @@ const RestaurantScreen = () => {
     return restaurantURL;
   };
 
+  // Track scroll position to show/hide the button
+  const handleScroll = (event) => {
+    const contentOffsetY = event.nativeEvent.contentOffset.y;
+    const contentHeight = event.nativeEvent.contentSize.height;
+    const screenHeight = event.nativeEvent.layoutMeasurement.height;
+
+    // Show button when scrolled past 10% of the page
+    if (contentOffsetY > contentHeight / 10 - screenHeight) {
+      setShowScrollToTopButton(true);
+    } else {
+      setShowScrollToTopButton(false);
+    }
+  };
+
+  // Scroll to top when button is pressed
+  const scrollToTop = () => {
+    scrollViewRef.current?.scrollTo({
+      y: 0,
+      animated: true,
+    });
+  };
+
+
   return (
     <SafeAreaView style={styles.AreaContainer}>
-      <ScrollView ref={scrollViewRef} style={styles.container}>
+      <ScrollView ref={scrollViewRef}
+        style={styles.container}
+        onScroll={handleScroll} // Handle scrolling
+        scrollEventThrottle={16} // Throttle scroll events
+      >
         <View>
           <View style={styles.headerIcons}>
             <TouchableOpacity onPress={() => router.back()}>
@@ -243,7 +271,7 @@ const RestaurantScreen = () => {
                 <TouchableOpacity onPress={() =>
                   callResto(restaurantData?.contact_number ? restaurantData?.contact_number : "")}
                   style={styles.icons}>
-                  <FontAwesome name="phone" size={28} color="#ff6347" />
+                  <FontAwesome name="phone" size={26} color="#ff6347" />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={openLocation} style={styles.icons}>
                   <FontAwesome name="map-marker" size={26} color="#00D0DD" />
@@ -251,14 +279,25 @@ const RestaurantScreen = () => {
               </View>
             </View>
 
-            {/* Rating and Reviews */}
-            <View style={styles.ratingRow}>
-              <FontAwesome name="star" size={16} color="#FFD700" />
-              <Text style={styles.ratingText}>{restaurantData?.rating} </Text>
-              {/* <Text style={styles.reviewText}>(30+)</Text> */}
-              <TouchableOpacity onPress={scrollToReviews}>
-                <Text style={styles.reviewLink}>Reviews</Text>
-              </TouchableOpacity>
+            {/* Cuisines Section */}
+            <View style={styles.categories}>
+              {/* <Text style={styles.subTitle}>Cuisines: </Text> */}
+              {Array.isArray(restaurantData?.cuisines) && restaurantData.cuisines.length > 0 ? (
+                <View>
+                  {restaurantData.cuisines.map((cuisine, index) => (
+                    <Text key={index} style={styles.category}>
+                      {
+                        // ${cuisine?.cuisine_type} Cuisine 
+                        cuisine?.cuisine_type
+                        // } 
+                        || "Unknown cuisine type"
+                      }
+                    </Text>
+                  ))}
+                </View>
+              ) : (
+                <Text>No cuisine available</Text>
+              )}
             </View>
 
             <View style={styles.distanceContact}>
@@ -274,27 +313,27 @@ const RestaurantScreen = () => {
               {/* Contact Button */}
               <TouchableOpacity
                 style={styles.contactButton}
-                onPress={() => router.push("pages/Chat")}
+                onPress={() => router.push({
+                  pathname: "pages/Chat",
+                  params: { 
+                    restaurantId: restaurantData?.id, 
+                  }
+                })}
               >
                 <Text style={styles.contactButtonText}>Contact Restaurant</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Cuisines Section */}
-            <View style={styles.categories}>
-              <Text style={styles.subTitle}>Cuisines: </Text>
-              {Array.isArray(restaurantData?.cuisines) && restaurantData.cuisines.length > 0 ? (
-                <View>
-                  {restaurantData.cuisines.map((cuisine, index) => (
-                    <Text key={index} style={styles.category}>
-                      {cuisine?.cuisine_type || "Unknown cuisine type"}
-                    </Text>
-                  ))}
-                </View>
-              ) : (
-                <Text>No cuisines available</Text>
-              )}
+            {/* Rating and Reviews */}
+            <View style={styles.ratingRow}>
+              <FontAwesome name="star" size={16} color="#FFD700" />
+              <Text style={styles.ratingText}>{restaurantData?.rating} </Text>
+              {/* <Text style={styles.reviewText}>(30+)</Text> */}
+              <TouchableOpacity onPress={scrollToReviews}>
+                <Text style={styles.reviewLink}>Reviews</Text>
+              </TouchableOpacity>
             </View>
+
 
             {/* Allergen Toggle */}
             <View style={styles.allergenContainer}>
@@ -327,7 +366,7 @@ const RestaurantScreen = () => {
           </View>
 
           {/* Review Section */}
-          <View style={styles.Review}>
+          <View style={styles.Review} ref={reviewsRef} >
             <ReviewsSection restaurantId={documentId} id={id} />
           </View>
 
@@ -339,6 +378,15 @@ const RestaurantScreen = () => {
       {/* <View>
         <Footer />
       </View> */}
+
+      {showScrollToTopButton && (
+        <TouchableOpacity
+          style={styles.scrollToTopButton}
+          onPress={scrollToTop}
+        >
+          <Ionicons name="arrow-up" size={24} color="white" />
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 };
@@ -346,11 +394,25 @@ const RestaurantScreen = () => {
 export default RestaurantScreen;
 
 const styles = StyleSheet.create({
+  scrollToTopButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    backgroundColor: "#333",
+    borderRadius: 50,
+    padding: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
   categories: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
-    marginVertical: 10,
+    marginTop: 10,
   },
   subTitle: {
     fontSize: 16,
@@ -410,14 +472,14 @@ const styles = StyleSheet.create({
   iconRow: {
     flexDirection: "row",
     alignItems: 'center',
-    maxWidth: '30%',
-    minWidth: '30%',
+    maxWidth: '25%',
+    minWidth: '25%',
     justifyContent: 'space-between',
   },
   icons: {
     backgroundColor: '#fff',
-    paddingVertical: 13,
-    paddingHorizontal: 18,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 30,
   },
   ratingRow: {

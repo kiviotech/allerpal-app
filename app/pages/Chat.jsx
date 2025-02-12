@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 const chats = [
@@ -11,6 +11,8 @@ const chats = [
 ];
 
 const Chat = () => {
+  const {restaurantId} = useLocalSearchParams();
+  console.log('restaurant ID', restaurantId)
   const router = useRouter();
 
   const handleChatPress = (chat) => {
@@ -28,7 +30,7 @@ const Chat = () => {
         >
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Chats</Text>
+        <Text style={styles.headerTitle}>Inbox</Text>
       </View>
       <FlatList
         data={chats}

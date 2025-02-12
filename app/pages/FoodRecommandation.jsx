@@ -85,8 +85,8 @@ const FoodCard = ({ item, onPress }) => {
         }
         style={styles.image}
       />
-      <View style={styles.priceContainer}>
-        <TouchableOpacity
+      {/* <View style={styles.priceContainer}> */}
+        {/* <TouchableOpacity
           onPress={handleFavoritePress}
           style={[styles.heartContainer, isFavorite && styles.heartContainerLiked]}
         >
@@ -96,16 +96,16 @@ const FoodCard = ({ item, onPress }) => {
             color="white"
             // style={styles.heartIcon}
           />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.ratingContainer}>
+        </TouchableOpacity> */}
+      {/* </View> */}
+      {/* <View style={styles.ratingContainer}>
         <Text style={styles.ratingText}>
           {item.is_vegetarian ? "🥬" : "🍖"}
         </Text>
         <Text style={styles.reviewText}>
           {item.is_available ? "Available" : "Unavailable"}
         </Text>
-      </View>
+      </View> */}
       <View style={styles.detailsContainer}>
         <Text style={styles.name}>
           {item.item_name.length > 18
@@ -275,49 +275,49 @@ const styles = StyleSheet.create({
     elevation: 3,
     width: width * 0.4,
     marginHorizontal: 8,
-    maxHeight: 180,
-    minHeight: 180,
+    maxHeight: 160,
+    minHeight: 160,
   },
   image: {
     width: "100%",
-    height: 120,
+    height: 110,
   },
-  priceContainer: {
-    flex: 1,
-    alignItems: 'flex-end',
-    position: 'fixed',
-    width: "40%",
-    padding: 5,
-  },
-  priceText: {
-    fontSize: 15,
-    fontWeight: "bold",
-    color: "#000",
-    backgroundColor: "white",
-    borderRadius: 5,
-    paddingHorizontal: 10,
-  },
-  ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    position: "absolute",
-    top: 95,
-    left: 6,
-    backgroundColor: "white",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 12,
-    borderColor: "gray",
-  },
-  ratingText: {
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-  reviewText: {
-    fontSize: 10,
-    marginLeft: 2,
-    color: "#777",
-  },
+  // priceContainer: {
+  //   flex: 1,
+  //   alignItems: 'flex-end',
+  //   position: 'fixed',
+  //   width: "40%",
+  //   padding: 5,
+  // },
+  // priceText: {
+  //   fontSize: 15,
+  //   fontWeight: "bold",
+  //   color: "#000",
+  //   backgroundColor: "white",
+  //   borderRadius: 5,
+  //   paddingHorizontal: 10,
+  // },
+  // ratingContainer: {
+  //   flexDirection: "row",
+  //   alignItems: "center",
+  //   position: "absolute",
+  //   top: 95,
+  //   left: 6,
+  //   backgroundColor: "white",
+  //   paddingHorizontal: 6,
+  //   paddingVertical: 2,
+  //   borderRadius: 12,
+  //   borderColor: "gray",
+  // },
+  // ratingText: {
+  //   fontSize: 12,
+  //   fontWeight: "bold",
+  // },
+  // reviewText: {
+  //   fontSize: 10,
+  //   marginLeft: 2,
+  //   color: "#777",
+  // },
   detailsContainer: {
     padding: 8,
     alignItems: "center",
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     marginBottom: 4,
-    marginTop: 10,
+    marginTop: 5,
     textTransform: 'capitalize',
   },
   heartContainer: {

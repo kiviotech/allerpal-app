@@ -2,26 +2,27 @@ import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 
 const MenuCard = ({ menuItems }) => {
-
   return (
     <View style={styles.container}>
       {menuItems.map((menuItem, index) => (
         <View key={menuItem.id} style={styles.maincard}>
-          {menuItem.menu_items.map((item) => (
+          {menuItem.menu_items.map((item) => {
+            const imageUrl = item?.image ? item?.image : "https://media.istockphoto.com/id/1442417585/photo/person-getting-a-piece-of-cheesy-pepperoni-pizza.jpg?s=612x612&w=0&k=20&c=k60TjxKIOIxJpd4F4yLMVjsniB4W1BpEV4Mi_nb4uJU="
+          return (
             <View key={item.id} style={styles.cardContainer}>
               {/* Image Section - Replace with actual item image if available */}
               <View style={styles.imageContainer}>
                 <Image
                   source={{
-                    uri: "https://media.istockphoto.com/id/1442417585/photo/person-getting-a-piece-of-cheesy-pepperoni-pizza.jpg?s=612x612&w=0&k=20&c=k60TjxKIOIxJpd4F4yLMVjsniB4W1BpEV4Mi_nb4uJU=",
+                    uri: imageUrl
                   }}
                   style={styles.image}
                 />
-                <View style={styles.ratingContainer}>
+                {/* <View style={styles.ratingContainer}>
                   <Text style={styles.ratingText}>4.5</Text>
                   <Text style={styles.star}>★</Text>
-                  {/* <Text style={styles.ratingCount}>(25+)</Text> */}
-                </View>
+                  <Text style={styles.ratingCount}>(25+)</Text>
+                </View> */}
               </View>
 
               {/* Details Section */}
@@ -37,7 +38,9 @@ const MenuCard = ({ menuItems }) => {
                 )}
               </View>
             </View>
-          ))}
+          )
+          }
+          )}
         </View>
       ))}
     </View>

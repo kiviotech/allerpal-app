@@ -523,7 +523,7 @@ const Search = () => {
         </View>
       )}
 
-      <View>
+      {/* <View>
         <Text style={styles.sectionTitle}>Popular Searches</Text>
         <FlatList
           data={popularSearches}
@@ -541,7 +541,7 @@ const Search = () => {
             </TouchableOpacity>
           )}
         />
-      </View>
+      </View> */}
 
       {/* 
       <View style={{ alignItems: 'center', marginTop: 10 }}>
