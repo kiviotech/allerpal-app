@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -18,6 +18,7 @@ import useAuthStore from "../../useAuthStore";
 const { width, height } = Dimensions.get("window");
 
 const Login = () => {
+  // useAuthMiddleware(); // Apply middleware for auth check
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -26,7 +27,18 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const jwt = useAuthStore((state) => state.jwt);
   const navigation = useNavigation();
+
+  useEffect(() => {
+    if (jwt) {
+      // Use a timeout to prevent the immediate state update
+      const timer = setTimeout(() => {
+        router.replace("/pages/Home");
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [jwt, router]);  
 
   const handleInputChange = (field, value) => {
     setFormData((prevFormData) => ({
@@ -76,7 +88,7 @@ const Login = () => {
     } catch (error) {
       const errorMessage =
         error.response?.data?.message ||
-        "Something went wrong. Please try again later.";
+        "Invalid Email or Password";
       setErrors({ general: errorMessage });
       console.error("Login error:", error);
 

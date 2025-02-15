@@ -20,7 +20,7 @@ const MenuCard = ({ menuItems }) => {
                 <View style={styles.ratingContainer}>
                   <Text style={styles.ratingText}>4.5</Text>
                   <Text style={styles.star}>★</Text>
-                  <Text style={styles.ratingCount}>(25+)</Text>
+                  {/* <Text style={styles.ratingCount}>(25+)</Text> */}
                 </View>
               </View>
 
@@ -28,13 +28,13 @@ const MenuCard = ({ menuItems }) => {
               <View style={styles.detailsContainer}>
                 <View style={styles.titleRow}>
                   <Text style={styles.title}>{item.item_name}</Text>
-                  <Text style={styles.price}>£{item.price || "N/A"}</Text>
+                  {/* <Text style={styles.price}>${item.price || "N/A"}</Text> */}
                 </View>
 
                 {/* Display allergens or other item info if available */}
-                <Text style={styles.allergens}>
-                  Allergens: {item.description || "None specified"}
-                </Text>
+                {item?.description && (
+                  <Text style={styles.allergens}>Allergens: {item.description}</Text>
+                )}
               </View>
             </View>
           ))}

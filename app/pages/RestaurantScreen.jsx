@@ -56,7 +56,7 @@ const RestaurantScreen = () => {
         console.error("documentId is missing. Skipping fetch.");
         return;
       }
-  
+
       const collectRestaurants = async () => {
         try {
           const response = await fetchRestaurantDetails(documentId);
@@ -66,7 +66,7 @@ const RestaurantScreen = () => {
           setRestaurantData([]);
         }
       };
-  
+
       const fetchMenus = async () => {
         try {
           const response = await fetchMenuByRestaurantId(documentId);
@@ -77,13 +77,13 @@ const RestaurantScreen = () => {
           console.error("Error fetching menus:", error);
         }
       };
-  
+
       collectRestaurants();
       fetchMenus();
     }, [documentId])
   );
-  
-  
+
+
 
   const handleFavoritePress = async () => {
     if (!user) {
@@ -226,7 +226,13 @@ const RestaurantScreen = () => {
           </View>
 
           {/* Image Section */}
-          <Image source={getImageSource()} style={styles.image} />
+          <View style={styles.imageRating}>
+            <Image source={getImageSource()} style={styles.image} />
+            <View style={styles.ratingContainer}>
+              <FontAwesome name="star" size={16} color="#FFD700" />
+              <Text style={styles.ratingText}>{restaurantData?.rating} </Text>
+            </View>
+          </View>
 
           {/* Restaurant Details */}
           <View style={styles.detailsContainer}>
@@ -373,11 +379,21 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 16,
   },
+  imageRating: {
+    display: 'flex',
+    flexDirection: 'row',
+
+  },
   image: {
     width: "85%",
     height: 180,
     borderRadius: 10,
     margin: 'auto',
+  },
+  ratingContainer: {
+    position: "relative",
+    right: 50
+
   },
   detailsContainer: {
     padding: 16,

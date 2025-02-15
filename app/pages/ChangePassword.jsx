@@ -149,7 +149,7 @@ const ChangePassword = () => {
                             />
                         </TouchableOpacity>
                     </View>
-                    {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+                    {passwordError ? <Text style={styles.errorMessage}>{passwordError}</Text> : null}
                 </View>
 
                 {/* Confirm Password Input */}

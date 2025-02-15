@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -28,6 +28,17 @@ const SignUp = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
+  const jwt = useAuthStore((state) => state.jwt);
+
+  useEffect(() => {
+    if (jwt) {
+      // Use a timeout to prevent the immediate state update
+      const timer = setTimeout(() => {
+        router.replace("/pages/Home");
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [jwt, router]);
 
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
