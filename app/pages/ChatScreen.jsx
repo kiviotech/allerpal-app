@@ -204,8 +204,7 @@
 
 
 
-
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -215,11 +214,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useRouter } from "expo-router";
-
-// const SESSION_TIMEOUT = 2 * 60 * 1000; // 2 minutes in milliseconds
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { fetchInboxById } from "../../src/services/inboxServices";
+import useAuthStore from "../../useAuthStore";
+import { createNewMessage } from "../../src/services/messageServices";
 
 const ChatScreen = () => {
   const router = useRouter();
@@ -228,79 +229,171 @@ const ChatScreen = () => {
     { text: "Hi! How can I help you today?", sender: "bot" },
   ]);
   const [userInput, setUserInput] = useState("");
-  const [isInputDisabled, setIsInputDisabled] = useState(false); // State to control input field
-  const flatListRef = useRef(null); // Ref for the FlatList
+  const [isInputDisabled, setIsInputDisabled] = useState(false);
+  const flatListRef = useRef(null);
+  const { chatId } = useLocalSearchParams();
+  const {user} = useAuthStore();
+  const userEmail = user?.email;
 
-  const handleSendMessage = () => {
+  useEffect(() => {
+    if (chatId) {
+      const fetchInboxDetails = async () => {
+        try {
+          const response = await fetchInboxById(chatId);
+          if (response.data && response.data.messages) {
+            const formattedMessages = response.data.messages.map((msg) => ({
+              text: msg.content,
+              sender: msg.sent_by === "user" ? "user" : "bot",
+            }));
+
+            setMessages((prevMessages) => [
+              ...prevMessages.filter(msg => msg.text !== "Hi, How can I help you today?"), // Avoid duplicate bot messages
+              ...formattedMessages,
+
+            ]);
+          }
+        } catch (error) {
+          console.error("Error fetching messages:", error);
+        }
+      };
+
+      fetchInboxDetails();
+    }
+  }, [chatId]);
+
+  // useEffect(() => {
+  //   const fetchInbox = async () => {
+  //     if (!userId) return;
+  //     setLoading(true);
+  
+  //     try {
+  //       let allInboxes = [];
+  
+  //       // Fetch all inboxes for the user first
+  //       const userInbox = await fetchInboxByuserId(userId);
+  //       if (userInbox?.data) {
+  //         allInboxes = userInbox.data; // Store all existing inboxes
+  //       }
+  
+  //       if (restaurantId) {
+  //         const inboxResponse = await fetchInboxByuserResto(userId, restaurantId);
+  //         if (inboxResponse?.data?.length > 0) {
+  //           setInbox(inboxResponse.data);
+  //         } else {
+  //           // If no inbox exists, create one
+  //           const payload = {
+  //             data: {
+  //               user: userId,
+  //               restaurant: restaurantId,
+  //             },
+  //           };
+  //           const newInbox = await createNewInbox(payload);
+  //           if (newInbox?.data) {
+  //             // Add the new inbox to the existing list
+  //             allInboxes.push(newInbox.data);
+  //             router.push({
+  //               pathname: "/pages/ChatScreen",
+  //               params: { chatId: newInbox.data.documentId },
+  //             });
+  //           }
+  //         }
+  //       }
+  
+  //       // Set the state to contain all inboxes
+  //       setInbox(allInboxes);
+  //     } catch (error) {
+  //       console.error("Error fetching inbox:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  
+  //   fetchInbox();
+  // }, [userId, restaurantId]);
+
+
+  // const handleSendMessage = () => {
+  //   if (userInput.trim()) {
+  //     addMessage(userInput, "user");
+  //     setUserInput("");
+  //     setTimeout(() => generateAndAddResponse(userInput.toLowerCase()), 300);
+  //   }
+  // };
+
+  const handleSendMessage = async () => {
     if (userInput.trim()) {
       addMessage(userInput, "user");
       setUserInput("");
+  
+      try {
+        const messagePayload = {
+          data: {
+            content: userInput,
+            sent_by: "user",
+            email_message_id: userEmail,
+            read: false,
+            inboxx: chatId,
+          },
+        };
+          await createNewMessage(messagePayload);
+        } catch (error) {
+        console.error("Error sending message:", error);
+        Alert.alert('Something went wrong. Please try again later.')
+      }
+  
+      // Generate response after delay
       setTimeout(() => generateAndAddResponse(userInput.toLowerCase()), 300);
     }
-  };
+  };  
 
   const generateAndAddResponse = (userMessage) => {
+    let botResponse = "Ask me about any restaurant";
+
     if (["hi", "hello", "hey"].includes(userMessage)) {
       botResponse = "Hello! How can I assist you today?";
     } else if (userMessage.includes("restaurant")) {
       botResponse =
         "Thank you for chatting with us. We will inform the restaurant and get back to you after 24 hours.";
-        setIsInputDisabled(true)
-    } else {
-      botResponse = "Ask me about any restaurant"
+      setIsInputDisabled(true);
     }
+
     addMessage(botResponse, "bot");
   };
 
   const addMessage = (text, sender) => {
     setMessages((prevMessages) => [...prevMessages, { text, sender }]);
-    // Scroll to the end of the chat
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header with Back Arrow and Title */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
+        <TouchableOpacity onPress={() => router.replace('/pages/Chat')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Chat</Text>
       </View>
 
-      {/* Message List */}
       <FlatList
-        ref={flatListRef} // Attach ref to FlatList
+        ref={flatListRef}
         data={messages}
         renderItem={({ item }) => (
           <View
             style={[
               styles.messageContainer,
-              item.sender === "user"
-                ? styles.userMessageContainer
-                : styles.botMessageContainer,
+              item.sender === "user" ? styles.userMessageContainer : styles.botMessageContainer,
             ]}
           >
-            <Text
-              style={
-                item.sender === "user" ? styles.userMessage : styles.botMessage
-              }
-            >
+            <Text style={item.sender === "user" ? styles.userMessage : styles.botMessage}>
               {item.text}
             </Text>
           </View>
         )}
         keyExtractor={(item, index) => index.toString()}
         contentContainerStyle={styles.messageList}
-        onContentSizeChange={() =>
-          flatListRef.current?.scrollToEnd({ animated: true })
-        } // Auto-scroll when new messages are added
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
       />
 
-      {/* Input Field */}
       <View style={styles.footer}>
         <View style={styles.inputContainer}>
           <TextInput
@@ -308,11 +401,9 @@ const ChatScreen = () => {
             value={userInput}
             onChangeText={setUserInput}
             placeholder="Type a message..."
-            editable={!isInputDisabled} // Disable input when isInputDisabled is true
+            editable={!isInputDisabled}
           />
-          <Button title="Send" onPress={handleSendMessage} 
-            disabled={isInputDisabled} // Disable button when isInputDisabled is true
-          />
+          <Button title="Send" onPress={handleSendMessage} disabled={isInputDisabled} />
         </View>
       </View>
     </SafeAreaView>

@@ -28,17 +28,17 @@ const SignUp = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
-  const jwt = useAuthStore((state) => state.jwt);
+  // const jwt = useAuthStore((state) => state.jwt);
 
-  useEffect(() => {
-    if (jwt) {
-      // Use a timeout to prevent the immediate state update
-      const timer = setTimeout(() => {
-        router.replace("/pages/Home");
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [jwt, router]);
+  // useEffect(() => {
+  //   if (jwt) {
+  //     // Use a timeout to prevent the immediate state update
+  //     const timer = setTimeout(() => {
+  //       router.replace("/pages/Home");
+  //     }, 0);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [jwt, router]);
 
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,9 +51,9 @@ const SignUp = ({ navigation }) => {
   
     // Full Name validation: must be alphabetic or alphanumeric, not only numbers
     if (!fullName) {
-      validationErrors.fullName = "Full Name is required";
+      validationErrors.fullName = "Username is required";
     } else if (!/^(?!\d+$)[a-zA-Z0-9\s]+$/.test(fullName)) {
-      validationErrors.fullName = "Full Name cannot be only numbers";
+      validationErrors.fullName = "Username cannot be only numbers";
     }
   
     // Email validation
@@ -124,6 +124,7 @@ const SignUp = ({ navigation }) => {
   const gotoLogin = () => {
     router.push("auth/Login");
   };
+
   const handleInputChange = (field, value) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
