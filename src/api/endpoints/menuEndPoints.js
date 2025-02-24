@@ -6,7 +6,7 @@ const menuEndPoints = {
     getMenusById: (id) => `/menus/${id}?populate=*`,
   
     // GET menus by restaurant ID
-    getMenusByRestaurantId: (id) => `/menus?populate=*&filters[restaurant][documentId][$eq]=${id}`,
+    getMenusByRestaurantId: (id) => `/menus?populate[menu_items][populate][image]=*&filters[restaurant][documentId][$eq]=${id}`,
   
     // GET a menu by menu item ID
     getMenuByMenuItemId: (id) => `/menus?filters[menu_items][id][$eq]=${id}&populate=*`,

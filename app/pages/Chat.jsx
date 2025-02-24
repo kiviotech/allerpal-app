@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import useAuthStore from "../../useAuthStore";
+import { createNewInbox, fetchInboxByuserId, fetchInboxByuserResto } from "../../src/services/inboxServices";
+// import Resto from "../../assets/Resto.png"
 
 const chats = [
   { id: 1, name: "John Doe", lastMessage: "Hey, how are you?", avatar: "https://randomuser.me/api/portraits/men/1.jpg" },
@@ -11,11 +14,63 @@ const chats = [
 ];
 
 const Chat = () => {
+  const { user } = useAuthStore();
+  const { restaurantId } = useLocalSearchParams();
+  const [inbox, setInbox] = useState([]);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const userId = user?.id
+
+  useEffect(() => {
+    const fetchInbox = async () => {
+      if (!userId) return;
+      setLoading(true);
+      try {
+        if (restaurantId) {
+          const inboxResponse = await fetchInboxByuserResto(userId, restaurantId);
+          if (inboxResponse?.data?.length > 0) {
+            setInbox(inboxResponse?.data);
+            const chatId = inboxResponse?.data[0]?.documentId;
+            if (chatId) {
+              router.push({
+                pathname: "/pages/ChatScreen",
+                params: { chatId: chatId }
+              });
+            }
+          } else {
+            // If no inbox exists, create one
+            const payload = {
+              data: {
+                user: userId,
+                restaurant: restaurantId
+              }
+            }
+            const newInbox = await createNewInbox(payload);
+            if (newInbox?.data) {
+              router.push({
+                pathname: "/pages/ChatScreen",
+                params: { chatId: newInbox.data.documentId }
+              });
+            }
+          }
+        } else {
+          const userInbox = await fetchInboxByuserId(userId);
+          setInbox(userInbox?.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching inbox:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInbox();
+  }, [userId, restaurantId]);
 
   const handleChatPress = (chat) => {
-    router.push({ pathname: "/pages/ChatScreen", 
-      // params: { chatId: chat.id, name: chat.name, avatar: chat.avatar } 
+    router.push({
+      pathname: "/pages/ChatScreen",
+      params: { chatId: chat.documentId }
     });
   };
 
@@ -23,22 +78,26 @@ const Chat = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => router.replace('/pages/Home')}
           style={styles.backButton}
         >
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Chats</Text>
+        <Text style={styles.headerTitle}>Inbox</Text>
       </View>
       <FlatList
-        data={chats}
-        keyExtractor={(item) => item.id.toString()}
+        data={inbox}
+        keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.chatItem} onPress={() => handleChatPress(item)}>
-            <Image source={{ uri: item.avatar }} style={styles.avatar} />
+            <Image source={{ uri: "https://randomuser.me/api/portraits/men/1.jpg" }} style={styles.avatar} />
             <View style={styles.chatInfo}>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.lastMessage}>{item.lastMessage}</Text>
+              <Text style={styles.name}>{item?.restaurant?.name || "No restaurant name"}</Text>
+              <Text style={styles.lastMessage}>
+                {item?.messages?.length > 0
+                  ? item.messages[item.messages.length - 1].content
+                  : "No messages yet"}
+              </Text>
             </View>
           </TouchableOpacity>
         )}

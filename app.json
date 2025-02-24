@@ -16,7 +16,11 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "We need your location to provide personalized services.",
-        "NSLocationAlwaysUsageDescription": "Location is required to provide background location features."
+        "NSLocationAlwaysUsageDescription": "Location is required to provide background location features.",
+        "UIWebView": {
+          "allowInlineMediaPlayback": true,
+          "disableZoom": true
+        }
       }
     },
     "android": {

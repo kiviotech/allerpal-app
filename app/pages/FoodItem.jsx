@@ -101,22 +101,23 @@ const FoodItem = () => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 5,
-    backgroundColor: "#f2f2f2",
+    // paddingVertical: 5,
+    backgroundColor: "#fff",
   },
   listContainer: {
     paddingHorizontal: 10,
+    paddingVertical: 10,
   },
   itemContainer: {
     width: 69,
     alignItems: "center",
     marginHorizontal: 8,
     backgroundColor: "white",
-    borderRadius: 50,
+    borderRadius: 25,
     paddingVertical: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
     height: "auto",

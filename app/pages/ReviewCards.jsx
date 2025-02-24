@@ -105,8 +105,9 @@ const ReviewCards = ({ restaurantId }) => {
               {reviews.map((item, index) => {
                 const imageUrl =
                   (item.Image && item.Image[0]?.url)
-                    ? `${MEDIA_BASE_URL}${item.Image[0].url}`
-                    : Restro;
+                    ? 
+                    `${MEDIA_BASE_URL}${item.Image[0].url}`
+                    : "";
                 return (
                   <View key={index} style={styles.card}>
                     {/* Header Section */}
@@ -137,12 +138,11 @@ const ReviewCards = ({ restaurantId }) => {
                       </View>
                     </View>
                     <View>
-                      <Image source={{ uri: imageUrl }} style={styles.reviewImage} />
+                      {imageUrl && 
+                      <Image source={{ uri: imageUrl }} style={styles.reviewImage} />}
                       <Text style={styles.review}>
-                        {item.comment?.length > 120
-                          ? `${item.comment?.substring(0, 120)}...`
-                          : item.comment}
-                        {/* {item.comment || "No comment provided."} */}
+                        {/* {item?.comment} */}
+                        {item.comment || "No comment provided."}
                       </Text>
                     </View>
                   </View>
@@ -163,7 +163,7 @@ export default ReviewCards;
 const styles = StyleSheet.create({
   AreaContainer: { flex: 1, padding: 10, marginBottom: 70 },
   Container: { flexDirection: "row", justifyContent: 'center', gap: 20 },
-  card: { width: 250, margin: 10, borderRadius: 8, padding: 10, height: 350, backgroundColor: "#fff", shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, },
+  card: { width: 250, margin: 10, borderRadius: 8, padding: 10, backgroundColor: "#fff", shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, },
   header: { flexDirection: "row", marginBottom: 10 },
   profileContainer: { alignItems: "center", flexDirection: "column" },
   profileImage: { width: 35, height: 35, borderRadius: 25, marginRight: 10 },
