@@ -140,11 +140,11 @@ const RestaurantCard = ({ restaurant, onPress }) => {
       } else {
         // Update existing favorite 
         // Extract IDs from the existing favorite restaurants
-      const existingRestaurantIds = favoriteData.restaurants.map((fav) => fav.id);
-        
+        const existingRestaurantIds = favoriteData.restaurants.map((fav) => fav.id);
+
         const updatedRestaurants = isFavorite
-        ? existingRestaurantIds.filter((id) => id !== restaurant.id) // Remove the current restaurant if it's already a favorite
-        : [...existingRestaurantIds, restaurant.id]; // Add the current restaurant ID if not already a favorite
+          ? existingRestaurantIds.filter((id) => id !== restaurant.id) // Remove the current restaurant if it's already a favorite
+          : [...existingRestaurantIds, restaurant.id]; // Add the current restaurant ID if not already a favorite
 
         const updatePayload = {
           data: {
@@ -236,12 +236,15 @@ const RestaurantCard = ({ restaurant, onPress }) => {
 
 const RestaurantRecommendation = () => {
   const [restaurantData, setRestaurantData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const collectRestaurants = async () => {
       try {
+        setLoading(true)
         const response = await fetchAllRestaurants();
         setRestaurantData(response.data);
+        setLoading(false)
       }
       catch (error) {
         console.error("Error fetching restaurants:", error);
@@ -254,6 +257,9 @@ const RestaurantRecommendation = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Restaurant recommendations</Text>
+      {loading ? (
+      <Text style={styles.loadingText}>Loading restaurants...</Text>
+    ) : (
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -264,6 +270,7 @@ const RestaurantRecommendation = () => {
             <RestaurantCard key={restaurant.id} restaurant={restaurant} />
           ))}
       </ScrollView>
+    )}
     </View>
   );
 };

@@ -30,15 +30,15 @@ const Login = () => {
   const jwt = useAuthStore((state) => state.jwt);
   const navigation = useNavigation();
 
-  useEffect(() => {
-    if (jwt) {
-      // Use a timeout to prevent the immediate state update
-      const timer = setTimeout(() => {
-        router.replace("/pages/Home");
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [jwt, router]);  
+  // useEffect(() => {
+  //   if (jwt) {
+  //     // Use a timeout to prevent the immediate state update
+  //     const timer = setTimeout(() => {
+  //       router.replace("/pages/Home");
+  //     }, 0);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [jwt, router]);  
 
   const handleInputChange = (field, value) => {
     setFormData((prevFormData) => ({
