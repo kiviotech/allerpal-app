@@ -482,6 +482,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     flexDirection: "row",
     alignItems: "center",
+    fontSize: 16,
+
   },
   input1: {
     borderWidth: 1,
@@ -493,6 +495,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 8,
     height: 100,
+    fontSize: 16,
+
   },
   dateInput: {
     flexDirection: "row",
@@ -500,6 +504,7 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 80,
+    fontSize: 16,
   },
   row: {
     flexDirection: "row",

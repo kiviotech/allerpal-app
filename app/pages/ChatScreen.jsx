@@ -469,6 +469,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     marginRight: 10,
+    fontSize: 16,
   },
 });
 
