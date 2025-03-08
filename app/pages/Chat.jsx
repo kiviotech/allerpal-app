@@ -85,25 +85,35 @@ const Chat = () => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Inbox</Text>
       </View>
-      <FlatList
-        data={inbox}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.chatItem} onPress={() => handleChatPress(item)}>
-            <Image source={{ uri: "https://randomuser.me/api/portraits/men/1.jpg" }} style={styles.avatar} />
-            <View style={styles.chatInfo}>
-              <Text style={styles.name}>{item?.restaurant?.name || "No restaurant name"}</Text>
-              <Text style={styles.lastMessage}>
-                {item?.messages?.length > 0
-                  ? item.messages[item.messages.length - 1].content
-                  : "No messages yet"}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
-      />
+  
+      {loading ? (
+        <Text style={styles.loadingText}>Loading...</Text>
+      ) : inbox.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Inbox is Empty</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={inbox}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={({ item }) => (
+            <TouchableOpacity style={styles.chatItem} onPress={() => handleChatPress(item)}>
+              <Image source={{ uri: "https://randomuser.me/api/portraits/men/1.jpg" }} style={styles.avatar} />
+              <View style={styles.chatInfo}>
+                <Text style={styles.name}>{item?.restaurant?.name || "No restaurant name"}</Text>
+                <Text style={styles.lastMessage}>
+                  {item?.messages?.length > 0
+                    ? item.messages[item.messages.length - 1].content
+                    : "No messages yet"}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+      )}
     </View>
   );
+  
 };
 
 const styles = StyleSheet.create({
@@ -151,6 +161,23 @@ const styles = StyleSheet.create({
     color: "#666",
     marginTop: 5,
   },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 18,
+    color: "#666",
+    fontWeight: "bold",
+  },
+  loadingText: {
+    textAlign: "center",
+    marginTop: 20,
+    fontSize: 16,
+    color: "#666",
+  },
+  
 });
 
 export default Chat;

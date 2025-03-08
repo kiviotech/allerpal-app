@@ -480,17 +480,21 @@ const styles = StyleSheet.create({
   },
   iconRow: {
     flexDirection: "row",
-    alignItems: 'center',
-    maxWidth: '25%',
-    minWidth: '25%',
-    justifyContent: 'space-between',
-  },
-  icons: {
-    backgroundColor: '#fff',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 30,
-  },
+    alignItems: "center",
+    maxWidth: "25%",
+    minWidth: "25%",
+    justifyContent: "space-between",
+},
+icons: {
+    backgroundColor: "#fff",
+    width: 45, // Fixed width
+    height: 45, // Fixed height
+    borderRadius: 25, // To maintain a circular shape
+    alignItems: "center", // Center the icon
+    justifyContent: "center", // Center the icon
+    marginRight:10
+},
+
   ratingRow: {
     flexDirection: "row",
     alignItems: "center",

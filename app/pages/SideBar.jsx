@@ -82,16 +82,7 @@ const Sidebar = ({ isVisible, onClose }) => {
                         </Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.menuItem} onPress={() => handleTabPress("/pages/Blog")}>
-                        <Ionicons
-                            name={isActiveTab("/pages/Blog") ? "newspaper" : "newspaper-outline"}
-                            size={24}
-                            color={isActiveTab("/pages/Blog") ? "#00aced" : "#888"}
-                        />
-                        <Text style={[styles.menuText, isActiveTab("/pages/Blog") && styles.activeFooterText,]}>
-                            Blog
-                        </Text>
-                    </TouchableOpacity>
+                  
 
                     <TouchableOpacity style={styles.menuItem} onPress={() => handleTabPress("/pages/Chat")}>
                         <Ionicons
@@ -101,6 +92,17 @@ const Sidebar = ({ isVisible, onClose }) => {
                         />
                         <Text style={[styles.menuText, isActiveTab("/pages/Chat") && styles.activeFooterText,]}>
                             Inbox
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.menuItem} onPress={() => handleTabPress("/pages/Blog")}>
+                        <Ionicons
+                            name={isActiveTab("/pages/Blog") ? "newspaper" : "newspaper-outline"}
+                            size={24}
+                            color={isActiveTab("/pages/Blog") ? "#00aced" : "#888"}
+                        />
+                        <Text style={[styles.menuText, isActiveTab("/pages/Blog") && styles.activeFooterText,]}>
+                            Blog
                         </Text>
                     </TouchableOpacity>
 
@@ -230,15 +232,14 @@ const styles = StyleSheet.create({
         padding: 30
     },
     signOutButton: {
-        // marginBottom: 50,
         paddingVertical: 10,
         paddingHorizontal: 5,
         alignItems: "center",
         borderRadius: 10,
-        shadowColor: "#00CFFF",
-        shadowRadius: 8,
-        elevation: 5,
+        borderWidth: 1.5, // Adding border
+        borderColor: "#00CFFF", // Border color
     },
+    
     signOutText: {
         color: "#00CFFF",
         fontSize: 20,

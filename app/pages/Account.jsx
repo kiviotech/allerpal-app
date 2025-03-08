@@ -271,9 +271,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     alignItems: "center",
     borderRadius: 10,
-    shadowColor: "#00CFFF",
-    shadowRadius: 8,
-    elevation: 5,
+    borderWidth:1.5,
+    borderColor:"#00CFFF"
   },
   signOutText: {
     color: "#00CFFF",

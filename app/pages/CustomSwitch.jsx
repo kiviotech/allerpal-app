@@ -46,12 +46,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
     flexDirection: 'row',
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3, // For Android shadow
+    borderWidth: 1, // Add border
+    borderColor: '#888', // Border color
   },
   switchText: {
     fontSize: 16,
@@ -59,21 +55,21 @@ const styles = StyleSheet.create({
     position: 'absolute', // Text inside switch
     top: '50%',
     transform: [{ translateY: -10 }], // Center text vertically
-    color: '#fff', // Default white color for text
   },
   switchOn: {
     backgroundColor: '#00D0DD',
-    // borderColor: '#007BFF',
+    borderColor: '#00A0AA', // Darker border when ON
   },
   switchOff: {
-    // backgroundColor: '#f4f3f4',
-    // borderColor: '#767577',
+    backgroundColor: '#f4f3f4',
+    borderColor: '#888', // Gray border when OFF
   },
   textOn: {
     color: '#fff',
   },
   textOff: {
     color: 'red',
+    marginLeft:9,
   },
   thumb: {
     position: 'absolute',
@@ -81,18 +77,14 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12, // Make the thumb circular
     backgroundColor: '#fff',
-    transition: 'transform 0.3s ease', // Smooth transition for thumb movement
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.5,
-    shadowRadius: 3,
-    elevation: 4, // For Android shadow
+    borderWidth: 1, // Add border to thumb
+    borderColor: '#888', // Border color for thumb
   },
   thumbOn: {
     left: 55, // Position the thumb on the right side when ON
   },
   thumbOff: {
-    left: 0, // Position the thumb on the left side when OFF
+    left: 5, // Position the thumb on the left side when OFF
   },
 });
 
