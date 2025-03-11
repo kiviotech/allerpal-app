@@ -22,7 +22,6 @@ import { BASE_URL } from "../../src/api/apiClient";
 
 const ReviewForm = () => {
   const { id } = useLocalSearchParams();
-  console.log('id', id)
   const profileId = useAuthStore((state) => state.profileId);
   const navigation = useNavigation();
   const router = useRouter();
@@ -346,8 +345,8 @@ const ReviewForm = () => {
 
         <View style={styles.termsContainer}>
           <CheckBox
-            value={isTermsAccepted} // Controlled state
-            onValueChange={setIsTermsAccepted} // Toggle state on change
+            value={isTermsAccepted}
+            onValueChange={setIsTermsAccepted}
             style={styles.termsCheckbox}
           />
           <Text style={styles.termsText}>
@@ -483,25 +482,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     fontSize: 16,
-
+    outlineStyle: "none",
   },
-  input1: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 15,
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 8,
-    height: 100,
-    fontSize: 16,
-
-  },
-  dateInput: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
+  // input1: {
+  //   borderWidth: 1,
+  //   borderColor: "#ccc",
+  //   padding: 10,
+  //   borderRadius: 5,
+  //   marginBottom: 15,
+  //   flexDirection: "row",
+  //   alignItems: "center",
+  //   marginTop: 8,
+  //   height: 100,
+  //   fontSize: 16,
+  //   outlineStyle: "none",
+  // },
+  // dateInput: {
+  //   flexDirection: "row",
+  //   justifyContent: "space-between",
+  // },
   textArea: {
     height: 80,
     fontSize: 16,
@@ -623,7 +622,7 @@ const styles = StyleSheet.create({
   },
   disclaimerButton: {
     marginTop: 10,
-    padding: 10
+    paddingVertical: 10
   },
   linkText: {
     color: "#00c4cc",

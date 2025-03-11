@@ -234,8 +234,8 @@ const RestaurantScreen = () => {
     <SafeAreaView style={styles.AreaContainer}>
       <ScrollView ref={scrollViewRef}
         style={styles.container}
-        onScroll={handleScroll} // Handle scrolling
-        scrollEventThrottle={16} // Throttle scroll events
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         <View>
           <View style={styles.headerIcons}>
@@ -253,7 +253,6 @@ const RestaurantScreen = () => {
             </View>
           </View>
 
-          {/* Image Section */}
           <View style={styles.imageRating}>
             <Image source={getImageSource()} style={styles.image} />
             <View style={styles.ratingContainer}>
@@ -262,9 +261,7 @@ const RestaurantScreen = () => {
             </View>
           </View>
 
-          {/* Restaurant Details */}
           <View style={styles.detailsContainer}>
-            {/* Restaurant Name and Icons */}
             <View style={styles.titleRow}>
               <Text style={styles.restaurantName}>{restaurantData?.name}</Text>
               <View style={styles.iconRow}>
@@ -279,7 +276,6 @@ const RestaurantScreen = () => {
               </View>
             </View>
 
-            {/* Cuisines Section */}
             <View style={styles.categories}>
               {/* <Text style={styles.subTitle}>Cuisines: </Text> */}
               {Array.isArray(restaurantData?.cuisines) && restaurantData.cuisines.length > 0 ? (
@@ -301,7 +297,6 @@ const RestaurantScreen = () => {
             </View>
 
             <View style={styles.distanceContact}>
-              {/* Distance and Address */}
               <View style={styles.addressRow}>
                 <View style={styles.address}>
                   <Ionicons name="walk" size={26} color="#ff6347" />
@@ -310,7 +305,6 @@ const RestaurantScreen = () => {
                 <Text style={styles.addressTextDistance}>{restaurantData?.location}</Text>
               </View>
 
-              {/* Contact Button */}
               <TouchableOpacity
                 style={styles.contactButton}
                 onPress={() => router.push({
@@ -324,7 +318,6 @@ const RestaurantScreen = () => {
             </TouchableOpacity>
             </View>
 
-            {/* Rating and Reviews */}
             <View style={styles.ratingRow}>
               <FontAwesome name="star" size={16} color="#FFD700" />
               <Text style={styles.ratingText}>{restaurantData?.rating} </Text>
@@ -335,7 +328,6 @@ const RestaurantScreen = () => {
             </View>
 
 
-            {/* Allergen Toggle */}
             <View style={styles.allergenContainer}>
               <Text style={styles.allergenText}>Your Allergens Filter</Text>
               {/* <Switch
@@ -345,16 +337,14 @@ const RestaurantScreen = () => {
                 trackColor={{ false: "#767577", true: "#ffdbc1" }}
               /> */}
 
-              {/* Replace the existing Switch with the CustomSwitch */}
               <CustomSwitch
                 value={isAllergenOn}
-                initialState={isAllergenOn}      // Pass the current state of the switch
-                onToggle={toggleAllergen}        // Pass the function to handle toggle
+                initialState={isAllergenOn}
+                onToggle={toggleAllergen}
               />
             </View>
           </View>
 
-          {/* Menu Card or Message */}
           <View>
             {filteredMenuItems.length > 0 ? (
               <MenuCard menuItems={filteredMenuItems} />
@@ -365,7 +355,6 @@ const RestaurantScreen = () => {
             )}
           </View>
 
-          {/* Review Section */}
           <View style={styles.Review} ref={reviewsRef} >
             <ReviewsSection restaurantId={documentId} id={id} />
           </View>
@@ -375,9 +364,6 @@ const RestaurantScreen = () => {
           </View>
         </View>
       </ScrollView>
-      {/* <View>
-        <Footer />
-      </View> */}
 
       {showScrollToTopButton && (
         <TouchableOpacity
@@ -458,7 +444,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 5,
     position: "relative",
-    right: 98,
+    right: 80,
     top: 10,
     height: 30,
     borderRadius: 20,
@@ -564,15 +550,15 @@ icons: {
     alignItems: "center",
     marginTop: 10,
     borderRadius: 15,
-    paddingVertical: 10,
+    paddingVertical: 6,
     paddingHorizontal: 20,
   },
   allergenText: {
-    fontSize: 20,
+    fontSize: 18,
     color: "#000000",
   },
   noItemsText: {
-    fontSize: 16,
+    fontSize: 14,
     padding: 15,
   },
   heart: {

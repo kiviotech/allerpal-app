@@ -19,9 +19,9 @@ const { width } = Dimensions.get("window");
 const Sidebar = ({ isVisible, onClose }) => {
     const router = useRouter();
     const currentRoute = usePathname();
-    const slideAnim = useRef(new Animated.Value(width)).current; // Start off-screen
+    const slideAnim = useRef(new Animated.Value(width)).current;
     const isActiveTab = (route) => currentRoute === route;
-    const [isModalVisible, setModalVisible] = useState(false); // Combined modal state
+    const [isModalVisible, setModalVisible] = useState(false);
     const clearAllergies = useAllergyStore((state) => state.clearAllergies);
     const [modalContent, setModalContent] = useState({
         message: "",
@@ -30,13 +30,13 @@ const Sidebar = ({ isVisible, onClose }) => {
 
     const handleTabPress = (route) => {
         if (route) {
-            router.push(route); // Navigate to the specified route
+            router.push(route);
         }
     };
 
     useEffect(() => {
         Animated.timing(slideAnim, {
-            toValue: isVisible ? width * 0.55 : width, // Sidebar width set to 50%
+            toValue: isVisible ? width * 0.55 : width,
             duration: 300,
             useNativeDriver: false,
         }).start();
@@ -57,15 +57,13 @@ const Sidebar = ({ isVisible, onClose }) => {
 
     return (
         <>
-            {/* Close Sidebar when clicking outside */}
             {isVisible && <TouchableOpacity style={styles.overlay} onPress={onClose} />}
 
-            {/* Sidebar */}
             <Animated.View style={[styles.sidebar, { left: slideAnim }]}>
                 <View style={styles.menu}>
+
                     <View style={styles.menuHeader}>
                         <Text style={styles.menuTitle}>Menu</Text>
-                        {/* Close Button */}
                         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                             <Ionicons name="close" size={24} color="black" />
                         </TouchableOpacity>
@@ -80,9 +78,7 @@ const Sidebar = ({ isVisible, onClose }) => {
                         <Text style={[styles.menuText, isActiveTab("/pages/Home") && styles.activeFooterText,]}>
                             Home
                         </Text>
-                    </TouchableOpacity>
-
-                  
+                    </TouchableOpacity>                  
 
                     <TouchableOpacity style={styles.menuItem} onPress={() => handleTabPress("/pages/Chat")}>
                         <Ionicons
@@ -116,35 +112,27 @@ const Sidebar = ({ isVisible, onClose }) => {
                             Account
                         </Text>
                     </TouchableOpacity>
-
-                    {/* <TouchableOpacity style={styles.menuItem}>
-                        <Ionicons name="heart-outline" size={20} color="black" />
-                        <Text style={styles.menuText}>Favorites</Text>
-                    </TouchableOpacity> */}
-
-                    {/* <TouchableOpacity style={styles.menuItem}>
-                        <Ionicons name="notifications-outline" size={20} color="black" />
-                        <Text style={styles.menuText}>Notifications</Text>
-                    </TouchableOpacity> */}
                 </View>
+
                 <View style={styles.logoutContainer}>
                     <TouchableOpacity
                         style={styles.signOutButton}
                         onPress={() =>
                             showModal(
                                 "Are you sure you want to logout?",
-                                true // Pass `isSignOut` as true
+                                true
                             )
                         }
                     >
                         <Text style={styles.signOutText}>Logout</Text>
                     </TouchableOpacity>
                 </View>
+
                 <Modal
                     animationType="slide"
                     transparent={true}
                     visible={isModalVisible}
-                    onRequestClose={() => setModalVisible(false)} // Close modal on back press
+                    onRequestClose={() => setModalVisible(false)}
                 >
                     <View style={styles.modalOverlay}>
                         <View style={styles.modalContent}>
@@ -183,7 +171,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         top: 0,
         bottom: 0,
-        width: "45%", // Sidebar width set to 50%
+        width: "45%",
         backgroundColor: "#fff",
         shadowColor: "#000",
         shadowOpacity: 0.2,
@@ -196,8 +184,8 @@ const styles = StyleSheet.create({
         top: 0,
         bottom: 0,
         left: 0,
-        right: 0, // Covers the remaining screen
-        // backgroundColor: "rgba(0,0,0,0.5)", // Dark background for outside area
+        right: 0,
+        backgroundColor: "rgba(0,0,0,0.0)",
     },
     menu: {
         flex: 1,
@@ -214,7 +202,6 @@ const styles = StyleSheet.create({
     menuTitle: {
         fontSize: 18,
         fontWeight: "bold",
-        // marginBottom: 20,
     },
     menuItem: {
         flexDirection: "row",
@@ -233,16 +220,16 @@ const styles = StyleSheet.create({
     },
     signOutButton: {
         paddingVertical: 10,
-        paddingHorizontal: 5,
+        paddingHorizontal: 15,
         alignItems: "center",
         borderRadius: 10,
-        borderWidth: 1.5, // Adding border
-        borderColor: "#00CFFF", // Border color
+        borderWidth: 1.5,
+        borderColor: "#00CFFF",
     },
     
     signOutText: {
         color: "#00CFFF",
-        fontSize: 20,
+        fontSize: 16,
         fontWeight: "bold",
     },
     modalOverlay: {

@@ -73,7 +73,8 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     color: "#000",
-    fontSize: 14,
+    fontSize: 16,
+    outlineStyle: "none",
   },
   noReviewsText: {
     fontSize: 16,

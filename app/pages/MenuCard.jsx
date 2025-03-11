@@ -5,40 +5,32 @@ const MenuCard = ({ menuItems }) => {
   return (
     <View style={styles.container}>
       {menuItems.map((menuItem, index) => (
-        <View key={menuItem.id} style={styles.maincard}>
-          {menuItem.menu_items.map((item) => {
+        <View key={index} style={styles.maincard}>
+          {menuItem.menu_items.map((item, indx) => {
             const imageUrl = item?.image ? item?.image : "https://media.istockphoto.com/id/1442417585/photo/person-getting-a-piece-of-cheesy-pepperoni-pizza.jpg?s=612x612&w=0&k=20&c=k60TjxKIOIxJpd4F4yLMVjsniB4W1BpEV4Mi_nb4uJU="
-          return (
-            <View key={item.id} style={styles.cardContainer}>
-              {/* Image Section - Replace with actual item image if available */}
-              <View style={styles.imageContainer}>
-                <Image
-                  source={{
-                    uri: imageUrl
-                  }}
-                  style={styles.image}
-                />
-                {/* <View style={styles.ratingContainer}>
-                  <Text style={styles.ratingText}>4.5</Text>
-                  <Text style={styles.star}>★</Text>
-                  <Text style={styles.ratingCount}>(25+)</Text>
-                </View> */}
-              </View>
-
-              {/* Details Section */}
-              <View style={styles.detailsContainer}>
-                <View style={styles.titleRow}>
-                  <Text style={styles.title}>{item.item_name}</Text>
-                  {/* <Text style={styles.price}>${item.price || "N/A"}</Text> */}
+            return (
+              <View key={indx} style={styles.cardContainer}>
+                <View style={styles.imageContainer}>
+                  <Image
+                    source={{
+                      uri: imageUrl
+                    }}
+                    style={styles.image}
+                  />
                 </View>
 
-                {/* Display allergens or other item info if available */}
-                {item?.description && (
+                <View style={styles.detailsContainer}>
+                  <View style={styles.titleRow}>
+                    <Text style={styles.title}>{item.item_name}</Text>
+                    {/* <Text style={styles.price}>${item.price || "N/A"}</Text> */}
+                  </View>
+
+                  {/* {item?.description && (
                   <Text style={styles.allergens}>Allergens: {item.description}</Text>
-                )}
+                )} */}
+                </View>
               </View>
-            </View>
-          )
+            )
           }
           )}
         </View>
@@ -49,29 +41,22 @@ const MenuCard = ({ menuItems }) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: "#F9F9F9",
+    paddingHorizontal: 20,
   },
   maincard: {
     flexDirection: "column",
-    // paddingBottom: 15,
     borderRadius: 15,
   },
   cardContainer: {
-    flexDirection: 'row',
     padding: 10,
-    borderRadius: 15,
+    flexDirection: 'row',
     backgroundColor: "#fff",
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    // height:105,
+    borderBottomWidth: 1,
+    borderBottomColor: 'gray',
   },
   imageContainer: {
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 80,
     borderRadius: 15,
     overflow: "hidden",
     marginRight: 15,

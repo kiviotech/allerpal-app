@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   signOutButton: {
     // marginBottom: 50,
     paddingVertical: 10,
-    paddingHorizontal: 5,
+    paddingHorizontal: 15,
     alignItems: "center",
     borderRadius: 10,
     borderWidth:1.5,
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   },
   signOutText: {
     color: "#00CFFF",
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "bold",
   },
   footer: {

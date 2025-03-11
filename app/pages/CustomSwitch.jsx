@@ -14,18 +14,16 @@ const CustomSwitch = ({ initialState = false, onToggle }) => {
 
   return (
     <View style={styles.container}>
-      {/* Switch container */}
       <TouchableOpacity
         style={[styles.switch, isEnabled ? styles.switchOn : styles.switchOff]}
         onPress={toggleSwitch}
       >
-        {/* ON and OFF text inside the switch */}
         <Text
           style={[styles.switchText, isEnabled ? styles.textOn : styles.textOff]}
         >
           {isEnabled ? 'ON' : 'OFF'}
         </Text>
-        {/* Circle Thumb */}
+        
         <View
           style={[
             styles.thumb,
@@ -39,30 +37,30 @@ const CustomSwitch = ({ initialState = false, onToggle }) => {
 
 const styles = StyleSheet.create({
   switch: {
-    width: 83, // Adjust width
-    height: 35, // Adjust height
-    borderRadius: 25, // Make it rounded
+    width: 70,
+    height: 30,
+    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
     flexDirection: 'row',
-    borderWidth: 1, // Add border
-    borderColor: '#888', // Border color
+    borderWidth: 1,
+    borderColor: '#888',
   },
   switchText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
-    position: 'absolute', // Text inside switch
+    position: 'absolute',
     top: '50%',
-    transform: [{ translateY: -10 }], // Center text vertically
+    transform: [{ translateY: -10 }],
   },
   switchOn: {
     backgroundColor: '#00D0DD',
-    borderColor: '#00A0AA', // Darker border when ON
+    borderColor: '#00A0AA',
   },
   switchOff: {
     backgroundColor: '#f4f3f4',
-    borderColor: '#888', // Gray border when OFF
+    borderColor: '#888',
   },
   textOn: {
     color: '#fff',
@@ -73,18 +71,18 @@ const styles = StyleSheet.create({
   },
   thumb: {
     position: 'absolute',
-    width: 24,
-    height: 24,
-    borderRadius: 12, // Make the thumb circular
+    width: 22,
+    height: 22,
+    borderRadius: 12,
     backgroundColor: '#fff',
-    borderWidth: 1, // Add border to thumb
-    borderColor: '#888', // Border color for thumb
+    borderWidth: 1,
+    borderColor: '#888',
   },
   thumbOn: {
-    left: 55, // Position the thumb on the right side when ON
+    left: 44, // Position the thumb on the right side when ON
   },
   thumbOff: {
-    left: 5, // Position the thumb on the left side when OFF
+    left: 2, // Position the thumb on the left side when OFF
   },
 });
 

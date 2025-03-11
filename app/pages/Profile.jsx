@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useRouter } from 'expo-router'
@@ -16,12 +17,16 @@ import useAuthStore from '../../useAuthStore';
 import { MEDIA_BASE_URL } from '../../src/api/apiClient';
 import useAllergyStore from '../../src/stores/allergyStore';
 import { fetchProfileByUserId } from '../../src/services/profileServices';
+import SwitchToggle from 'react-native-switch-toggle';
+import { updateProfileAllergyById } from '../../src/services/profileAllergiesServices';
 
 const Profile = () => {
   const router = useRouter()
   const [allergens, setAllergens] = useState([]); // Dynamic allergens state
   const [loading, setLoading] = useState(true); // Loading state for allergens
   const [editing, setEditing] = useState(false);
+  const [isAllergenOn, setIsAllergenOn] = useState(false);
+  const [profileAllergyId, setProfileAllergyId] = useState('');
   const profileId = useAuthStore((state) => state.profileId);
   const setSelectedAllergies = useAllergyStore(
     (state) => state.setSelectedAllergies
@@ -31,13 +36,15 @@ const Profile = () => {
 
   useEffect(() => {
     const getAllergiesOfUser = async () => {
-          try {
-            const response = await fetchProfileByUserId(userId);
-            const userAllergies = response?.data[0]?.profile_allergies[0]?.allergies || []
-            setAllergens(userAllergies);
-          } catch (error) {
-            console.warn("Error fetching profile allergies");
-          }
+      try {
+        const response = await fetchProfileByUserId(userId);
+        const userAllergies = response?.data[0]?.profile_allergies[0]?.allergies || []
+        setAllergens(userAllergies);
+        setProfileAllergyId(response.data[0]?.profile_allergies[0]?.documentId);
+        setIsAllergenOn(response?.data[0]?.profile_allergies[0]?.excludeMayContain);
+      } catch (error) {
+        console.warn("Error fetching profile allergies");
+      }
       finally {
         setLoading(false);
       }
@@ -53,6 +60,23 @@ const Profile = () => {
       <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
     ); // Show loading indicator while fetching allergens
   }
+
+  const handleAllergenToggle = async () => {
+    setIsAllergenOn(prev => !prev); // Optimistically update state
+
+    try {
+      const payload = { data: { excludeMayContain: !isAllergenOn } };
+      const response = await updateProfileAllergyById(profileAllergyId, payload);
+
+      response?.data
+        ? Alert.alert('Allergen preferences updated successfully.')
+        : Alert.alert('Failed to update allergen preferences. Please try again.');
+    } catch (error) {
+      console.error('Error updating allergen preferences:', error);
+      Alert.alert('Failed to update allergen preferences. Please try again.');
+    }
+  };
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -85,19 +109,41 @@ const Profile = () => {
           editable={false}
         />
 
+        <View style={styles.switchContainer}>
+          <Text style={styles.toggleLabel}>
+            Do you wish to EXCLUDE dishes that 'MAY CONTAIN' the selected
+            Allergies
+          </Text>
+          <SwitchToggle
+            switchOn={isAllergenOn}
+            onPress={handleAllergenToggle
+              //  setIsAllergenOn(!isAllergenOn)
+            }
+            circleColorOff="#bbb"
+            circleColorOn="#00c4cc"
+            backgroundColorOn="#e0f7fa"
+            backgroundColorOff="#ddd"
+            containerStyle={styles.switchToggleContainer}
+            circleStyle={styles.switchCircle}
+          />
+          <Text style={styles.switchText}>
+            {isAllergenOn ? "Yes" : "No"}
+          </Text>
+        </View>
+
         <Text style={styles.label}>Allergens</Text>
         {editing ?
           <EditScreen />
           :
           <>
             <View style={styles.allergensContainer}>
-            {(!allergens || allergens.length === 0) ? (
+              {(!allergens || allergens.length === 0) ? (
                 <Text style={styles.noDataText}>No allergies found</Text>
               ) : (
                 allergens?.map((allergen, index) => {
                   return (
                     <TouchableOpacity key={index} style={styles.allergenTag}>
-                      <Image source={{uri: `${MEDIA_BASE_URL}${allergen?.Allergen_icon?.url}`}} style={styles.icon}></Image>
+                      <Image source={{ uri: `${MEDIA_BASE_URL}${allergen?.Allergen_icon?.url}` }} style={styles.icon}></Image>
                       <Text style={styles.allergenText}>{allergen.name}</Text>
                     </TouchableOpacity>
                   );
@@ -182,6 +228,28 @@ const styles = StyleSheet.create({
   loader: { marginTop: 50 },
   noDataText: { fontSize: 14, color: '#888' },
   image: { width: 24, height: 24, borderRadius: 12 },
+
+  switchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: "7%",
+  },
+  switchToggleContainer: {
+    width: 50,
+    height: 25,
+    borderRadius: 25,
+  },
+  switchCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 20,
+  },
+  switchText: {
+    marginLeft: 10,
+    fontSize: 14,
+    color: "#00c4cc",
+    fontWeight: "bold",
+  },
 });
 
 export default Profile;

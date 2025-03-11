@@ -81,7 +81,7 @@ const Profile = () => {
       const payload = {
         data: {
           allergies: formattedAllergens,
-          excludeMayContain: isAllergenOn,
+          // excludeMayContain: isAllergenOn,
         },
       };
 
@@ -131,7 +131,7 @@ const Profile = () => {
         </View>
       </View>
 
-      <View style={styles.switchContainer}>
+      {/* <View style={styles.switchContainer}>
         <Text style={styles.toggleLabel}>
           Do you wish to EXCLUDE dishes that 'MAY CONTAIN' the selected
           Allergies
@@ -149,7 +149,7 @@ const Profile = () => {
         <Text style={styles.switchText}>
           {isAllergenOn ? "Yes" : "No"}
         </Text>
-      </View>
+      </View> */}
       <TouchableOpacity style={styles.signOutButton} onPress={handleSaveChanges}>
         <Text style={styles.signOutText}>Save Changes</Text>
       </TouchableOpacity>
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   signOutButton: {
-    // marginTop: 30,
+    marginTop: 30,
     paddingVertical: 15,
     alignItems: 'center',
     borderRadius: 10,

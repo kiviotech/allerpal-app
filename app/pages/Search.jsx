@@ -683,12 +683,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     margin: "auto",
     width: "80%",
+    fontSize: 16,
   },
   searchIcon: { marginRight: 8, },
   searchInput: {
     flex: 1,
     marginLeft: 10,
     fontSize: 16,
+    outlineStyle: "none",
   },
   filterImage: {
     width: 20,
