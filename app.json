@@ -21,6 +21,9 @@
           "allowInlineMediaPlayback": true,
           "disableZoom": true
         }
+      },
+      "config": {
+        "googleMapsApiKey": "AIzaSyAdVO77J0_bxxv0auNHF-AwsCXcd9mFal8"
       }
     },
     "android": {
@@ -32,11 +35,19 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "FOREGROUND_SERVICE"
-      ]
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAdVO77J0_bxxv0auNHF-AwsCXcd9mFal8"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "viewport": "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+      "viewport": "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
+      "config": {
+        "googleMapsApiKey": "AIzaSyAdVO77J0_bxxv0auNHF-AwsCXcd9mFal8"
+      }
     },
     "plugins": [
       [

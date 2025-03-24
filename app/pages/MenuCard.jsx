@@ -49,7 +49,7 @@ const MenuCard = ({ menuItems }) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 15,
     backgroundColor: "#F9F9F9",
   },
   maincard: {
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 15,
     backgroundColor: "#fff",
-    marginBottom: 20,
+    marginBottom: 5,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 10,
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: 100,
-    height: 100,
+    height: 65,
     borderRadius: 15,
     overflow: "hidden",
     marginRight: 15,

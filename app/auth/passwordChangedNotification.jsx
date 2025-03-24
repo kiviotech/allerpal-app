@@ -1,87 +1,86 @@
-import { StyleSheet, Text, View, Image, Dimensions } from "react-native";
-import React from "react";
-import Successmark from "../../assets/Successmark.jpg"
+import React, { useEffect } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
-import { TouchableOpacity } from "react-native";
-
-const { width, height } = Dimensions.get("window");
+import Icon from "react-native-vector-icons/Ionicons";
 
 const PasswordChangedNotification = () => {
   const router = useRouter();
 
-  const goToLogin = () => {
-    router.push('./Login')
-  }
+  // Automatically redirect to login after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.replace("/auth/Login");
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-    <View style={styles.container}> 
-    <View style={{ alignItems: 'center',   marginTop: 50,}}>
-        <Image source={Successmark} style={styles.imageStyle} />
-      </View>
-
-      <Text style={styles.textStyle}>Password Changed!</Text>
-      <Text
-        style={[
-          styles.textStyle,
-          { color: "gray", fontSize: 15, fontWeight: "500", marginBottom: 30 },
-        ]}
-      >
-        Your password has been changed{" "}
-      </Text>
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.redirectButton} onPress={goToLogin}>
-          <Text style={styles.redirectButtonText}>Back to Login</Text>
+    <View style={styles.container}>
+      <View style={styles.content}>
+        <Icon name="checkmark-circle" size={100} color="#00CFFF" style={styles.icon} />
+        
+        <Text style={styles.title}>Password Changed!</Text>
+        
+        <Text style={styles.message}>
+          Your password has been successfully reset. You can now login with your new password.
+        </Text>
+        
+        <TouchableOpacity 
+          style={styles.button} 
+          onPress={() => router.replace("/auth/Login")}
+        >
+          <Text style={styles.buttonText}>Go to Login</Text>
         </TouchableOpacity>
       </View>
-
-      {/* <CommonButton text="Back to Login" handlePress={goToLogin}/> */}
     </View>
   );
 };
 
-export default PasswordChangedNotification;
-
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Takes full height of the screen
-    justifyContent: "center", // Centers content vertically
-    // alignItems: 'center',
-    backgroundColor: "#FFFFFF", // Optional: Set background color if needed
-    padding: 15,
-  },
-  textStyle: {
-    color: "#1E232C",
-    textAlign: "center",
-    fontFamily: "Montserrat",
-    fontSize: 26,
-    fontStyle: "normal",
-    fontWeight: "700",
-    lineHeight: 26,
-    marginVertical: 5, // Add margin between texts
-  },
-  imageStyle: {
-    marginBottom: 20, // Space between image and text
-    resizeMode: "contain", // Ensures the image scales correctly
-  },
-  buttonContainer: {
     flex: 1,
-    // justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#FFFFFF",
+    padding: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  redirectButton: {
-    justifyContent: 'center',
-    backgroundColor: "#00D0DD",
-    borderRadius: 28,
-    padding: "4%",
-    marginBottom: "5%",
-    width: "50%",
-    marginTop: "15%",
+  content: {
+    width: "100%",
+    maxWidth: 400,
+    alignItems: "center",
+    padding: 20,
   },
-  redirectButtonText: {
-    color: "#fff",
-    textAlign: "center",
-    fontSize: width < 360 ? 18 : 20,
+  icon: {
+    marginBottom: 30,
+  },
+  title: {
+    fontSize: 28,
     fontWeight: "bold",
-  }
+    color: "#333333",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  message: {
+    fontSize: 16,
+    color: "#666666",
+    lineHeight: 24,
+    textAlign: "center",
+    marginBottom: 40,
+  },
+  button: {
+    backgroundColor: "#00CFFF",
+    width: "100%",
+    height: 50,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });
+
+export default PasswordChangedNotification;

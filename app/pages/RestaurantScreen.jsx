@@ -9,6 +9,9 @@ import {
   ScrollView,
   SafeAreaView,
   Linking,
+  Alert,
+  ActivityIndicator,
+  FlatList,
 } from "react-native";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import MenuCard from "./MenuCard";
@@ -27,6 +30,10 @@ import { calculateDistanceFromUser } from "../../src/utils/distanceUtils";
 import { createNewFavourite, fetchFavouritesByUserId, updateFavouriteData } from "../../src/services/favouriteServices";
 import CustomSwitch from "./CustomSwitch";
 import { useFocusEffect } from '@react-navigation/native';
+import { getChatsByUserAndRestaurant } from "../../src/services/chatService";
+import { sendMessageToRestaurant } from "../../src/services/chatService";
+import { useLocation } from '../../src/contexts/LocationContext';
+import { filterRestaurantsByDistance, sortRestaurantsByDistance, calculateDistance } from '../../src/utils/locationUtils';
 
 
 const RestaurantScreen = () => {
@@ -42,6 +49,11 @@ const RestaurantScreen = () => {
   const [restaurantData, setRestaurantData] = useState([]);
   const [distance, setDistance] = useState(null);
   const [showScrollToTopButton, setShowScrollToTopButton] = useState(false); // State to show/hide button
+  const [loading, setLoading] = useState(false); // Add loading state
+  const { userLocation, locationError, isLoadingLocation } = useLocation();
+  const [maxDistance, setMaxDistance] = useState(10); // Default 10km radius
+  const [restaurants, setRestaurants] = useState([]);
+  const [filteredRestaurants, setFilteredRestaurants] = useState([]);
 
   const toggleAllergen = (value) => {
     setIsAllergenOn(value);
@@ -85,7 +97,16 @@ const RestaurantScreen = () => {
     }, [documentId])
   );
 
-
+  useEffect(() => {
+    if (restaurants && userLocation) {
+      // Filter restaurants by distance and sort them
+      const nearbyRestaurants = filterRestaurantsByDistance(restaurants, userLocation, maxDistance);
+      const sortedRestaurants = sortRestaurantsByDistance(nearbyRestaurants, userLocation);
+      setFilteredRestaurants(sortedRestaurants);
+    } else {
+      setFilteredRestaurants(restaurants);
+    }
+  }, [restaurants, userLocation, maxDistance]);
 
   const handleFavoritePress = async () => {
     if (!user) {
@@ -213,8 +234,10 @@ const RestaurantScreen = () => {
     const contentHeight = event.nativeEvent.contentSize.height;
     const screenHeight = event.nativeEvent.layoutMeasurement.height;
 
-    // Show button when scrolled past 10% of the page
-    if (contentOffsetY > contentHeight / 10 - screenHeight) {
+    // Show button when scrolled past 40% of the page
+    const scrollThreshold = contentHeight * 0.3;
+    
+    if (contentOffsetY > scrollThreshold) {
       setShowScrollToTopButton(true);
     } else {
       setShowScrollToTopButton(false);
@@ -229,6 +252,61 @@ const RestaurantScreen = () => {
     });
   };
 
+  // Update the handleContactRestaurant function with better error handling
+  const handleContactRestaurant = async () => {
+    if (!user) {
+      // Redirect to login if user is not authenticated
+      router.push("/pages/Login");
+      return;
+    }
+
+    try {
+      setLoading(true); // Add loading state
+      console.log("[RestaurantScreen] Initiating contact with restaurant:", restaurantData?.name);
+      
+      if (!restaurantData?.documentId) {
+        throw new Error("Restaurant document ID is missing");
+      }
+      
+      // Navigate directly to chat screen
+      console.log("[RestaurantScreen] Navigating to chat screen with restaurant:", restaurantData?.documentId);
+      router.push({
+        pathname: "/pages/ChatScreen",
+        params: { 
+          restaurantDocumentId: restaurantData.documentId
+        }
+      });
+      
+    } catch (error) {
+      console.error("[RestaurantScreen] Error in contact restaurant flow:", error);
+      Alert.alert("Error", "Could not open chat with this restaurant. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add distance information to restaurant card
+  const renderRestaurantCard = (restaurant) => {
+    const distance = userLocation ? calculateDistance(userLocation, {
+      latitude: restaurant.location?.latitude,
+      longitude: restaurant.location?.longitude,
+    }) : null;
+
+    return (
+      <View style={styles.restaurantCard}>
+        {/* Existing restaurant card content */}
+        {distance && (
+          <Text style={styles.distanceText}>{distance} km away</Text>
+        )}
+      </View>
+    );
+  };
+
+  // Update the handleBackPress function to always go to home
+  const handleBackPress = () => {
+    // Always navigate to home instead of trying to go back
+    router.push('/pages/Home');
+  };
 
   return (
     <SafeAreaView style={styles.AreaContainer}>
@@ -239,7 +317,7 @@ const RestaurantScreen = () => {
       >
         <View>
           <View style={styles.headerIcons}>
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity onPress={handleBackPress}>
               <Ionicons name="arrow-back" size={24} color="#333" />
             </TouchableOpacity>
             <View style={styles.heart}>
@@ -313,15 +391,15 @@ const RestaurantScreen = () => {
               {/* Contact Button */}
               <TouchableOpacity
                 style={styles.contactButton}
-                onPress={() => router.push({
-                  pathname: "pages/Chat",
-                  params: { 
-                    restaurantId: restaurantData?.id, 
-                  }
-                })}
+                onPress={handleContactRestaurant}
+                disabled={loading}
               >
-                <Text style={styles.contactButtonText}>Contact Restaurant</Text>
-            </TouchableOpacity>
+                {loading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.contactButtonText}>Contact Restaurant</Text>
+                )}
+              </TouchableOpacity>
             </View>
 
             {/* Rating and Reviews */}
@@ -374,15 +452,31 @@ const RestaurantScreen = () => {
             <ReviewCards restaurantId={documentId} />
           </View>
         </View>
-      </ScrollView>
       {/* <View>
         <Footer />
       </View> */}
 
-      {showScrollToTopButton && (
+
+      {/* Show location status */}
+      {locationError && (
+        <Text style={styles.errorText}>
+          Location error: {locationError}. Some features may be limited.
+        </Text>
+      )}
+      
+      {/* Restaurant list */}
+      <FlatList
+        data={filteredRestaurants}
+        renderItem={({ item }) => renderRestaurantCard(item)}
+        keyExtractor={(item) => item.id}
+      />
+     </ScrollView>
+
+     {showScrollToTopButton && (
         <TouchableOpacity
           style={styles.scrollToTopButton}
           onPress={scrollToTop}
+          activeOpacity={0.7}
         >
           <Ionicons name="arrow-up" size={24} color="white" />
         </TouchableOpacity>
@@ -398,11 +492,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 20,
     right: 20,
-    backgroundColor: "#333",
+    backgroundColor: "red",
     borderRadius: 50,
-    padding: 10,
+    width: 44,
+    height: 44,
     justifyContent: "center",
     alignItems: "center",
+    elevation: 5,
+    zIndex: 0,
+    opacity: 0.8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -428,13 +526,13 @@ const styles = StyleSheet.create({
   },
   AreaContainer: {
     flex: 1,
-    paddingHorizontal: 10,
+    paddingHorizontal: 0,
     width: "100%",
   },
   container: {
     flex: 1,
     // backgroundColor: "#F9F9F9",
-    marginBottom: 50
+    marginBottom: 0
   },
   headerIcons: {
     flexDirection: "row",
@@ -568,7 +666,7 @@ icons: {
     paddingHorizontal: 20,
   },
   allergenText: {
-    fontSize: 20,
+    fontSize: 19,
     color: "#000000",
   },
   noItemsText: {
@@ -583,5 +681,25 @@ icons: {
     backgroundColor: "#00aced",
     justifyContent: "center",
     alignItems: "center",
+  },
+  filterContainer: {
+    padding: 16,
+    backgroundColor: '#fff',
+    marginBottom: 8,
+  },
+  distanceText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
+  errorText: {
+    color: 'red',
+    padding: 16,
+    textAlign: 'center',
+  },
+  restaurantCard: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
 });

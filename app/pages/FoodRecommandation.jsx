@@ -1,344 +1,480 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
-  Image,
   StyleSheet,
-  Dimensions,
+  Image,
   TouchableOpacity,
-  FlatList,
+  Dimensions,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import foodrestro from "../../assets/foodrestro.png";
 import { Ionicons } from "@expo/vector-icons";
-import { fetchAllMenuItems, fetchMenuItemBySubcuisine } from "../../src/services/menuItemsServices";
-import useAllergyStore from "../../src/stores/allergyStore";
-import { MEDIA_BASE_URL } from "../../src/api/apiClient";
-import { useRouter } from "expo-router";
-import restaurantImg from '../../assets/restaurant.png'
-import { fetchMenuByMenuItemId } from "../../src/services/menuServices";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { fetchFoodRecommendationsByProfile } from "../../src/services/menuItemsServices";
+import { fetchUserAllergyByUserId } from '../../src/services/userAllergyServices';
 import useAuthStore from "../../useAuthStore";
-import { fetchProfileById, fetchProfileByUserId } from "../../src/services/profileServices";
-import { fetchProfileAllergyByProfileId } from "../../src/services/profileAllergiesServices";
-import { createNewFavourite, fetchFavouritesByUserId, updateFavouriteData } from "../../src/services/favouriteServices";
-// import { fetchAllMenuItems } from "../../src/services/menuItemsServices"
+import useFavoritesStore from "../../src/stores/favoritesStore";
 
 const { width } = Dimensions.get("window");
 
-const FoodCard = ({ item, onPress }) => {
-  const { user } = useAuthStore();
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  const handleFavoritePress = async () => {
-    if (!user) {
-      // Redirect to login if user is not authenticated
-      router.push("/pages/Login");
-      return;
-    }
-    try {
-      const response = await fetchFavouritesByUserId(user.id);
-      const favoriteData = response?.data?.[0]; // Get the existing favorite entry, if available
-
-      if (!favoriteData) {
-        // Create new favorite entry
-        const newFavorite = {
-          user: { id: user.id }, // Associate the user
-          menu_items: [
-            {
-              id: item.id
-            },
-          ],
-        };
-        await createNewFavourite({ data: newFavorite });
-      } else {
-        // Update existing favorite 
-        // Extract IDs from the existing favorite restaurants
-      const existingMenuItemsIds = favoriteData.menu_items.map((fav) => fav.id);        
-        const updatedRestaurants = isFavorite
-        ? existingMenuItemsIds.filter((id) => id !== item.id) // Remove the current restaurant if it's already a favorite
-        : [...existingMenuItemsIds, item.id]; // Add the current restaurant ID if not already a favorite
-
-        const updatePayload = {
-          data: {
-            menu_items: updatedRestaurants,
-          },
-        };
-
-        await updateFavouriteData(favoriteData.documentId, updatePayload);
-      }
-
-      // Toggle the favorite state
-      setIsFavorite((prev) => !prev);
-      global.EventEmitter.emit("favoritesUpdated");
-    } catch (error) {
-      console.error("Error updating favorites:", error);
-    }
-  };
-
+const FoodCard = ({ item, onPress, isFavorite, onFavoritePress }) => {
   return (
-    <TouchableOpacity onPress={() => onPress(item.id)} style={styles.card}>
-      <Image
-        source={
-          item.image?.[0]?.url
-            ? { uri: `${MEDIA_BASE_URL}${item.image?.[0]?.url}` }
-            : foodrestro
-        }
-        style={styles.image}
-      />
-      {/* <View style={styles.priceContainer}> */}
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => onPress(item)}
+    >
+      <View style={styles.imageContainer}>
+        <Image
+          source={
+            item.image
+              ? { uri: item.image }
+              : foodrestro
+          }
+          style={styles.image}
+          resizeMode="cover"
+        />
         {/* <TouchableOpacity
-          onPress={handleFavoritePress}
-          style={[styles.heartContainer, isFavorite && styles.heartContainerLiked]}
+          style={[
+            styles.favoriteButton,
+            isFavorite && styles.favoriteButtonActive
+          ]}
+          onPress={() => onFavoritePress(item.id || item.documentId)}
         >
           <Ionicons
             name={isFavorite ? "heart" : "heart-outline"}
-            size={18}
-            color="white"
-            // style={styles.heartIcon}
+            size={20}
+            color="#FFFFFF"
           />
         </TouchableOpacity> */}
-      {/* </View> */}
-      {/* <View style={styles.ratingContainer}>
-        <Text style={styles.ratingText}>
-          {item.is_vegetarian ? "🥬" : "🍖"}
+      </View>
+      <View style={styles.cardContent}>
+        <Text style={styles.cardTitle} numberOfLines={1}>
+          {item.item_name}
         </Text>
-        <Text style={styles.reviewText}>
-          {item.is_available ? "Available" : "Unavailable"}
-        </Text>
-      </View> */}
-      <View style={styles.detailsContainer}>
-        <Text style={styles.name}>
-          {item.item_name.length > 18
-            ? `${item.item_name.substring(0, 18)}...`
-            : item.item_name}
-        </Text>
+        {/* <Text style={styles.cardDescription} numberOfLines={2}>
+          {item.description || "No description available"}
+        </Text> */}
+        {/* <Text style={styles.cardPrice}>£{item.price?.toFixed(2) || "N/A"}</Text> */}
+        {item.restaurant && (
+          <Text style={styles.restaurantName} numberOfLines={1}>
+            {item.restaurant.name}
+          </Text>
+        )}
       </View>
     </TouchableOpacity>
   );
 };
 
 const FoodRecommendations = () => {
-  const [menuItems, setMenuItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filteredFoodRecommendations, setFilteredFoodRecommendations] = useState([]);
-  const [profileAllergies, setProfileAllergies] = useState([]);
+  const router = useRouter();
+  const { restaurantId } = useLocalSearchParams();
   const profileId = useAuthStore((state) => state.profileId);
   const userId = useAuthStore((state) => state?.user?.id);
-  const [isAllergenOn, setIsAllergenOn] = useState(false);
-  const router = useRouter();
+  const { favorites, toggleFavorite } = useFavoritesStore();
+  
+  const [menuItems, setMenuItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [userAllergies, setUserAllergies] = useState([]);
+  
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
+  
+  const scrollViewRef = useRef(null);
+  const isLoadingMoreRef = useRef(false);
 
-  const onFoodCardPress = async (menuItemId) => {
+  const onFoodCardPress = async (item) => {
+    // Check if item and item.restaurant exist before accessing documentId
+    if (!item || !item.restaurant || !item.restaurant.documentId) {
+      console.error('Restaurant information is missing from food item:', item);
+      return; // Exit early if restaurant data is missing
+    }
+    
+    // Get the documentId from the item
+    const documentId = item.restaurant.documentId;
+    
+    // Navigate to restaurant detail page with the required parameters
+    router.push(`/pages/RestaurantScreen?id=${documentId}&documentId=${documentId}&isFavoriteItem=true`);
+  };
+
+  const handleFavoritePress = (id) => {
+    if (!userId) {
+      router.push("/pages/Login");
+      return;
+    }
+    console.log("[FoodRecommendations] Toggling favorite for item ID:", id);
+    console.log("[FoodRecommendations] Current favorites:", favorites);
+    
+    // Make sure we're passing a numeric ID if available, otherwise use the documentId
+    const itemId = typeof id === 'number' ? id : parseInt(id);
+    toggleFavorite(userId, isNaN(itemId) ? id : itemId);
+  };
+
+  const getAllergiesOfUser = async () => {
     try {
-      // Fetch restaurants for the selected menu item
-      const response = await fetchMenuByMenuItemId(menuItemId)
-      const restaurant = response.data?.[0]?.restaurant; // Adjust according to your API response structure
+      console.log("[FoodRecommendations] Fetching user allergies for profileId:", profileId);
       
-      if (restaurant) {
-        // Navigate to the RestaurantScreen and pass the restaurantId
-        router.push({
-          pathname: "/pages/RestaurantScreen",
-          params: {
-            id: restaurant.id,
-            documentId: restaurant.documentId,
-          },
-        });
+      if (!profileId) {
+        console.log("[FoodRecommendations] No profileId available");
+        return [];
+      }
+      
+      const allergiesResponse = await fetchUserAllergyByUserId(profileId);
+      console.log("[FoodRecommendations] Allergies response:", allergiesResponse);
+      
+      if (allergiesResponse?.data) {
+        const allergies = allergiesResponse.data;
+        console.log("[FoodRecommendations] User allergies:", allergies);
+        
+        // Set the state
+        setUserAllergies(allergies);
+        
+        return allergies;
+      }
+      
+      return [];
+    } catch (error) {
+      console.error("[FoodRecommendations] Error fetching user allergies:", error);
+      return [];
+    }
+  };
+
+  const getMenuItems = async (pageNum = 1, shouldAppend = false) => {
+    try {
+      console.log("[FoodRecommendations] Fetching menu items using new API with profileId:", profileId);
+      
+      // Get user allergies first
+      const userAllergies = await getAllergiesOfUser();
+      console.log("[FoodRecommendations] Retrieved user allergies:", userAllergies);
+      
+      // Try the new API first
+      if (profileId) {
+        try {
+          if (pageNum > 1) {
+            setLoadingMore(true);
+            isLoadingMoreRef.current = true;
+          }
+          
+          console.log("[FoodRecommendations] Calling fetchFoodRecommendationsByProfile for page:", pageNum);
+          // We're not passing restaurantId to get recommendations across all restaurants
+          // Set pageSize to 20 as requested
+          const recommendationsResponse = await fetchFoodRecommendationsByProfile(profileId, null, pageNum, 20);
+          console.log("[FoodRecommendations] API response:", JSON.stringify(recommendationsResponse, null, 2));
+          
+          if (recommendationsResponse && recommendationsResponse.data) {
+            console.log("[FoodRecommendations] Successfully fetched recommendations");
+            
+            // Update pagination info
+            const paginationMeta = recommendationsResponse.meta?.pagination;
+            if (paginationMeta) {
+              setTotalPages(paginationMeta.pageCount);
+              setHasMore(pageNum < paginationMeta.pageCount);
+              console.log("[FoodRecommendations] Pagination info:", {
+                currentPage: pageNum,
+                totalPages: paginationMeta.pageCount,
+                hasMore: pageNum < paginationMeta.pageCount
+              });
+            } else {
+              setHasMore(false);
+            }
+            
+            // Update menu items
+            if (shouldAppend) {
+              setMenuItems(prev => [...prev, ...recommendationsResponse.data]);
+            } else {
+              setMenuItems(recommendationsResponse.data);
+            }
+            
+            setLoading(false);
+            setLoadingMore(false);
+            isLoadingMoreRef.current = false;
+          }
+        } catch (error) {
+          console.error("[FoodRecommendations] Error fetching recommendations:", error);
+          setError("Failed to fetch recommendations. Please try again.");
+          setLoading(false);
+          setLoadingMore(false);
+          isLoadingMoreRef.current = false;
+        }
       } else {
-        console.log("No restaurant found for this menu item.");
+        console.log("[FoodRecommendations] No profileId available");
+        setError("User profile not found. Please complete your profile setup.");
+        setLoading(false);
       }
     } catch (error) {
-      console.error("Error fetching restaurants:", error);
+      console.error("[FoodRecommendations] Error in getMenuItems:", error);
+      setError("An error occurred. Please try again.");
+      setLoading(false);
+      setLoadingMore(false);
+      isLoadingMoreRef.current = false;
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (!loadingMore && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      setLoadingMore(true);
+      getMenuItems(nextPage, true);
+    }
+  };
+
+  const handleScroll = (event) => {
+    // Simple check if we're near the end of the scroll
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const isNearEnd = layoutMeasurement.width + contentOffset.x >= contentSize.width - 100;
+    
+    if (isNearEnd && !loadingMore && hasMore) {
+      handleLoadMore();
     }
   };
 
   useEffect(() => {
-    let selectedAllergies = [];
-    const getAllergiesOfUser = async () => {
-      try {
-        const response = await fetchProfileByUserId(userId)
-        const profileAllergy = response?.data[0]?.profile_allergies[0]?.allergies || []
-        selectedAllergies = profileAllergy.map((allergy) => allergy.name.toLowerCase());
-        setIsAllergenOn(response?.data[0]?.profile_allergies[0]?.excludeMayContain)
-      } catch (error) {
-        console.warn("Error fetching profile allergies");
-      }
-    };
-
-    const getMenuItems = async () => {
-      try {
-        const response = await fetchMenuItemBySubcuisine('Mains');
-        if (response && response.data) {
-          const menuItems = response.data;
-          setMenuItems(menuItems);
-
-          // Filter based on allergies after fetching the data
-          const filteredItems = menuItems.filter((item) => {
-            const description = item.description?.toLowerCase() || ""; // Get description as lowercase
-            return !selectedAllergies.some((allergy) =>
-              description.includes(allergy.toLowerCase()) // Check if allergy is in the description
-            );
-          });
-          setFilteredFoodRecommendations(filteredItems); // Update filtered items after applying allergy filters
-          setLoading(false); // Once the filtering is done, stop loading
-        } else {
-          console.warn("API response format invalid or empty");
-          setMenuItems([]);
-          setFilteredFoodRecommendations([]);
-          setLoading(false); // Stop loading if API response is invalid
-        }
-      } catch (error) {
-        console.error("Error fetching menu items:", error);
-        setMenuItems([]); // Fallback
-        setFilteredFoodRecommendations([]); // Fallback
-        setLoading(false); // Stop loading in case of error
-      }
-    };
-    getAllergiesOfUser();
-    getMenuItems();
-  }, []);
+    if (profileId) {
+      // Reset pagination when component mounts or profileId changes
+      setPage(1);
+      setHasMore(true);
+      setMenuItems([]);
+      setLoading(true);
+      getMenuItems(1, false);
+    }
+    
+    // Fetch favorites when component mounts
+    if (userId) {
+      console.log("[FoodRecommendations] Fetching favorites for user:", userId);
+      useFavoritesStore.getState().fetchFavorites(userId);
+    }
+  }, [profileId, userId]);
 
   if (loading) {
     return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#00aced" />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={'blue'} />
+        <Text style={styles.loadingText}>Loading food recommendations...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Dish recommendations for you</Text>
-      <FlatList
-        data={
-          !isAllergenOn
-            ? menuItems.length > 0
-              ? menuItems
-              : []
-            : filteredFoodRecommendations.length > 0
-            ? filteredFoodRecommendations
-            : []
-        }
-        renderItem={({ item }) => (
-          <FoodCard item={item} onPress={onFoodCardPress} />
-        )}
-        keyExtractor={(item) => item.documentId}
-        horizontal
+      <Text style={styles.title}>Food Recommendations</Text>
+      
+      <ScrollView 
+        horizontal 
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 8 }}
-        ListEmptyComponent={
-          isAllergenOn ? (
-            <Text style={styles.noItemsText}>No items available</Text>
-          ) : (
-            <Text style={styles.noItemsText}>
-              No suitable items found based on your allergies
-            </Text>
-          )
-        }
-      />
+        style={styles.scrollView}
+        ref={scrollViewRef}
+        onScroll={handleScroll}
+        scrollEventThrottle={400} // Increase throttle to reduce event frequency
+      >
+        {menuItems.map((item) => (
+          <FoodCard
+            key={item.documentId}
+            item={item}
+            onPress={onFoodCardPress}
+            isFavorite={favorites.includes(item.id) || favorites.includes(item.documentId)}
+            onFavoritePress={handleFavoritePress}
+          />
+        ))}
+        
+        {loadingMore && (
+          <View style={styles.loadingMoreContainer}>
+            <ActivityIndicator size="small" color={'blue'} />
+            <Text style={styles.loadingMoreText}>Loading more...</Text>
+          </View>
+        )}
+        
+        {!hasMore && menuItems.length > 0 && (
+          <View style={styles.endMessageContainer}>
+            <Text style={styles.endMessageText}>No more items</Text>
+          </View>
+        )}
+      </ScrollView>
+      
+      {menuItems.length === 0 && !loading && (
+        <View style={styles.noItemsContainer}>
+          <Text style={styles.noItemsText}>No food recommendations found.</Text>
+        </View>
+      )}
     </View>
   );
-  
-  
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 20,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff",
+    padding: 10,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 8,
+    paddingHorizontal: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    paddingHorizontal: 8,
+    marginBottom: 10,
+    color: 'grey',
+  },
+  card: {
+    width: width * 0.38,
+    marginHorizontal: 8,
+    borderRadius: 12,
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    marginBottom: 16,
+  },
+  imageContainer: {
+    position: "relative",
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    overflow: "hidden",
+    height: 90,
     width: "100%",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+  },
+  favoriteButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    borderRadius: 20,
+    padding: 8,
+  },
+  favoriteButtonActive: {
+    backgroundColor: "#00aced",
+  },
+  cardContent: {
+    padding: 16,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  cardDescription: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 8,
+  },
+  cardPrice: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#00aced",
+    marginBottom: 4,
+  },
+  restaurantName: {
+    fontSize: 12,
+    color: "#999",
+  },
+  safetyBadge: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  safeBadge: {
+    backgroundColor: "#4CAF50",
+  },
+  warningBadge: {
+    backgroundColor: "#FFC107",
+  },
+  unsafeBadge: {
+    backgroundColor: "#F44336",
+  },
+  safetyText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
   },
   loaderContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    paddingHorizontal: 16,
-    marginBottom: 10,
-  },
   noItemsText: {
-    textAlign: "center",
-    padding: 20,
-    color: "#666",
     fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginTop: 20,
   },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 9,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
-    width: width * 0.4,
-    marginHorizontal: 8,
-    maxHeight: 160,
-    minHeight: 160,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  image: {
-    width: "100%",
-    height: 100,
+  loadingText: {
+    color: 'grey',
+    marginTop: 10,
   },
-  // priceContainer: {
-  //   flex: 1,
-  //   alignItems: 'flex-end',
-  //   position: 'fixed',
-  //   width: "40%",
-  //   padding: 5,
-  // },
-  // priceText: {
-  //   fontSize: 15,
-  //   fontWeight: "bold",
-  //   color: "#000",
-  //   backgroundColor: "white",
-  //   borderRadius: 5,
-  //   paddingHorizontal: 10,
-  // },
-  // ratingContainer: {
-  //   flexDirection: "row",
-  //   alignItems: "center",
-  //   position: "absolute",
-  //   top: 95,
-  //   left: 6,
-  //   backgroundColor: "white",
-  //   paddingHorizontal: 6,
-  //   paddingVertical: 2,
-  //   borderRadius: 12,
-  //   borderColor: "gray",
-  // },
-  // ratingText: {
-  //   fontSize: 12,
-  //   fontWeight: "bold",
-  // },
-  // reviewText: {
-  //   fontSize: 10,
-  //   marginLeft: 2,
-  //   color: "#777",
-  // },
-  detailsContainer: {
-    padding: 8,
-    alignItems: "center",
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
-  name: {
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  loadingMoreContainer: {
+    width: 100,
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 10,
+    flexDirection: 'row',
+  },
+  loadingMoreText: {
+    color: 'grey',
+    marginLeft: 10,
     fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 4,
-    marginTop: 5,
-    textTransform: 'capitalize',
   },
-  heartContainer: {
-    width: 25,
-    height: 25,
-    borderRadius: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
+  endMessageContainer: {
+    width: 100,
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 10,
   },
-  heartContainerLiked: {
-    backgroundColor: "#00aced",
+  endMessageText: {
+    color: 'grey',
+    textAlign: 'center',
+    fontSize: 14,
+  },
+  noItemsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
 });
 

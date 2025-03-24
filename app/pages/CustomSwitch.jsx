@@ -39,8 +39,8 @@ const CustomSwitch = ({ initialState = false, onToggle }) => {
 
 const styles = StyleSheet.create({
   switch: {
-    width: 83, // Adjust width
-    height: 35, // Adjust height
+    width: 80, // Adjust width
+    height: 30, // Adjust height
     borderRadius: 25, // Make it rounded
     justifyContent: 'center',
     alignItems: 'center',
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     left: 55, // Position the thumb on the right side when ON
   },
   thumbOff: {
-    left: 5, // Position the thumb on the left side when OFF
+    left: 3, // Position the thumb on the left side when OFF
   },
 });
 

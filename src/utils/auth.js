@@ -131,6 +131,7 @@ export const changePassword = async (currentPassword, password, passwordConfirma
 
 export const forgotPassword = async (email) => {
   try {
+    console.log("Forgot password request for email:", email);
     const response = await apiClient.post("/auth/forgot-password", {
       email,
     });
@@ -139,26 +140,27 @@ export const forgotPassword = async (email) => {
     console.log("Forgot password response:", response.data);
     return response.data;
   } catch (error) {
-    console.error("Forgot password error:", error);
+    console.error("Forgot password error:", error.response?.data || error.message);
     throw error;
   }
 };
 
 export const resetPassword = async (data) => {
   try {
+    console.log("Reset password request data:", data);
     const response = await apiClient.post("/auth/reset-password", 
       {
         "password": data.password,
-        "passwordConfirmation": data.passwordConfirm,
+        "passwordConfirmation": data.password,
         "code": data.code
       }
     );
 
     // Handle the response and notify the user
-    console.log("Forgot password response:", response.data);
+    console.log("Reset password response:", response.data);
     return response.data;
   } catch (error) {
-    console.error("Forgot password error:", error);
+    console.error("Reset password error:", error.response?.data || error.message);
     throw error;
   }
 };

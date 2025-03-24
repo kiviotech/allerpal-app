@@ -3,6 +3,7 @@ import { StyleSheet, Text } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Login from "./auth/Login";
+import { Redirect } from 'expo-router';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -24,7 +25,7 @@ export default function App() {
     );
   }
 
-  return <Login />;
+  return <Redirect href="pages/LocationAccess" />;
 }
 
 const styles = StyleSheet.create({

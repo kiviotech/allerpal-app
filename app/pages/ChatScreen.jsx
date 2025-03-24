@@ -1,209 +1,3 @@
-// import React, { useState } from "react";
-// import {
-//   View,
-//   Text,
-//   TextInput,
-//   TouchableOpacity,
-//   FlatList,
-//   StyleSheet,
-// } from "react-native";
-// import { Rating } from "react-native-ratings";
-// import { Ionicons } from "@expo/vector-icons";
-// import { useRouter } from "expo-router";
-// import Chat from "./Chat";
-// const messages = [
-//   {
-//     id: "1",
-//     type: "received",
-//     text: "Welcome to Lorem ipsum, how can we help you?",
-//     time: "10:15 AM",
-//   },
-//   { id: "2", type: "sent", text: "Lorem ipsum", time: "10:16 AM" },
-//   {
-//     id: "3",
-//     type: "sent",
-//     text: "A supportive space where practitioners and enthusiasts.",
-//     time: "10:17 AM",
-//   },
-//   {
-//     id: "4",
-//     type: "received",
-//     text: "Please rate chat support experience",
-//     time: "10:18 AM",
-//     ratingRequest: true,
-//   },
-// ];
-
-// const ChatScreen = () => {
-//   const router = useRouter();
-//   const [inputText, setInputText] = useState("");
-//   const [rating, setRating] = useState(4);
-
-//   const renderMessage = ({ item }) => {
-//     if (item.ratingRequest) {
-//       return (
-//         <View style={styles.ratingContainer}>
-//           <Text style={styles.messageText}>{item.text}</Text>
-//           <Rating
-//             startingValue={rating}
-//             imageSize={20}
-//             onFinishRating={setRating}
-//             style={styles.rating}
-//           />
-//         </View>
-//       );
-//     }
-//     return (
-//       <View
-//         style={[
-//           styles.messageContainer,
-//           item.type === "sent" ? styles.sentMessage : styles.receivedMessage,
-//         ]}
-//       >
-//         <Text style={styles.messageText}>{item.text}</Text>
-//         <Text style={styles.timeText}>{item.time}</Text>
-//       </View>
-//     );
-//   };
-
-//   return (
-//     <View style={styles.container}>
-//       {/* Back Arrow */}
-//       <View style={styles.ArrowContainer}>
-//         <TouchableOpacity
-//           style={styles.backArrow}
-//           onPress={() => router.push("./Chat")}
-//         >
-//           <Ionicons name="arrow-back" size={24} color="black" />
-//         </TouchableOpacity>
-
-//         {/* Header */}
-//         <Text style={styles.header}>Lorem ipsum</Text>
-//       </View>
-
-//       {/* Chat messages */}
-//       <FlatList
-//         data={messages}
-//         renderItem={renderMessage}
-//         keyExtractor={(item) => item.id}
-//         contentContainerStyle={styles.chatContainer}
-//       />
-
-//       {/* Input area */}
-//       <View style={styles.inputContainer}>
-//         <TextInput
-//           style={styles.input}
-//           placeholder="Send message"
-//           value={inputText}
-//           onChangeText={setInputText}
-//         />
-//         <TouchableOpacity style={styles.sendButton}>
-//           <Text style={styles.sendButtonText}>➤</Text>
-//         </TouchableOpacity>
-//       </View>
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: "lightgray",
-//     paddingTop: 20, // Added padding to move content down
-//   },
-//   backArrow: {
-//     marginLeft: 15,
-//     marginTop: 10, // Add some space above the back arrow
-//   },
-//   header: {
-//     fontSize: 24,
-//     fontWeight: "bold",
-//     padding: 15,
-//     color: "#000",
-//     marginTop: 10, // Move header down a bit
-//   },
-//   chatContainer: {
-//     paddingHorizontal: 10,
-//     paddingBottom: 80, // Space for the input area
-//   },
-//   messageContainer: {
-//     maxWidth: "70%",
-//     padding: 10,
-//     borderRadius: 10,
-//     marginVertical: 5,
-//   },
-//   receivedMessage: {
-//     alignSelf: "flex-start",
-//     backgroundColor: "#e0e0e0",
-//   },
-//   sentMessage: {
-//     alignSelf: "flex-end",
-//     backgroundColor: "#00aced",
-//   },
-//   messageText: {
-//     fontSize: 16,
-//     color: "#333",
-//   },
-//   timeText: {
-//     fontSize: 12,
-//     color: "#888",
-//     marginTop: 5,
-//     alignSelf: "flex-end",
-//   },
-//   ratingContainer: {
-//     alignSelf: "flex-start",
-//     padding: 10,
-//     marginVertical: 5,
-//     backgroundColor: "#e0e0e0",
-//     borderRadius: 10,
-//   },
-//   rating: {
-//     marginTop: 5,
-//   },
-//   inputContainer: {
-//     flexDirection: "row",
-//     position: "absolute",
-//     bottom: 0,
-//     left: 0,
-//     right: 0,
-//     backgroundColor: "#fff",
-//     padding: 10,
-//     borderTopWidth: 1,
-//     borderTopColor: "#ccc",
-//   },
-//   input: {
-//     flex: 1,
-//     borderWidth: 1,
-//     borderColor: "#ccc",
-//     borderRadius: 20,
-//     paddingHorizontal: 15,
-//     paddingVertical: 5,
-//     marginRight: 10,
-//   },
-//   sendButton: {
-//     backgroundColor: "#00aced",
-//     borderRadius: 20,
-//     justifyContent: "center",
-//     alignItems: "center",
-//     padding: 10,
-//   },
-//   sendButtonText: {
-//     color: "#fff",
-//     fontSize: 18,
-//   },
-//   ArrowContainer: {
-//     display: "flex",
-//     flexDirection: "row",
-//     alignItems: "center",
-//     gap: 4,
-//   },
-// });
-
-// export default ChatScreen;
-
-
-
-
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -215,154 +9,352 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { fetchInboxById } from "../../src/services/inboxServices";
 import useAuthStore from "../../useAuthStore";
 import { createNewMessage } from "../../src/services/messageServices";
+import { sendMessageToRestaurant } from '../../src/services/chatService';
+import { getChatById, checkChatMessages } from '../../src/api/repositories/chatRepositories';
+import { fetchRestaurantDetails } from '../../src/services/restaurantServices';
+import { MEDIA_BASE_URL } from './Chat';
 
 const ChatScreen = () => {
   const router = useRouter();
   const navigation = useNavigation();
-  const [messages, setMessages] = useState([
-    { text: "Hi! How can I help you today?", sender: "bot" },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [userInput, setUserInput] = useState("");
   const [isInputDisabled, setIsInputDisabled] = useState(false);
+  const [canSendMessage, setCanSendMessage] = useState(true);
+  const [waitTimeRemaining, setWaitTimeRemaining] = useState(null);
   const flatListRef = useRef(null);
-  const { chatId } = useLocalSearchParams();
+  const inputRef = useRef(null);
+  const params = useLocalSearchParams();
+  const { chatId, restaurantDocumentId } = params;
   const {user} = useAuthStore();
   const userEmail = user?.email;
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [restaurant, setRestaurant] = useState(null);
+  const [chatStatus, setChatStatus] = useState(null);
+  const [lastMessageTime, setLastMessageTime] = useState(null);
+  const [checkingMessages, setCheckingMessages] = useState(false);
+
+  // Focus input when component mounts
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
 
   useEffect(() => {
+    console.log("[ChatScreen] Initializing with params:", { chatId, restaurantDocumentId });
+    fetchChatDetails();
+  }, [chatId, restaurantDocumentId]);
+
+  // Check if user can send a message based on chat status and last message time
+  useEffect(() => {
+    checkMessageSendingPermission();
+  }, [messages, chatStatus]);
+
+  // Update the wait time remaining every minute
+  useEffect(() => {
+    if (!canSendMessage && waitTimeRemaining) {
+      const timer = setInterval(() => {
+        checkMessageSendingPermission();
+      }, 60000); // Check every minute
+      
+      return () => clearInterval(timer);
+    }
+  }, [canSendMessage, waitTimeRemaining]);
+
+  // Check for new messages when component mounts and periodically
+  useEffect(() => {
     if (chatId) {
-      const fetchInboxDetails = async () => {
-        try {
-          const response = await fetchInboxById(chatId);
-          if (response.data && response.data.messages) {
-            const formattedMessages = response.data.messages.map((msg) => ({
-              text: msg.content,
-              sender: msg.sent_by === "user" ? "user" : "bot",
-            }));
-
-            setMessages((prevMessages) => [
-              ...prevMessages.filter(msg => msg.text !== "Hi, How can I help you today?"), // Avoid duplicate bot messages
-              ...formattedMessages,
-
-            ]);
-          }
-        } catch (error) {
-          console.error("Error fetching messages:", error);
-        }
-      };
-
-      fetchInboxDetails();
+      checkForNewMessages();
+      
+      // Check for new messages every 10 seconds
+      const interval = setInterval(checkForNewMessages, 10000);
+      
+      return () => clearInterval(interval);
     }
   }, [chatId]);
 
-  // useEffect(() => {
-  //   const fetchInbox = async () => {
-  //     if (!userId) return;
-  //     setLoading(true);
-  
-  //     try {
-  //       let allInboxes = [];
-  
-  //       // Fetch all inboxes for the user first
-  //       const userInbox = await fetchInboxByuserId(userId);
-  //       if (userInbox?.data) {
-  //         allInboxes = userInbox.data; // Store all existing inboxes
-  //       }
-  
-  //       if (restaurantId) {
-  //         const inboxResponse = await fetchInboxByuserResto(userId, restaurantId);
-  //         if (inboxResponse?.data?.length > 0) {
-  //           setInbox(inboxResponse.data);
-  //         } else {
-  //           // If no inbox exists, create one
-  //           const payload = {
-  //             data: {
-  //               user: userId,
-  //               restaurant: restaurantId,
-  //             },
-  //           };
-  //           const newInbox = await createNewInbox(payload);
-  //           if (newInbox?.data) {
-  //             // Add the new inbox to the existing list
-  //             allInboxes.push(newInbox.data);
-  //             router.push({
-  //               pathname: "/pages/ChatScreen",
-  //               params: { chatId: newInbox.data.documentId },
-  //             });
-  //           }
-  //         }
-  //       }
-  
-  //       // Set the state to contain all inboxes
-  //       setInbox(allInboxes);
-  //     } catch (error) {
-  //       console.error("Error fetching inbox:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  
-  //   fetchInbox();
-  // }, [userId, restaurantId]);
-
-
-  // const handleSendMessage = () => {
-  //   if (userInput.trim()) {
-  //     addMessage(userInput, "user");
-  //     setUserInput("");
-  //     setTimeout(() => generateAndAddResponse(userInput.toLowerCase()), 300);
-  //   }
-  // };
-
-  const handleSendMessage = async () => {
-    if (userInput.trim()) {
-      addMessage(userInput, "user");
-      setUserInput("");
-  
-      try {
-        const messagePayload = {
-          data: {
-            content: userInput,
-            sent_by: "user",
-            email_message_id: userEmail,
-            read: false,
-            inboxx: chatId,
-          },
-        };
-          await createNewMessage(messagePayload);
-        } catch (error) {
-        console.error("Error sending message:", error);
-        Alert.alert('Something went wrong. Please try again later.')
-      }
-  
-      // Generate response after delay
-      setTimeout(() => generateAndAddResponse(userInput.toLowerCase()), 300);
-    }
-  };  
-
-  const generateAndAddResponse = (userMessage) => {
-    let botResponse = "Ask me about any restaurant";
-
-    if (["hi", "hello", "hey"].includes(userMessage)) {
-      botResponse = "Hello! How can I assist you today?";
-    } else if (userMessage.includes("restaurant")) {
-      botResponse =
-        "Thank you for chatting with us. We will inform the restaurant and get back to you after 24 hours.";
-      setIsInputDisabled(true);
+  const checkMessageSendingPermission = () => {
+    // If no messages, user can send a message
+    if (!messages || messages.length === 0) {
+      setCanSendMessage(true);
+      setWaitTimeRemaining(null);
+      return;
     }
 
-    addMessage(botResponse, "bot");
+    // Get the last message
+    const lastMessage = [...messages].sort((a, b) => 
+      new Date(b.timestamp) - new Date(a.timestamp)
+    )[0];
+
+    // If the last message is from the restaurant, user can send a message
+    if (lastMessage.sender === 'restaurant' || lastMessage.sender === 'bot') {
+      setCanSendMessage(true);
+      setWaitTimeRemaining(null);
+      return;
+    }
+
+    // If the chat status is 'responded', user can send a message
+    if (chatStatus === 'responded') {
+      setCanSendMessage(true);
+      setWaitTimeRemaining(null);
+      return;
+    }
+
+    // Check if 24 hours have passed since the last user message
+    const lastMessageTime = new Date(lastMessage.timestamp);
+    const currentTime = new Date();
+    const hoursSinceLastMessage = (currentTime - lastMessageTime) / (1000 * 60 * 60);
+    
+    if (hoursSinceLastMessage >= 24) {
+      setCanSendMessage(true);
+      setWaitTimeRemaining(null);
+    } else {
+      setCanSendMessage(false);
+      
+      // Calculate remaining wait time
+      const remainingHours = Math.floor(24 - hoursSinceLastMessage);
+      const remainingMinutes = Math.floor((24 - hoursSinceLastMessage - remainingHours) * 60);
+      
+      setWaitTimeRemaining({
+        hours: remainingHours,
+        minutes: remainingMinutes
+      });
+    }
   };
 
-  const addMessage = (text, sender) => {
-    setMessages((prevMessages) => [...prevMessages, { text, sender }]);
-    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+  const checkForNewMessages = async () => {
+    if (checkingMessages || !chatId) return;
+    
+    try {
+      setCheckingMessages(true);
+      console.log('[ChatScreen] Checking for new messages...');
+      
+      const response = await checkChatMessages(chatId, lastMessageTime);
+      const { newMessages, unreadCount, status } = response.data?.data || {};
+      
+      if (newMessages && newMessages.length > 0) {
+        console.log('[ChatScreen] Found new messages:', newMessages);
+        
+        // Update messages state with new messages
+        setMessages(prevMessages => {
+          const updatedMessages = [...prevMessages];
+          
+          newMessages.forEach(newMsg => {
+            const existingIndex = updatedMessages.findIndex(msg => msg.id === newMsg.id);
+            
+            if (existingIndex === -1) {
+              // Add new message if it doesn't exist
+              updatedMessages.push(newMsg);
+            }
+          });
+          
+          // Sort by timestamp
+          return updatedMessages.sort((a, b) => 
+            new Date(a.timestamp) - new Date(b.timestamp)
+          );
+        });
+        
+        // Update last message time
+        const latestMessage = newMessages.reduce((latest, msg) => {
+          return !latest || new Date(msg.timestamp) > new Date(latest.timestamp) ? msg : latest;
+        }, null);
+        
+        if (latestMessage) {
+          setLastMessageTime(latestMessage.timestamp);
+        }
+      }
+      
+      // Update chat status and unread count if changed
+      if (status) {
+        setChatStatus(status);
+      }
+      
+    } catch (error) {
+      console.error('[ChatScreen] Error checking for new messages:', error);
+    } finally {
+      setCheckingMessages(false);
+    }
+  };
+
+  const fetchChatDetails = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      console.log("[ChatScreen] Fetching chat details with:", { chatId, restaurantDocumentId });
+      
+      // Fetch chat details if chatId is available
+      if (chatId) {
+        console.log("[ChatScreen] Fetching chat with ID:", chatId);
+        try {
+          const chatResponse = await getChatById(chatId);
+          const chatData = chatResponse.data?.data;
+          
+          if (chatData) {
+            console.log("[ChatScreen] Chat data:", chatData);
+            
+            // Set restaurant data from the chat
+            if (chatData.restaurant) {
+              console.log("[ChatScreen] Setting restaurant from chat data:", chatData.restaurant);
+              setRestaurant(chatData.restaurant);
+            }
+            
+            // Set chat status
+            setChatStatus(chatData.status || 'active');
+            
+            // Set messages from the chat
+            if (chatData.messages && Array.isArray(chatData.messages)) {
+              console.log("[ChatScreen] Setting messages from chat data:", chatData.messages.length);
+              setMessages(chatData.messages);
+            } else {
+              console.log("[ChatScreen] No messages found in chat data");
+              setMessages([]);
+            }
+            
+            // Check if user can send a message
+            checkMessageSendingPermission();
+            
+            // Set initial lastMessageTime from the most recent message
+            if (chatData.messages && Array.isArray(chatData.messages) && chatData.messages.length > 0) {
+              const latestMessage = chatData.messages.reduce((latest, msg) => {
+                return !latest || new Date(msg.timestamp) > new Date(latest.timestamp) ? msg : latest;
+              }, null);
+              
+              if (latestMessage) {
+                setLastMessageTime(latestMessage.timestamp);
+              }
+            }
+          } else {
+            console.error("[ChatScreen] No chat data found");
+            setError("Chat not found. Please try again.");
+          }
+        } catch (error) {
+          console.error("[ChatScreen] Error fetching chat:", error);
+          setError("Failed to load chat. Please try again.");
+        }
+      } else if (restaurantDocumentId) {
+        // Fetch restaurant details for new chat
+        console.log("[ChatScreen] Fetching restaurant with documentId:", restaurantDocumentId);
+        try {
+          const restaurantResponse = await fetchRestaurantDetails(restaurantDocumentId);
+          if (restaurantResponse.data) {
+            console.log("[ChatScreen] Setting restaurant from direct fetch:", restaurantResponse.data);
+            setRestaurant(restaurantResponse.data);
+            setMessages([]); // Initialize with empty messages for new chat
+            setCanSendMessage(true); // Enable message sending for new chat
+            setWaitTimeRemaining(null);
+          }
+        } catch (error) {
+          console.error("[ChatScreen] Error fetching restaurant details:", error);
+          setError("Failed to load restaurant details. Please try again.");
+        }
+      } else {
+        console.log("[ChatScreen] No chatId or restaurantDocumentId available");
+        setError("No chat or restaurant information available.");
+      }
+    } catch (error) {
+      console.error("[ChatScreen] Error fetching chat details:", error);
+      setError("Failed to load chat. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!userInput.trim() || !canSendMessage) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const messageText = userInput.trim();
+      setUserInput(''); // Clear input field immediately for better UX
+      
+      // Add message to UI optimistically
+      const newMessage = {
+        id: Date.now().toString(),
+        text: messageText,
+        sender: 'user',
+        timestamp: new Date().toISOString(),
+        read: true
+      };
+      
+      setMessages(prev => [...prev, newMessage]);
+      
+      // Temporarily disable sending more messages
+      setCanSendMessage(false);
+      
+      // Send message to restaurant via email
+      if (user?.id && (restaurantDocumentId || chatId)) {
+        console.log("[ChatScreen] Sending message to restaurant:", { 
+          userId: user.id, 
+          restaurantDocumentId: restaurantDocumentId || restaurant?.documentId, 
+          chatId 
+        });
+        
+        // Use the restaurant's documentId for sending messages
+        const docId = restaurantDocumentId || restaurant?.documentId;
+        if (!docId) {
+          console.error("[ChatScreen] No restaurant documentId available for sending message");
+          throw new Error("Restaurant documentId is missing");
+        }
+        
+        const userName = user?.username || user?.email || 'AllerPal User';
+        
+        // Create chat if it doesn't exist, or send message to existing chat
+        const updatedChat = await sendMessageToRestaurant(
+          user.id,
+          docId,
+          messageText,
+          userName
+        );
+        
+        if (updatedChat && updatedChat.id) {
+          if (!chatId) {
+            // If this is a new chat, update the URL with the chat ID
+            console.log("[ChatScreen] New chat created, updating URL with chat ID:", updatedChat.id);
+            router.setParams({ chatId: updatedChat.id });
+          }
+          // Fetch the updated chat details
+          fetchChatDetails();
+        } else {
+          throw new Error("Failed to send message");
+        }
+      } else {
+        console.error("[ChatScreen] Missing user ID or restaurant documentId");
+        throw new Error("Missing user ID or restaurant documentId");
+      }
+    } catch (error) {
+      console.error("[ChatScreen] Error sending message:", error);
+      setError("Failed to send message. Please try again.");
+      
+      // Remove the optimistically added message
+      setMessages(prev => prev.filter(msg => msg.id !== Date.now().toString()));
+      
+      // Re-enable sending messages if there was an error
+      setCanSendMessage(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Format the wait time remaining
+  const formatWaitTime = () => {
+    if (!waitTimeRemaining) return '';
+    
+    if (waitTimeRemaining.hours > 0) {
+      return `${waitTimeRemaining.hours} hour${waitTimeRemaining.hours !== 1 ? 's' : ''} and ${waitTimeRemaining.minutes} minute${waitTimeRemaining.minutes !== 1 ? 's' : ''}`;
+    } else {
+      return `${waitTimeRemaining.minutes} minute${waitTimeRemaining.minutes !== 1 ? 's' : ''}`;
+    }
   };
 
   return (
@@ -371,9 +363,27 @@ const ChatScreen = () => {
         <TouchableOpacity onPress={() => router.replace('/pages/Chat')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Chat</Text>
+        <Text style={styles.headerTitle}>
+          {restaurant?.name || 'Chat'}
+        </Text>
       </View>
 
+      {isLoading || checkingMessages ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#00aced" />
+          <Text style={styles.loadingText}>Loading conversation...</Text>
+        </View>
+      ) : error && !messages.length ? (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={fetchChatDetails}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
       <FlatList
         ref={flatListRef}
         data={messages}
@@ -389,23 +399,59 @@ const ChatScreen = () => {
             </Text>
           </View>
         )}
-        keyExtractor={(item, index) => index.toString()}
+          keyExtractor={(item, index) => item.id?.toString() || index.toString()}
         contentContainerStyle={styles.messageList}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-      />
+          onRefresh={checkForNewMessages}
+          refreshing={checkingMessages}
+        />
+      )}
+
+      {!canSendMessage && waitTimeRemaining && (
+        <View style={styles.waitingBanner}>
+          <Ionicons name="time-outline" size={20} color="#555" />
+          <Text style={styles.waitingText}>
+            Please wait for the restaurant to respond or try again in {formatWaitTime()}.
+          </Text>
+        </View>
+      )}
 
       <View style={styles.footer}>
         <View style={styles.inputContainer}>
           <TextInput
-            style={styles.input}
+            ref={inputRef}
+            style={[styles.input, !canSendMessage && styles.inputDisabled]}
             value={userInput}
             onChangeText={setUserInput}
-            placeholder="Type a message..."
-            editable={!isInputDisabled}
+            placeholder={canSendMessage ? "Type a message..." : "Waiting for response..."}
+            multiline
+            editable={canSendMessage}
           />
-          <Button title="Send" onPress={handleSendMessage} disabled={isInputDisabled} />
+          <TouchableOpacity 
+            style={[
+              styles.sendButton, 
+              (!userInput.trim() || !canSendMessage || isLoading) && styles.sendButtonDisabled
+            ]}
+            onPress={handleSendMessage}
+            disabled={!userInput.trim() || !canSendMessage || isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="send" size={24} color="white" />
+            )}
+          </TouchableOpacity>
         </View>
       </View>
+      
+      {error && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>{error}</Text>
+          <TouchableOpacity onPress={() => setError(null)}>
+            <Ionicons name="close" size={20} color="white" />
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -470,6 +516,73 @@ const styles = StyleSheet.create({
     padding: 10,
     marginRight: 10,
     fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: '#ff6b6b',
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  retryButton: {
+    backgroundColor: '#00aced',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  errorBanner: {
+    position: 'absolute',
+    bottom: 70,
+    left: 10,
+    right: 10,
+    backgroundColor: '#ff6b6b',
+    padding: 10,
+    borderRadius: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  errorBannerText: {
+    color: 'white',
+    flex: 1,
+  },
+  sendButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  waitingBanner: {
+    backgroundColor: '#f8f8f8',
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+  },
+  waitingText: {
+    marginLeft: 8,
+    color: '#555',
+    fontSize: 14,
+    flex: 1,
+  },
+  inputDisabled: {
+    backgroundColor: '#f0f0f0',
+    color: '#999',
   },
 });
 

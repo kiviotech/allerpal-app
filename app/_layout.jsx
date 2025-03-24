@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { NavigationContainer, useNavigationState } from "@react-navigation/native";
 import { ToastProvider } from "./ToastContext";
 import useAuthStore from "../useAuthStore";
+import { LocationProvider } from '../src/contexts/LocationContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -30,29 +31,32 @@ const Layout = () => {
       }}
     >
       <ToastProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="auth/Login" />
-          <Stack.Screen name="auth/SignUp" />
-          <Stack.Screen name="auth/createNewPassword" />
-          <Stack.Screen name="auth/passwordChangedNotification" />
-          <Stack.Screen name="pages/AccountSetup" />
-          <Stack.Screen name="pages/ResetPassWord" />
-          <Stack.Screen name="pages/ChangePassword" />
-          <Stack.Screen name="pages/Home" />
-          <Stack.Screen name="pages/Search" />
-          <Stack.Screen name="pages/Community" />
-          <Stack.Screen name="pages/Blog" />
-          <Stack.Screen name="pages/BlogDetails" />
-          <Stack.Screen name="pages/Chat" />
-          <Stack.Screen name="pages/Account" />
-          <Stack.Screen name="pages/Profile" />
-          <Stack.Screen name="pages/RestaurantScreen" />
-          <Stack.Screen name="pages/ReviewForm" />
-          <Stack.Screen name="pages/Disclamier" />
-          <Stack.Screen name="pages/FinishSetup" />
-          <Stack.Screen name="pages/LegalPolicy" />
-        </Stack>
+        <LocationProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="auth/Login" />
+            <Stack.Screen name="auth/SignUp" />
+            <Stack.Screen name="auth/createNewPassword" />
+            <Stack.Screen name="auth/passwordChangedNotification" />
+            <Stack.Screen name="pages/LocationAccess" />
+            <Stack.Screen name="pages/AccountSetup" />
+            <Stack.Screen name="pages/ResetPassWord" />
+            <Stack.Screen name="pages/ChangePassword" />
+            <Stack.Screen name="pages/Home" />
+            <Stack.Screen name="pages/Search" />
+            <Stack.Screen name="pages/Community" />
+            <Stack.Screen name="pages/Blog" />
+            <Stack.Screen name="pages/BlogDetails" />
+            <Stack.Screen name="pages/Chat" />
+            <Stack.Screen name="pages/Account" />
+            <Stack.Screen name="pages/Profile" />
+            <Stack.Screen name="pages/RestaurantScreen" />
+            <Stack.Screen name="pages/ReviewForm" />
+            <Stack.Screen name="pages/Disclamier" />
+            <Stack.Screen name="pages/FinishSetup" />
+            <Stack.Screen name="pages/LegalPolicy" />
+          </Stack>
+        </LocationProvider>
       </ToastProvider>
     </NavigationContainer>
   );

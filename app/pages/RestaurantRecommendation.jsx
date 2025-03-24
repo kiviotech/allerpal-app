@@ -22,144 +22,79 @@ import { getRestaurants } from "../../src/api/repositories/restaurantRepositorie
 
 const { width } = Dimensions.get("window");
 
-const RestaurantCard = ({ restaurant, onPress }) => {
+const RestaurantCard = React.memo(({ restaurant, onPress, isFavorite: initialIsFavorite }) => {
   const router = useRouter();
   const { user, isAuthenticated, latitude, longitude } = useAuthStore();
-  // const userLocation = useAuthStore((state) => state.location); // Getting the user's location from Zustand
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [distance, setDistance] = useState(null); // State to hold the calculated distance
+  const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
+  const [distance, setDistance] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Hardcoded coordinates for the restaurant (replace with actual data in real scenarios)
-  // const hardcodedCoordinates = {
-  //   latitude: 51.479342,
-  //   longitude: -0.298706,
-  // };
-
-  // Function to fetch coordinates using a geocoding service (like Google Geocoding API)
-  // const getCoordinatesFromAddress = async (address) => {
-  // const API_KEY = 'AIzaSyDFQTSshpxEzndpEMEIDi_8f7OUGyh-Hs8';
-  // const response = await axios.get(
-  //   `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${API_KEY}`
-  // );
-
-  // const location = response.data.results[0]?.geometry?.location;
-  // if (location) {
-  //   return {
-  //     latitude: location.lat,
-  //     longitude: location.lng,
-  //   };
-  // } 
-  //   else {
-  //     return null; // Return null if geocoding fails
-  //   }
-  // };
-
-  // const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  //   const toRad = (value) => (value * Math.PI) / 180;
-  //   const R = 6371; // Earth's radius in km
-
-  //   const dLat = toRad(lat2 - lat1);
-  //   const dLon = toRad(lon2 - lon1);
-  //   const a =
-  //     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-  //     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-  //     Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  //   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  //   return R * c; // Distance in km
-  // };
-
-  // useEffect(() => {
-  //   // Ensure that the user and restaurant locations are available before calculating distance
-  //   if (latitude && longitude) {
-  //     const dist = calculateDistance(
-  //       latitude,
-  //       longitude,
-  //       hardcodedCoordinates.latitude,
-  //       hardcodedCoordinates.longitude
-  //     );
-  //     setDistance(dist.toFixed(2)); // Round the distance to 2 decimal places
-  //   }
-  // }, [latitude, longitude, restaurant.location]);
+  useEffect(() => {
+    setIsFavorite(initialIsFavorite);
+  }, [initialIsFavorite]);
 
   useEffect(() => {
     const fetchDistanceToRestaurant = async () => {
       if (latitude && longitude && restaurant.location) {
-        const dist = await calculateDistanceFromUser(
-          { latitude, longitude },
-          restaurant.location
-        );
-        if (dist) setDistance(dist); // Round distance to 2 decimal places
+        try {
+          const dist = await calculateDistanceFromUser(
+            { latitude, longitude },
+            restaurant.location
+          );
+          if (dist) setDistance(dist);
+        } catch (error) {
+          console.error("[RestaurantCard] Error calculating distance:", error);
+        }
       }
     };
 
     fetchDistanceToRestaurant();
   }, [latitude, longitude, restaurant.location]);
 
-  // Fetch user's favorites on mount
-  useEffect(() => {
-    const fetchFavorites = async () => {
-      if (!user?.id) return;
-
-      try {
-        const response = await fetchFavouritesByUserId(user.id);
-        if (response?.data?.length > 0) {
-          const userFavorites = response.data[0]; // Assuming one favorite record per user
-          const isRestaurantFavorite = userFavorites.restaurants.some(
-            (favRestaurant) => favRestaurant.documentId === restaurant.documentId
-          );
-          setIsFavorite(isRestaurantFavorite);
-        }
-      } catch (error) {
-        console.error("Error fetching favorites:", error);
-      }
-    };
-
-    fetchFavorites();
-  }, [user?.id, restaurant.id]);
-
   const handleFavoritePress = async () => {
     if (!isAuthenticated) {
       router.push("/pages/Login");
       return;
     }
+
     try {
+      setIsUpdating(true);
+      setError(null);
+      
       const response = await fetchFavouritesByUserId(user.id);
-      const favoriteData = response?.data?.[0]; // Get the existing favorite entry, if available
+      const favoriteData = response?.data?.[0];
 
       if (!favoriteData) {
         // Create new favorite entry
         const newFavorite = {
-          user: { id: user.id }, // Associate the user
-          restaurants: [
-            {
-              id: restaurant.id,
-            },
-          ],
+          user: { id: user.id },
+          restaurants: [restaurant.id],
         };
         await createNewFavourite({ data: newFavorite });
       } else {
-        // Update existing favorite 
-        // Extract IDs from the existing favorite restaurants
+        // Update existing favorites
         const existingRestaurantIds = favoriteData.restaurants.map((fav) => fav.id);
-
         const updatedRestaurants = isFavorite
-          ? existingRestaurantIds.filter((id) => id !== restaurant.id) // Remove the current restaurant if it's already a favorite
-          : [...existingRestaurantIds, restaurant.id]; // Add the current restaurant ID if not already a favorite
+          ? existingRestaurantIds.filter((id) => id !== restaurant.id)
+          : [...existingRestaurantIds, restaurant.id];
 
-        const updatePayload = {
-          data: {
-            restaurants: updatedRestaurants,
-          },
-        };
-
-        await updateFavouriteData(favoriteData.documentId, updatePayload);
+        await updateFavouriteData(favoriteData.id, {
+          data: { restaurants: updatedRestaurants }
+        });
       }
 
-      // Toggle the favorite state
+      // Optimistically update UI
       setIsFavorite((prev) => !prev);
       global.EventEmitter.emit("favoritesUpdated");
+      
     } catch (error) {
-      console.error("Error updating favorites:", error);
+      console.error("[RestaurantCard] Error updating favorites:", error);
+      setError("Failed to update favorite status");
+      // Revert optimistic update if needed
+      setIsFavorite(initialIsFavorite);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -167,18 +102,16 @@ const RestaurantCard = ({ restaurant, onPress }) => {
     router.push({
       pathname: "pages/RestaurantScreen",
       params: {
-        id: restaurant.documentId,
+        id: restaurant.id,
         documentId: restaurant.documentId,
         isFavoriteItem: isFavorite,
       },
-    })
+    });
   };
 
-  // Construct the full image URL or use a fallback image
-  const imageUrl =
-    (restaurant.image && restaurant.image[0]?.url)
-      ? `${MEDIA_BASE_URL}${restaurant.image[0].url}`
-      : Restro;
+  const imageUrl = (restaurant.image && restaurant.image[0]?.url)
+    ? `${MEDIA_BASE_URL}${restaurant.image[0].url}`
+    : Restro;
 
   return (
     <TouchableOpacity onPress={goToRestaurantScreen}>
@@ -186,11 +119,14 @@ const RestaurantCard = ({ restaurant, onPress }) => {
         <Image source={{ uri: imageUrl }} style={styles.image} />
         <View style={styles.iconContainer}>
           <View style={styles.heart}>
-            <TouchableOpacity onPress={handleFavoritePress}>
+            <TouchableOpacity 
+              onPress={handleFavoritePress}
+              disabled={isUpdating}
+            >
               <Ionicons
                 name={isFavorite ? "heart" : "heart-outline"}
                 size={20}
-                color={isFavorite ? "white" : "white"}
+                color="white"
                 style={styles.icon}
               />
             </TouchableOpacity>
@@ -206,6 +142,14 @@ const RestaurantCard = ({ restaurant, onPress }) => {
             </TouchableOpacity>
           </View>
         </View>
+
+        {error && (
+          <View style={[styles.errorBadge, { position: 'absolute', top: 10, left: 10 }]}>
+            <Text style={[styles.errorText, { color: 'white', fontSize: 10 }]}>
+              {error}
+            </Text>
+          </View>
+        )}
 
         <View style={styles.ratingContainer}>
           <Text style={styles.ratingText}>{restaurant.rating} ⭐</Text>
@@ -232,45 +176,132 @@ const RestaurantCard = ({ restaurant, onPress }) => {
       </View>
     </TouchableOpacity>
   );
-};
+});
+
+RestaurantCard.displayName = 'RestaurantCard';
 
 const RestaurantRecommendation = () => {
   const [restaurantData, setRestaurantData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [favorites, setFavorites] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const { user, isAuthenticated } = useAuthStore();
 
-  useEffect(() => {
-    const collectRestaurants = async () => {
-      try {
-        setLoading(true)
-        const response = await fetchAllRestaurants();
-        setRestaurantData(response.data);
-        setLoading(false)
+  // Fetch favorites at parent level
+  const fetchUserFavorites = async () => {
+    if (!user?.id) return;
+    try {
+      console.log("[RestaurantRecommendation] Fetching favorites for user:", user.id);
+      const response = await fetchFavouritesByUserId(user.id);
+      if (response?.data?.length > 0) {
+        const favoriteIds = response.data[0].restaurants.map(r => r.id);
+        console.log("[RestaurantRecommendation] Fetched favorite IDs:", favoriteIds);
+        setFavorites(favoriteIds);
       }
-      catch (error) {
-        console.error("Error fetching restaurants:", error);
-        setRestaurantData([])
-      }
+    } catch (error) {
+      console.error("[RestaurantRecommendation] Error fetching favorites:", error);
+      setError('Failed to fetch favorites');
     }
-    collectRestaurants()
+  };
+
+  // Fetch restaurants with pagination
+  const collectRestaurants = async (pageNum = 1, shouldAppend = false) => {
+    try {
+      if (pageNum === 1) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+      console.log("[RestaurantRecommendation] Fetching restaurants page:", pageNum);
+      
+      const response = await fetchAllRestaurants(pageNum);
+      console.log("[RestaurantRecommendation] Restaurants response:", JSON.stringify(response?.data?.length, null, 2));
+      
+      if (response?.data) {
+        if (shouldAppend) {
+          setRestaurantData(prev => [...prev, ...response.data]);
+        } else {
+          setRestaurantData(response.data);
+        }
+        setHasMore(response.data.length > 0);
+      }
+    } catch (error) {
+      console.error("[RestaurantRecommendation] Error fetching restaurants:", error);
+      setError('Failed to fetch restaurants');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  // Handle infinite scroll
+  const handleLoadMore = () => {
+    if (!loading && !loadingMore && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      collectRestaurants(nextPage, true);
+    }
+  };
+
+  // Initial data fetch
+  useEffect(() => {
+    collectRestaurants(1, false);
+    if (user?.id) {
+      fetchUserFavorites();
+    }
+  }, [user?.id]);
+
+  // Listen for favorites updates
+  useEffect(() => {
+    const handleFavoritesUpdate = () => {
+      fetchUserFavorites();
+    };
+
+    global.EventEmitter.addListener("favoritesUpdated", handleFavoritesUpdate);
+    return () => {
+      global.EventEmitter.removeListener("favoritesUpdated", handleFavoritesUpdate);
+    };
   }, []);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Restaurant recommendations</Text>
+      {error && <Text style={[styles.errorText, { color: 'red', padding: 10 }]}>{error}</Text>}
       {loading ? (
-      <Text style={styles.loadingText}>Loading restaurants...</Text>
-    ) : (
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.scrollContainer}
-      >
-        {Array.isArray(restaurantData) &&
-          restaurantData.map((restaurant) => (
-            <RestaurantCard key={restaurant.id} restaurant={restaurant} />
-          ))}
-      </ScrollView>
-    )}
+        <Text style={styles.loadingText}>Loading restaurants...</Text>
+      ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.scrollContainer}
+          onScroll={({ nativeEvent }) => {
+            const isCloseToEnd = 
+              nativeEvent.layoutMeasurement.width + nativeEvent.contentOffset.x 
+              >= nativeEvent.contentSize.width - 20;
+            if (isCloseToEnd) {
+              handleLoadMore();
+            }
+          }}
+          scrollEventThrottle={400}
+        >
+          {Array.isArray(restaurantData) &&
+            restaurantData.map((restaurant) => (
+              <RestaurantCard 
+                key={restaurant.id} 
+                restaurant={restaurant}
+                isFavorite={favorites.includes(restaurant.id)}
+              />
+            ))}
+          {loadingMore && (
+            <View style={[styles.card, { justifyContent: 'center', alignItems: 'center' }]}>
+              <Text>Loading more...</Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 };
@@ -389,6 +420,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#00aced",
     justifyContent: "center",
     alignItems: "center",
+  },
+  errorBadge: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    backgroundColor: 'red',
+    padding: 4,
+    borderRadius: 5,
+  },
+  errorText: {
+    color: 'white',
+    fontSize: 10,
   },
 });
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, CheckBox, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, CheckBox, Image, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Ionicons } from '@expo/vector-icons';
 import useAuthStore from '../../useAuthStore'; // Assuming this holds user details
@@ -11,15 +11,18 @@ import { MEDIA_BASE_URL } from '../../src/api/apiClient';
 import { fetchProfileByUserId } from '../../src/services/profileServices';
 import { Switch } from 'react-native-web';
 import SwitchToggle from 'react-native-switch-toggle';
+import { useToast } from '../ToastContext';
 
-const Profile = () => {
-  const router = useRouter()
+const Profile = ({ onSave }) => {
+  const router = useRouter();
+  const { showToast } = useToast(); // Use the toast hook
   const [allegenList, setAllergenList] = useState([]);
   const [userAllergenId, setUserAllergenId] = useState(''); // To store allergens of the user
   const [selectedAllergens, setSelectedAllergens] = useState([]); // To track selected allergens
   const [profileAllergyId, setProfileAllergyId] = useState(''); // To store profileAllergyId
   const [isAllergenOn, setIsAllergenOn] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false); // Track save in progress
   const profileId = useAuthStore((state) => state.profileId);
 
   const userId = useAuthStore((state) => state.user?.id); // Fetch logged-in user's ID
@@ -75,6 +78,8 @@ const Profile = () => {
 
   const handleSaveChanges = async () => {
     try {
+      setIsSaving(true); // Start saving state
+      
       const formattedAllergens = selectedAllergens.map((allergenId) => ({
         id: allergenId,
       }));
@@ -88,15 +93,34 @@ const Profile = () => {
       const response = await updateProfileAllergyById(profileAllergyId, payload);
 
       if (response?.data) {
-        Alert.alert('Allergen preferences updated successfully.', '', [
-          router.push('/pages/Account'),
-        ]);
-
+        // Show toast notification
+        showToast('Profile updated successfully!', 'success');
+        
+        // Wait a moment before navigating away so the user can see the toast
+        setTimeout(() => {
+          if (onSave && typeof onSave === 'function') {
+            onSave(); // Call the onSave callback if provided
+          } else {
+            router.back(); // Fallback to going back
+          }
+        }, 800);
       } else {
-        alert('Failed to update allergen preferences. Please try again.');
+        showToast('Failed to update preferences', 'error');
       }
     } catch (error) {
-      alert('Failed to update allergen preferences.');
+      console.error('Error updating allergen preferences:', error);
+      showToast('Failed to update preferences', 'error');
+    } finally {
+      setIsSaving(false); // End saving state
+    }
+  };
+
+  // Handle cancel button press
+  const handleCancel = () => {
+    if (onSave && typeof onSave === 'function') {
+      onSave(); // Just go back without saving
+    } else {
+      router.back();
     }
   };
 
@@ -114,44 +138,62 @@ const Profile = () => {
 
   return (
     <View contentContainerStyle={styles.container}>
-      <View style={styles.allergensContainer}>
-        <View style={styles.checkboxContainer}>
-          {allegenList.map((allergen) => (
-            <View key={allergen.id} style={styles.checkboxRow}>
-              <CustomCheckBox
-                checked={selectedAllergens.includes(allergen.id)} // Check if allergen is selected
-                onPress={() => handleCheckboxChange(allergen.id)} // Toggle allergen selection
-              />
-              <View style={styles.imageiconContainer}>
-                <Image source={{ uri: `${MEDIA_BASE_URL}${allergen?.Allergen_icon?.url}` }} style={styles.icon} ></Image>
-                <Text style={styles.checkboxLabel}>{allergen.name}</Text>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleCancel} style={styles.cancelButton}>
+          <Text style={styles.cancelText}>Cancel</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Edit Allergies</Text>
+      </View>
+      
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.allergensContainer}>
+          <View style={styles.checkboxContainer}>
+            {allegenList.map((allergen) => (
+              <View key={allergen.id} style={styles.checkboxRow}>
+                <CustomCheckBox
+                  checked={selectedAllergens.includes(allergen.id)} // Check if allergen is selected
+                  onPress={() => handleCheckboxChange(allergen.id)} // Toggle allergen selection
+                />
+                <View style={styles.imageiconContainer}>
+                  <Image source={{ uri: `${MEDIA_BASE_URL}${allergen?.Allergen_icon?.url}` }} style={styles.icon} ></Image>
+                  <Text style={styles.checkboxLabel}>{allergen.name}</Text>
+                </View>
               </View>
-            </View>
-          ))}
+            ))}
+          </View>
         </View>
-      </View>
 
-      <View style={styles.switchContainer}>
-        <Text style={styles.toggleLabel}>
-          Do you wish to EXCLUDE dishes that 'MAY CONTAIN' the selected
-          Allergies
-        </Text>
-        <SwitchToggle
-          switchOn={isAllergenOn}
-          onPress={() => setIsAllergenOn(!isAllergenOn)}
-          circleColorOff="#bbb"
-          circleColorOn="#00c4cc"
-          backgroundColorOn="#e0f7fa"
-          backgroundColorOff="#ddd"
-          containerStyle={styles.switchToggleContainer}
-          circleStyle={styles.switchCircle}
-        />
-        <Text style={styles.switchText}>
-          {isAllergenOn ? "Yes" : "No"}
-        </Text>
-      </View>
-      <TouchableOpacity style={styles.signOutButton} onPress={handleSaveChanges}>
-        <Text style={styles.signOutText}>Save Changes</Text>
+        <View style={styles.switchContainer}>
+          <Text style={styles.toggleLabel}>
+            Do you wish to EXCLUDE dishes that 'MAY CONTAIN' the selected
+            Allergies
+          </Text>
+          <SwitchToggle
+            switchOn={isAllergenOn}
+            onPress={() => setIsAllergenOn(!isAllergenOn)}
+            circleColorOff="#bbb"
+            circleColorOn="#00c4cc"
+            backgroundColorOn="#e0f7fa"
+            backgroundColorOff="#ddd"
+            containerStyle={styles.switchToggleContainer}
+            circleStyle={styles.switchCircle}
+          />
+          <Text style={styles.switchText}>
+            {isAllergenOn ? "Yes" : "No"}
+          </Text>
+        </View>
+      </ScrollView>
+      
+      <TouchableOpacity 
+        style={[styles.saveButton, isSaving && styles.savingButton]} 
+        onPress={handleSaveChanges}
+        disabled={isSaving}
+      >
+        {isSaving ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <Text style={styles.saveText}>Save Changes</Text>
+        )}
       </TouchableOpacity>
     </View >
   );
@@ -167,8 +209,25 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 30,
+    justifyContent: 'center',
+    marginBottom: 20,
+    position: 'relative',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  cancelButton: {
+    position: 'absolute',
+    left: 0,
+  },
+  cancelText: {
+    color: '#888',
+    fontSize: 16,
+  },
+  scrollView: {
+    flex: 1,
   },
   profileArrow: {
     display: 'flex',
@@ -176,11 +235,6 @@ const styles = StyleSheet.create({
     gap: 5,
     alignItems: 'center',
     justifyContent: 'center'
-  },
-  headerText: {
-    fontSize: 23,
-    fontWeight: 'bold',
-    color: '#333',
   },
   editText: {
     color: '#00CFFF',
@@ -215,7 +269,6 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 15,
   },
-
   checkboxRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -246,24 +299,30 @@ const styles = StyleSheet.create({
     color: "#00c4cc",
     fontWeight: "bold",
   },
-  input: {
+  toggleLabel: {
     flex: 1,
     marginLeft: 10,
     fontSize: 14,
   },
-  signOutButton: {
-    // marginTop: 30,
+  saveButton: {
+    backgroundColor: '#00CFFF',
     paddingVertical: 15,
     alignItems: 'center',
     borderRadius: 10,
-    shadowColor: '#00CFFF',
-    shadowRadius: 5,
-    elevation: 5,
+    marginTop: 20,
   },
-  signOutText: {
-    color: '#00CFFF',
-    fontSize: 20,
+  savingButton: {
+    backgroundColor: '#7AD7F0',
+  },
+  saveText: {
+    color: '#FFFFFF',
+    fontSize: 18,
     fontWeight: 'bold',
+  },
+  loader: { 
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   checkBox: {
     width: 25,

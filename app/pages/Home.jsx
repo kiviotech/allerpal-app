@@ -23,6 +23,7 @@ import { fetchLocation } from "../../src/services/locationService";
 import * as Location from 'expo-location';
 import { fetchUserById } from "../../src/services/userServices";
 import Sidebar from "./SideBar";
+import useFavoritesStore from '../../src/stores/favoritesStore';
 
 const Home = () => {
   const router = useRouter();
@@ -33,22 +34,35 @@ const Home = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [filteredFoodRecommendations, setFilteredFoodRecommendations] = useState([]);
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  // const [isAllergenOn, setIsAllergenOn] = useState(!excludeMayContain);
+  const fetchFavorites = useFavoritesStore((state) => state.fetchFavorites);
 
   useEffect(() => {
+    console.log("[Home] Component mounted, userId:", userId);
+    
     if (!userId) {
+      console.log("[Home] No userId found, redirecting to login");
       router.replace("auth/Login");
       return;
     }
+    
     const getProfileIdbyUserId = async () => {
-      const response = await fetchUserById(userId);
-      const profileId = response?.profiles[0]?.id
-      useAuthStore.getState().setProfileId(profileId);
+      console.log("[Home] Fetching profile for userId:", userId);
+      try {
+        const response = await fetchUserById(userId);
+        console.log("[Home] User response:", JSON.stringify(response, null, 2));
+        const profileId = response?.profiles[0]?.id;
+        console.log("[Home] Setting profileId in store:", profileId);
+        useAuthStore.getState().setProfileId(profileId);
+      } catch (error) {
+        console.error("[Home] Error fetching user profile:", error);
+      }
     }
+    
     getProfileIdbyUserId();
   }, [userId])
 
   useEffect(() => {
+    console.log("[Home] Setting static location");
     // Static location data
     const latitude = 51.5074; // Example: London latitude
     const longitude = -0.1278; // Example: London longitude
@@ -56,9 +70,19 @@ const Home = () => {
 
     // Store the static location in Zustand
     setLocation(latitude, longitude, location);
+    console.log("[Home] Location set in store:", { latitude, longitude, location });
   }, [setLocation]);
 
+  // Initialize favorites when the app starts
+  useEffect(() => {
+    if (userId) {
+      console.log("[Home] Initializing favorites for user:", userId);
+      fetchFavorites(userId);
+    }
+  }, [userId, fetchFavorites]);
+
   const handleSearch = () => {
+    console.log("[Home] Search button pressed");
     router.push('./Search')
   };
 
@@ -75,7 +99,7 @@ const Home = () => {
         <View>
           <Text style={styles.locationLabel}>Location</Text>
           <TouchableOpacity
-            onPress={() => router.push("./LocationAccessScreen")}
+            onPress={() => router.push("./LocationAccess")}
           >
             <View style={styles.locationRow}>
               <Ionicons name="location-outline" size={20} color="blue" />
