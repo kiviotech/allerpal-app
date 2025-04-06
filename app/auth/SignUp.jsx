@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 15,
     padding: "3%",
-    fontSize: width < 360 ? 14 : 16,
+    fontSize: width < 360 ? 16 : 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center'
@@ -299,6 +299,7 @@ const styles = StyleSheet.create({
   inputField: {
     width: "90%", // Full width input
     outlineStyle: "none", // Removes focus outline
+    fontSize: 16,
   },
   signUpButton: {
     backgroundColor: "#00D0DD",

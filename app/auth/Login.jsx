@@ -233,6 +233,7 @@ const styles = StyleSheet.create({
   inputField: {
     width: "90%", // Full width input
     outlineStyle: "none", // Removes focus outline
+    fontSize: 16,
   },
   signUpButton: {
     backgroundColor: "#00D0DD",
