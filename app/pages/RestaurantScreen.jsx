@@ -34,7 +34,9 @@ import { getChatsByUserAndRestaurant } from "../../src/services/chatService";
 import { sendMessageToRestaurant } from "../../src/services/chatService";
 import { useLocation } from '../../src/contexts/LocationContext';
 import { filterRestaurantsByDistance, sortRestaurantsByDistance, calculateDistance } from '../../src/utils/locationUtils';
-
+import { getCurrentLocation, GEO_ERROR_CODES } from '../../src/utils/geolocationService';
+import LocationErrorHandler from '../../src/components/LocationErrorHandler';
+import { fetchProfileByUserId } from "../../src/services/profileServices";
 
 const RestaurantScreen = () => {
   const router = useRouter();
@@ -54,10 +56,22 @@ const RestaurantScreen = () => {
   const [maxDistance, setMaxDistance] = useState(10); // Default 10km radius
   const [restaurants, setRestaurants] = useState([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
+  const [userAllergies, setUserAllergies] = useState([]);
+  const [isLoadingAllergies, setIsLoadingAllergies] = useState(true);
 
   const toggleAllergen = (value) => {
+    console.log(`[AllergenFilter] Toggling allergen filter ${value ? 'ON' : 'OFF'}`);
     setIsAllergenOn(value);
-    setType(value ? "allergen" : "normal"); // Set type based on switch
+    setType(value ? "allergen" : "normal");
+
+    // Log user allergens and menu data
+    console.log(`[AllergenFilter] User has ${userAllergies.length} allergens:`, 
+      userAllergies.map(a => a.name).join(", "));
+    console.log(`[AllergenFilter] Menu data contains ${menuData.length} menus`);
+    
+    // Preview filtered results
+    const filteredItems = getFilteredMenuItems(value);
+    console.log(`[AllergenFilter] Filtered to ${filteredItems.length} menus`);
   };
 
   useEffect(() => {
@@ -169,7 +183,101 @@ const RestaurantScreen = () => {
     fetchDistanceToRestaurant();
   }, [latitude, longitude, restaurantData.location]);
 
-  const filteredMenuItems = menuData.filter((item) => item.type === type);
+  // Update the getFilteredMenuItems function to skip filtering when toggle is off
+  const getFilteredMenuItems = (allergenFilterOverride = null) => {
+    // Use override value if provided, otherwise use state
+    const useAllergenFilter = allergenFilterOverride !== null ? allergenFilterOverride : isAllergenOn;
+    
+    // First filter by menu type (normal/allergen)
+    let filtered = menuData.filter((menu) => menu.type === type);
+    
+    console.log(`[AllergenFilter] Starting with ${filtered.length} ${type} menus`);
+    console.log(`[AllergenFilter] Allergen filter is ${useAllergenFilter ? 'enabled' : 'disabled'}`);
+    
+    // Skip allergen filtering if toggle is off - just return all menus of the selected type
+    if (!useAllergenFilter) {
+      console.log(`[AllergenFilter] Toggle is OFF - showing all menu items without allergen filtering`);
+      return filtered;
+    }
+    
+    // If allergen filter is on and user has allergies
+    if (userAllergies.length > 0) {
+      console.log(`[AllergenFilter] Filtering for ${userAllergies.length} allergens`);
+      
+      // Process each menu (keeping the menu structure intact)
+      filtered = filtered.map(menu => {
+        // Make a copy of the menu to modify
+        const processedMenu = {...menu};
+        
+        // Get all menu items in this menu
+        const items = menu.menu_items || [];
+        console.log(`[AllergenFilter] Processing ${items.length} items in ${menu.type} menu`);
+        
+        // Filter menu items that don't contain user's allergens
+        const safeItems = items.filter(item => {
+          // Skip items without description (unlikely but safer)
+          if (!item || !item.description) {
+            console.log(`[AllergenFilter] Skipping item without description`);
+            return true; // Include items without descriptions
+          }
+          
+          const itemName = item.item_name || 'Unknown item';
+          
+          // Case 1: Check structured allergen objects (if they exist)
+          const hasStructuredAllergen = item.allergens && Array.isArray(item.allergens) && 
+            item.allergens.some(menuAllergen => 
+              userAllergies.some(userAllergen => {
+                const match = userAllergen.id === menuAllergen.id;
+                if (match) {
+                  console.log(`[AllergenFilter] Item "${itemName}" contains structured allergen: ${userAllergen.name}`);
+                }
+                return match;
+              })
+            );
+          
+          // Case 2: Check description text for allergen names
+          const descriptionAllergens = userAllergies.filter(allergen => {
+            const allergenName = allergen.name.toLowerCase();
+            const descriptionLower = item.description.toLowerCase();
+            const match = descriptionLower.includes(allergenName);
+            if (match) {
+              console.log(`[AllergenFilter] Item "${itemName}" contains "${allergenName}" in description: "${item.description}"`);
+            }
+            return match;
+          });
+          
+          const hasDescriptionAllergen = descriptionAllergens.length > 0;
+          
+          // For debugging
+          if (!hasStructuredAllergen && !hasDescriptionAllergen) {
+            console.log(`[AllergenFilter] Item "${itemName}" is safe`);
+          }
+          
+          // Include only if it doesn't have any allergens matching user's allergies
+          return !(hasStructuredAllergen || hasDescriptionAllergen);
+        });
+        
+        console.log(`[AllergenFilter] ${safeItems.length} of ${items.length} items are safe in this menu`);
+        
+        // Update the menu with only safe items
+        processedMenu.menu_items = safeItems;
+        return processedMenu;
+      });
+      
+      // Remove any menus that now have no items
+      const filteredCount = filtered.length;
+      filtered = filtered.filter(menu => menu.menu_items && menu.menu_items.length > 0);
+      console.log(`[AllergenFilter] Removed ${filteredCount - filtered.length} empty menus`);
+    }
+    
+    console.log(`[AllergenFilter] Final result: ${filtered.length} menus`);
+    
+    // Flatten all menu items for display if needed
+    const allMenuItems = filtered.flatMap(menu => menu.menu_items || []);
+    console.log(`[AllergenFilter] Total safe menu items: ${allMenuItems.length}`);
+    
+    return filtered;
+  };
 
   const callResto = (contact_number) => {
     const phoneNumber = contact_number; // Replace with the restaurant's phone number
@@ -185,33 +293,49 @@ const RestaurantScreen = () => {
 
   const openLocation = async () => {
     try {
-      // Request location permissions
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Permission Denied", "Location access is required.");
-        return;
-      }
-
-      // Get current location
-      const currentLocation = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
+      // Clear any previous location errors
+      setLocationError(null);
+      
+      // Try to get current location using our improved service
+      const currentLocation = await getCurrentLocation({
+        timeout: 10000, // 10 seconds timeout
+        enableHighAccuracy: true
       });
 
       // Get latitude and longitude from current location
       const { latitude, longitude } = currentLocation.coords;
 
-      // Construct the URL for Google Maps
-      const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      // Construct the URL for Google Maps with restaurant location as destination
+      // and current location as starting point
+      const restaurantLat = restaurantData?.latitude || 0;
+      const restaurantLng = restaurantData?.longitude || 0;
+      const url = restaurantLat && restaurantLng 
+        ? `https://www.google.com/maps/dir/?api=1&origin=${latitude},${longitude}&destination=${restaurantLat},${restaurantLng}&travelmode=driving`
+        : `https://www.google.com/maps?q=${latitude},${longitude}`;
 
       // Open Google Maps with the location
       Linking.openURL(url).catch((err) => {
         console.error('Error opening location:', err);
+        Alert.alert("Error", "Could not open maps application.");
       });
 
     } catch (error) {
       console.error("Error fetching location:", error);
-      Alert.alert("Error", "Unable to fetch location or address.");
+      
+      // Set the location error so we can display it to the user
+      setLocationError(error);
+      
+      // Only show alert if the LocationErrorHandler component isn't being used
+      if (!LocationErrorHandler) {
+        Alert.alert("Location Error", error.message || "Unable to fetch your location.");
+      }
     }
+  };
+  
+  // Add a retry handler for location errors
+  const handleLocationRetry = () => {
+    setLocationError(null);
+    openLocation();
   };
 
   // Scroll to reviews section
@@ -307,6 +431,28 @@ const RestaurantScreen = () => {
     // Always navigate to home instead of trying to go back
     router.push('/pages/Home');
   };
+
+  // Fetch user's allergies when component mounts
+  useEffect(() => {
+    const fetchUserAllergies = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setIsLoadingAllergies(true);
+        const response = await fetchProfileByUserId(user.id);
+        // Get the profile allergies data from the first profile (myself profile)
+        const profileAllergies = response?.data[0]?.profile_allergies[0] || {};
+        const allergies = profileAllergies?.allergies || [];
+        setUserAllergies(allergies);
+      } catch (error) {
+        console.error("Error fetching user allergies:", error);
+      } finally {
+        setIsLoadingAllergies(false);
+      }
+    };
+
+    fetchUserAllergies();
+  }, [user?.id]);
 
   return (
     <SafeAreaView style={styles.AreaContainer}>
@@ -415,31 +561,59 @@ const RestaurantScreen = () => {
 
             {/* Allergen Toggle */}
             <View style={styles.allergenContainer}>
-              <Text style={styles.allergenText}>Your Allergens Filter</Text>
-              {/* <Switch
-                value={isAllergenOn}
-                onValueChange={toggleAllergen}
-                thumbColor={isAllergenOn ? "#ff6347" : "#f4f3f4"}
-                trackColor={{ false: "#767577", true: "#ffdbc1" }}
-              /> */}
-
-              {/* Replace the existing Switch with the CustomSwitch */}
-              <CustomSwitch
-                value={isAllergenOn}
-                initialState={isAllergenOn}      // Pass the current state of the switch
-                onToggle={toggleAllergen}        // Pass the function to handle toggle
-              />
+              <View style={styles.allergenInfo}>
+                <Text style={styles.allergenText}>Your Allergens Filter</Text>
+                {userAllergies.length > 0 && (
+                  <Text style={styles.allergenCount}>
+                    ({userAllergies.length} allergen{userAllergies.length !== 1 ? 's' : ''})
+                  </Text>
+                )}
+              </View>
+              {!user ? (
+                <TouchableOpacity 
+                  style={styles.loginButton}
+                  onPress={() => router.push("/pages/Login")}
+                >
+                  <Text style={styles.loginButtonText}>Login to use filter</Text>
+                </TouchableOpacity>
+              ) : (
+                <CustomSwitch
+                  value={isAllergenOn}
+                  initialState={isAllergenOn}
+                  onToggle={toggleAllergen}
+                  disabled={userAllergies.length === 0}
+                />
+              )}
             </View>
           </View>
 
           {/* Menu Card or Message */}
           <View>
-            {filteredMenuItems.length > 0 ? (
-              <MenuCard menuItems={filteredMenuItems} />
+            {isLoadingAllergies ? (
+              <ActivityIndicator size="large" color="#00D0DD" />
             ) : (
-              <Text style={styles.noItemsText}>
-                There are no foods available for this option.
-              </Text>
+              <>
+                {getFilteredMenuItems().length > 0 ? (
+                  <MenuCard 
+                    menuItems={getFilteredMenuItems()} 
+                    userAllergies={userAllergies}
+                    isAllergenFilterOn={isAllergenOn}
+                  />
+                ) : (
+                  <View style={styles.noItemsContainer}>
+                    <Text style={styles.noItemsText}>
+                      {isAllergenOn 
+                        ? "No allergen-safe foods available based on your allergen profile."
+                        : "There are no foods available for this option."}
+                    </Text>
+                    {isAllergenOn && userAllergies.length > 0 && (
+                      <Text style={styles.allergenListText}>
+                        Your allergens: {userAllergies.map(a => a.name).join(", ")}
+                      </Text>
+                    )}
+                  </View>
+                )}
+              </>
             )}
           </View>
 
@@ -459,9 +633,11 @@ const RestaurantScreen = () => {
 
       {/* Show location status */}
       {locationError && (
-        <Text style={styles.errorText}>
-          Location error: {locationError}. Some features may be limited.
-        </Text>
+        <LocationErrorHandler 
+          error={locationError} 
+          onRetry={handleLocationRetry} 
+          compact={true} 
+        />
       )}
       
       {/* Restaurant list */}
@@ -665,9 +841,29 @@ icons: {
     paddingVertical: 10,
     paddingHorizontal: 20,
   },
+  allergenInfo: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+  },
   allergenText: {
     fontSize: 19,
     color: "#000000",
+    marginBottom: 4,
+  },
+  allergenCount: {
+    fontSize: 14,
+    color: "#666",
+  },
+  loginButton: {
+    backgroundColor: '#00D0DD',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  loginButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   noItemsText: {
     fontSize: 16,
@@ -701,5 +897,14 @@ icons: {
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+  },
+  noItemsContainer: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  allergenListText: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 10,
   },
 });

@@ -51,6 +51,9 @@ const Layout = () => {
             <Stack.Screen name="pages/Account" />
             <Stack.Screen name="pages/Profile" />
             <Stack.Screen name="pages/RestaurantScreen" />
+            <Stack.Screen name="pages/RestaurantImport" />
+            <Stack.Screen name="pages/ImportHistory" />
+            <Stack.Screen name="pages/ImportDetails" />
             <Stack.Screen name="pages/ReviewForm" />
             <Stack.Screen name="pages/Disclamier" />
             <Stack.Screen name="pages/FinishSetup" />

@@ -1,107 +1,100 @@
 import { Platform } from 'react-native';
 import * as ExpoLocation from 'expo-location';
-import { getDistance } from 'geolib';
+import { getCurrentLocation as getLocationWithErrorHandling } from './geolocationService';
 
-// Request location permissions and get current position
+/**
+ * Legacy function to get current location
+ * @returns {Promise<Object>} - Location object with coordinates
+ * @deprecated Use geolocationService.getCurrentLocation() instead
+ */
 export const getCurrentLocation = async () => {
   try {
-    if (Platform.OS === 'web') {
-      // Use browser's Geolocation API for web
-      return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-          reject(new Error('Geolocation is not supported by this browser.'));
-          return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            resolve({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-            });
-          },
-          (error) => {
-            reject(error);
-          },
-          { 
-            enableHighAccuracy: true, 
-            timeout: 15000, 
-            maximumAge: 10000 
-          }
-        );
-      });
-    } else {
-      // Use Expo Location for native platforms
-      const { status } = await ExpoLocation.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        throw new Error('Location permission denied');
-      }
-
-      const location = await ExpoLocation.getCurrentPositionAsync({
-        accuracy: ExpoLocation.Accuracy.High
-      });
-
-      return {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      };
-    }
+    // Use the new robust implementation
+    return await getLocationWithErrorHandling();
   } catch (error) {
-    console.error('Error getting location:', error);
+    // Log and rethrow
+    console.error('Error getting location in locationUtils:', error);
     throw error;
   }
 };
 
-// Calculate distance between two points in kilometers
-export const calculateDistance = (userLocation, restaurantLocation) => {
-  if (!userLocation || !restaurantLocation) return null;
-
-  try {
-    const distanceInMeters = getDistance(
-      { latitude: userLocation.latitude, longitude: userLocation.longitude },
-      { latitude: restaurantLocation.latitude, longitude: restaurantLocation.longitude }
-    );
-
-    // Convert to kilometers
-    return (distanceInMeters / 1000).toFixed(1);
-  } catch (error) {
-    console.error('Error calculating distance:', error);
+/**
+ * Calculate distance between two points using Haversine formula
+ * @param {Object} point1 - First point with latitude and longitude
+ * @param {Object} point2 - Second point with latitude and longitude
+ * @returns {number} - Distance in kilometers
+ */
+export const calculateDistance = (point1, point2) => {
+  if (!point1 || !point2 || !point1.latitude || !point2.latitude) {
     return null;
   }
+
+  const toRad = (value) => (value * Math.PI) / 180;
+  const R = 6371; // Earth's radius in km
+
+  const dLat = toRad(point2.latitude - point1.latitude);
+  const dLon = toRad(point2.longitude - point1.longitude);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(point1.latitude)) *
+      Math.cos(toRad(point2.latitude)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c;
+
+  return parseFloat(distance.toFixed(1));
 };
 
-// Filter restaurants based on maximum distance (in kilometers)
-export const filterRestaurantsByDistance = (restaurants, userLocation, maxDistance = 10) => {
-  if (!userLocation || !restaurants) return [];
+/**
+ * Filter restaurants by distance from user location
+ * @param {Array} restaurants - Array of restaurant objects
+ * @param {Object} userLocation - User location object
+ * @param {number} maxDistance - Maximum distance in kilometers
+ * @returns {Array} - Filtered restaurants
+ */
+export const filterRestaurantsByDistance = (restaurants, userLocation, maxDistance) => {
+  if (!userLocation || !Array.isArray(restaurants)) {
+    return restaurants || [];
+  }
 
-  return restaurants.filter(restaurant => {
-    if (!restaurant.location?.latitude || !restaurant.location?.longitude) return false;
+  return restaurants.filter((restaurant) => {
+    const restaurantLocation = {
+      latitude: restaurant.latitude,
+      longitude: restaurant.longitude,
+    };
 
-    const distance = calculateDistance(userLocation, {
-      latitude: restaurant.location.latitude,
-      longitude: restaurant.location.longitude,
-    });
-
+    const distance = calculateDistance(userLocation, restaurantLocation);
     return distance !== null && distance <= maxDistance;
   });
 };
 
-// Sort restaurants by distance from user
+/**
+ * Sort restaurants by distance from user location
+ * @param {Array} restaurants - Array of restaurant objects
+ * @param {Object} userLocation - User location object
+ * @returns {Array} - Sorted restaurants
+ */
 export const sortRestaurantsByDistance = (restaurants, userLocation) => {
-  if (!userLocation || !restaurants) return [];
+  if (!userLocation || !Array.isArray(restaurants)) {
+    return restaurants || [];
+  }
 
   return [...restaurants].sort((a, b) => {
     const distanceA = calculateDistance(userLocation, {
-      latitude: a.location?.latitude,
-      longitude: a.location?.longitude,
+      latitude: a.latitude,
+      longitude: a.longitude,
     });
+    
     const distanceB = calculateDistance(userLocation, {
-      latitude: b.location?.latitude,
-      longitude: b.location?.longitude,
+      latitude: b.latitude,
+      longitude: b.longitude,
     });
 
-    if (!distanceA) return 1;
-    if (!distanceB) return -1;
+    if (distanceA === null) return 1;
+    if (distanceB === null) return -1;
     return distanceA - distanceB;
   });
 }; 

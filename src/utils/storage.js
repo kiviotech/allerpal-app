@@ -1,42 +1,61 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Function to get the JWT token
-export const getToken = () => {
-  return AsyncStorage.getItem("authToken");
+// Get storage based on platform
+const getStorage = () => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    return {
+      getItem: (key) => localStorage.getItem(key),
+      setItem: (key, value) => localStorage.setItem(key, value),
+      removeItem: (key) => localStorage.removeItem(key)
+    };
+  } else {
+    return AsyncStorage;
+  }
+};
+
+// Function to get JWT token
+export const getToken = async () => {
+  const storage = getStorage();
+  return storage.getItem('authToken');
 };
 
 // Function to save JWT token
 export const saveToken = async (token) => {
-  await AsyncStorage.setItem('jwt', token);
+  const storage = getStorage();
+  await storage.setItem('authToken', token);
 };
 
 // Function to save user ID
 export const saveUserId = async (userId) => {
-  await AsyncStorage.setItem('userId', userId.toString());
+  const storage = getStorage();
+  await storage.setItem('userId', userId.toString());
 };
 
 // Function to remove JWT and user ID from storage (logout)
 export const deleteToken = async () => {
-  await AsyncStorage.removeItem('jwt');
-  await AsyncStorage.removeItem('userId');
+  const storage = getStorage();
+  await storage.removeItem('jwt');
+  await storage.removeItem('userId');
 };
 
-// Generic function to save data to AsyncStorage
+// Generic function to save data to storage
 export const saveToStorage = async (key, value) => {
   try {
-    await AsyncStorage.setItem(key, JSON.stringify(value));
+    const storage = getStorage();
+    await storage.setItem(key, JSON.stringify(value));
   } catch (error) {
-    console.error("Error saving data to AsyncStorage:", error);
+    console.error("Error saving data to storage:", error);
   }
 };
 
-// Generic function to retrieve data from AsyncStorage
+// Generic function to retrieve data from storage
 export const getFromStorage = async (key) => {
   try {
-    const value = await AsyncStorage.getItem(key);
+    const storage = getStorage();
+    const value = await storage.getItem(key);
     return value ? JSON.parse(value) : [];
   } catch (error) {
-    console.error("Error retrieving data from AsyncStorage:", error);
+    console.error("Error retrieving data from storage:", error);
   }
 };
 

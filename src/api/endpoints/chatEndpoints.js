@@ -1,7 +1,7 @@
 const chatEndpoints = {
   // Chat endpoints
   getAllChats: "/chats?populate=*",
-  getChatById: (id) => `/chats/${id}?populate=*`,
+  getChatById: (id) => `/chats/${id}?populate[0]=messages&populate[1]=restaurant&populate[2]=user`,
   getChatsByUserId: (userId) => `/chats?filters[user]=${userId}&populate=*&sort=lastMessageTime:desc`,
   getChatsByRestaurantId: (restaurantId) => `/chats?filters[restaurant]=${restaurantId}&populate=*&sort=lastMessageTime:desc`,
   getChatsByRestaurantDocumentId: (documentId) => `/chats?filters[restaurant][documentId]=${documentId}&populate=*&sort=lastMessageTime:desc`,
@@ -31,9 +31,12 @@ const chatEndpoints = {
   deleteChat: (id) => `/chats/${id}`,
   
   // Message endpoints
-  getChatMessages: (chatId) => `/messages?filters[chat]=${chatId}&sort=timestamp:asc`,
+  getChatMessages: (chatId) => `/messages?filters[chat]=${chatId}&sort=timestamp:asc&pagination[limit]=100`,
   addMessageToChat: (chatId) => `/messages`,
   markMessagesAsRead: (chatId) => `/messages/mark-read/${chatId}`,
+  
+  // Chat history endpoint
+  getChatHistory: (chatId) => `/chats/${chatId}?populate[0]=messages&populate[1]=restaurant&populate[2]=user`,
   
   // Custom endpoints
   createChatCustom: "/create-chat",

@@ -26,6 +26,7 @@ const Chat = () => {
   const router = useRouter();
   const userId = user?.id;
   const [checkingMessages, setCheckingMessages] = useState(false);
+  const checking = React.useRef(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -51,49 +52,63 @@ const Chat = () => {
     }
   }, [user?.id]);
 
+  /**
+   * Check for new messages across all user's chats
+   */
   const checkForNewMessages = async () => {
-    if (checkingMessages) return;
+    if (checking.current || !user?.id) return;
     
     try {
+      checking.current = true;
       setCheckingMessages(true);
-      console.log('[Chat] Checking for new messages...');
+      
+      console.log(`[Chat] Checking for new messages for user: ${user.id}`);
+      
+      // Validate user ID
+      if (!user.id) {
+        console.error('[Chat] Cannot check messages: User ID is undefined');
+        throw new Error('User ID is required to check messages');
+      }
       
       const response = await checkNewMessages(user.id);
-      const chatsWithNewMessages = response.data?.data || [];
       
-      if (chatsWithNewMessages.length > 0) {
-        console.log('[Chat] Found new messages:', chatsWithNewMessages);
-        // Update the inbox with new messages
-        setInbox(prevInbox => {
-          const updatedInbox = [...prevInbox];
+      // Process new messages if available
+      if (response && response.data && response.data.data) {
+        const chatsWithNewMessages = response.data.data;
+        
+        if (chatsWithNewMessages.length > 0) {
+          console.log(`[Chat] Found new messages in ${chatsWithNewMessages.length} chats`);
           
-          chatsWithNewMessages.forEach(newChat => {
-            const existingIndex = updatedInbox.findIndex(chat => chat.id === newChat.id);
-            
-            if (existingIndex !== -1) {
-              // Update existing chat
-              updatedInbox[existingIndex] = {
-                ...updatedInbox[existingIndex],
-                lastMessage: newChat.lastMessage,
-                lastMessageTime: newChat.lastMessageTime,
-                unreadCount: newChat.unreadCount,
-                status: newChat.status
-              };
-            } else {
-              // Add new chat to inbox
-              updatedInbox.push(newChat);
-            }
-          });
+          // Update inbox
+          fetchInbox();
           
-          // Sort by last message time
-          return updatedInbox.sort((a, b) => 
-            new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
-          );
-        });
+          // Show notification
+          showNotification('New Messages', `You have new messages in ${chatsWithNewMessages.length} conversations`);
+        }
       }
     } catch (error) {
       console.error('[Chat] Error checking for new messages:', error);
+      
+      // For 400 Bad Request errors, don't show an error message to the user
+      // This is likely due to a parameter issue which we'll handle silently
+      if (error.response && error.response.status !== 400) {
+        setError('Failed to check for new messages. Please try again.');
+        
+        // For server errors, wait longer before retrying
+        if (error.response && error.response.status >= 500) {
+          setTimeout(() => {
+            setError(null);
+          }, 60000); // Clear error after 1 minute
+          return;
+        }
+        
+        // For other errors, clear after 5 seconds
+        setTimeout(() => {
+          setError(null);
+        }, 5000);
+      }
     } finally {
+      checking.current = false;
       setCheckingMessages(false);
     }
   };

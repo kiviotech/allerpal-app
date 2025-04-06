@@ -95,6 +95,17 @@ const Sidebar = ({ isVisible, onClose }) => {
                         </Text>
                     </TouchableOpacity>
 
+                    <TouchableOpacity style={styles.menuItem} onPress={() => handleTabPress("/pages/RestaurantImport")}>
+                        <Ionicons
+                            name={isActiveTab("/pages/RestaurantImport") ? "restaurant" : "restaurant-outline"}
+                            size={24}
+                            color={isActiveTab("/pages/RestaurantImport") ? "#00aced" : "#888"}
+                        />
+                        <Text style={[styles.menuText, isActiveTab("/pages/RestaurantImport") && styles.activeFooterText,]}>
+                            Import Restaurant
+                        </Text>
+                    </TouchableOpacity>
+
                     <TouchableOpacity style={styles.menuItem} onPress={() => handleTabPress("/pages/Blog")}>
                         <Ionicons
                             name={isActiveTab("/pages/Blog") ? "newspaper" : "newspaper-outline"}

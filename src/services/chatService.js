@@ -155,9 +155,19 @@ export const sendMessageToRestaurant = async (userId, restaurantDocumentId, mess
       
       if (updatedChat && updatedChat.data) {
         console.log(`[ChatService] Successfully retrieved updated chat`);
+        
+        // Make sure we have messages in the response
+        const messages = updatedChat.data?.data?.messages || 
+                         updatedChat.data?.messages || 
+                         [];
+                         
+        // Return data with id, messages, and status
         return {
-          ...updatedChat.data,
-          id: chatId
+          id: chatId,
+          messageId: messages.length > 0 ? messages[messages.length - 1].id : null,
+          messages: messages,
+          status: updatedChat.data?.data?.status || updatedChat.data?.status || 'pending_restaurant',
+          lastMessageTime: updatedChat.data?.data?.lastMessageTime || updatedChat.data?.lastMessageTime || new Date().toISOString()
         };
       } else {
         throw new Error('Invalid response from getChatById');

@@ -73,8 +73,8 @@ export const login = async (email, password) => {
     const { jwt, user } = response.data;
 
     // Save the JWT and user ID to secure storage
-    saveToken(jwt);
-    saveUserId(user.id);
+    await saveToken(jwt);
+    await saveUserId(user.id);
 
     // Update Zustand store with JWT and user data
     useAuthStore.getState().login(user, jwt);
@@ -98,8 +98,8 @@ export const signup = async (username, email, password) => {
     const { jwt, user } = response.data;
 
     // Save the JWT and user ID to secure storage
-    saveToken(jwt);
-    saveUserId(user.id);
+    await saveToken(jwt);
+    await saveUserId(user.id);
 
     // Update Zustand store with JWT and user data
     useAuthStore.getState().login(user, jwt);
@@ -166,7 +166,7 @@ export const resetPassword = async (data) => {
 };
 
 // Logout function
-export const logout = () => {
-  deleteToken(); // Remove the JWT token from storage
+export const logout = async () => {
+  await deleteToken(); // Remove the JWT token from storage
   useAuthStore.getState().logout(); // Clear the Zustand store
 };
